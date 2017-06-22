@@ -1,4 +1,4 @@
-// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
+// Generated from CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 
@@ -16,7 +16,7 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 33, 120,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 30, 120,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
@@ -29,41 +29,41 @@ var parserATN = []uint16{
 	3, 12, 3, 12, 3, 13, 3, 13, 3, 14, 6, 14, 103, 10, 14, 13, 14, 14, 14,
 	104, 3, 15, 3, 15, 3, 15, 3, 15, 3, 16, 3, 16, 3, 16, 5, 16, 114, 10, 16,
 	3, 17, 3, 17, 3, 18, 3, 18, 3, 18, 2, 2, 19, 2, 4, 6, 8, 10, 12, 14, 16,
-	18, 20, 22, 24, 26, 28, 30, 32, 34, 2, 4, 4, 2, 12, 14, 29, 30, 3, 2, 24,
-	28, 2, 120, 2, 41, 3, 2, 2, 2, 4, 43, 3, 2, 2, 2, 6, 51, 3, 2, 2, 2, 8,
-	54, 3, 2, 2, 2, 10, 62, 3, 2, 2, 2, 12, 70, 3, 2, 2, 2, 14, 80, 3, 2, 2,
-	2, 16, 82, 3, 2, 2, 2, 18, 85, 3, 2, 2, 2, 20, 95, 3, 2, 2, 2, 22, 97,
-	3, 2, 2, 2, 24, 99, 3, 2, 2, 2, 26, 102, 3, 2, 2, 2, 28, 106, 3, 2, 2,
-	2, 30, 113, 3, 2, 2, 2, 32, 115, 3, 2, 2, 2, 34, 117, 3, 2, 2, 2, 36, 42,
-	5, 4, 3, 2, 37, 42, 5, 6, 4, 2, 38, 42, 5, 8, 5, 2, 39, 42, 5, 10, 6, 2,
-	40, 42, 5, 12, 7, 2, 41, 36, 3, 2, 2, 2, 41, 37, 3, 2, 2, 2, 41, 38, 3,
-	2, 2, 2, 41, 39, 3, 2, 2, 2, 41, 40, 3, 2, 2, 2, 42, 3, 3, 2, 2, 2, 43,
-	44, 7, 3, 2, 2, 44, 45, 5, 14, 8, 2, 45, 47, 7, 4, 2, 2, 46, 48, 5, 16,
-	9, 2, 47, 46, 3, 2, 2, 2, 48, 49, 3, 2, 2, 2, 49, 47, 3, 2, 2, 2, 49, 50,
-	3, 2, 2, 2, 50, 5, 3, 2, 2, 2, 51, 52, 7, 5, 2, 2, 52, 53, 5, 14, 8, 2,
-	53, 7, 3, 2, 2, 2, 54, 55, 7, 6, 2, 2, 55, 56, 5, 14, 8, 2, 56, 58, 5,
-	22, 12, 2, 57, 59, 5, 24, 13, 2, 58, 57, 3, 2, 2, 2, 59, 60, 3, 2, 2, 2,
-	60, 58, 3, 2, 2, 2, 60, 61, 3, 2, 2, 2, 61, 9, 3, 2, 2, 2, 62, 63, 7, 7,
-	2, 2, 63, 64, 5, 14, 8, 2, 64, 66, 5, 22, 12, 2, 65, 67, 5, 24, 13, 2,
-	66, 65, 3, 2, 2, 2, 67, 68, 3, 2, 2, 2, 68, 66, 3, 2, 2, 2, 68, 69, 3,
-	2, 2, 2, 69, 11, 3, 2, 2, 2, 70, 71, 7, 8, 2, 2, 71, 72, 5, 14, 8, 2, 72,
-	73, 7, 9, 2, 2, 73, 74, 5, 26, 14, 2, 74, 75, 7, 10, 2, 2, 75, 78, 5, 18,
-	10, 2, 76, 77, 7, 11, 2, 2, 77, 79, 5, 34, 18, 2, 78, 76, 3, 2, 2, 2, 78,
-	79, 3, 2, 2, 2, 79, 13, 3, 2, 2, 2, 80, 81, 7, 32, 2, 2, 81, 15, 3, 2,
-	2, 2, 82, 83, 5, 18, 10, 2, 83, 84, 5, 20, 11, 2, 84, 17, 3, 2, 2, 2, 85,
-	86, 7, 32, 2, 2, 86, 19, 3, 2, 2, 2, 87, 96, 3, 2, 2, 2, 88, 96, 7, 15,
-	2, 2, 89, 96, 7, 16, 2, 2, 90, 96, 7, 17, 2, 2, 91, 96, 7, 18, 2, 2, 92,
-	96, 7, 19, 2, 2, 93, 96, 7, 20, 2, 2, 94, 96, 7, 21, 2, 2, 95, 87, 3, 2,
-	2, 2, 95, 88, 3, 2, 2, 2, 95, 89, 3, 2, 2, 2, 95, 90, 3, 2, 2, 2, 95, 91,
+	18, 20, 22, 24, 26, 28, 30, 32, 34, 2, 4, 3, 2, 26, 27, 3, 2, 21, 25, 2,
+	120, 2, 41, 3, 2, 2, 2, 4, 43, 3, 2, 2, 2, 6, 51, 3, 2, 2, 2, 8, 54, 3,
+	2, 2, 2, 10, 62, 3, 2, 2, 2, 12, 70, 3, 2, 2, 2, 14, 80, 3, 2, 2, 2, 16,
+	82, 3, 2, 2, 2, 18, 85, 3, 2, 2, 2, 20, 95, 3, 2, 2, 2, 22, 97, 3, 2, 2,
+	2, 24, 99, 3, 2, 2, 2, 26, 102, 3, 2, 2, 2, 28, 106, 3, 2, 2, 2, 30, 113,
+	3, 2, 2, 2, 32, 115, 3, 2, 2, 2, 34, 117, 3, 2, 2, 2, 36, 42, 5, 4, 3,
+	2, 37, 42, 5, 6, 4, 2, 38, 42, 5, 8, 5, 2, 39, 42, 5, 10, 6, 2, 40, 42,
+	5, 12, 7, 2, 41, 36, 3, 2, 2, 2, 41, 37, 3, 2, 2, 2, 41, 38, 3, 2, 2, 2,
+	41, 39, 3, 2, 2, 2, 41, 40, 3, 2, 2, 2, 42, 3, 3, 2, 2, 2, 43, 44, 7, 3,
+	2, 2, 44, 45, 5, 14, 8, 2, 45, 47, 7, 4, 2, 2, 46, 48, 5, 16, 9, 2, 47,
+	46, 3, 2, 2, 2, 48, 49, 3, 2, 2, 2, 49, 47, 3, 2, 2, 2, 49, 50, 3, 2, 2,
+	2, 50, 5, 3, 2, 2, 2, 51, 52, 7, 5, 2, 2, 52, 53, 5, 14, 8, 2, 53, 7, 3,
+	2, 2, 2, 54, 55, 7, 6, 2, 2, 55, 56, 5, 14, 8, 2, 56, 58, 5, 22, 12, 2,
+	57, 59, 5, 24, 13, 2, 58, 57, 3, 2, 2, 2, 59, 60, 3, 2, 2, 2, 60, 58, 3,
+	2, 2, 2, 60, 61, 3, 2, 2, 2, 61, 9, 3, 2, 2, 2, 62, 63, 7, 7, 2, 2, 63,
+	64, 5, 14, 8, 2, 64, 66, 5, 22, 12, 2, 65, 67, 5, 24, 13, 2, 66, 65, 3,
+	2, 2, 2, 67, 68, 3, 2, 2, 2, 68, 66, 3, 2, 2, 2, 68, 69, 3, 2, 2, 2, 69,
+	11, 3, 2, 2, 2, 70, 71, 7, 8, 2, 2, 71, 72, 5, 14, 8, 2, 72, 73, 7, 9,
+	2, 2, 73, 74, 5, 26, 14, 2, 74, 75, 7, 10, 2, 2, 75, 78, 5, 18, 10, 2,
+	76, 77, 7, 11, 2, 2, 77, 79, 5, 34, 18, 2, 78, 76, 3, 2, 2, 2, 78, 79,
+	3, 2, 2, 2, 79, 13, 3, 2, 2, 2, 80, 81, 7, 29, 2, 2, 81, 15, 3, 2, 2, 2,
+	82, 83, 5, 18, 10, 2, 83, 84, 5, 20, 11, 2, 84, 17, 3, 2, 2, 2, 85, 86,
+	7, 29, 2, 2, 86, 19, 3, 2, 2, 2, 87, 96, 3, 2, 2, 2, 88, 96, 7, 12, 2,
+	2, 89, 96, 7, 13, 2, 2, 90, 96, 7, 14, 2, 2, 91, 96, 7, 15, 2, 2, 92, 96,
+	7, 16, 2, 2, 93, 96, 7, 17, 2, 2, 94, 96, 7, 18, 2, 2, 95, 87, 3, 2, 2,
+	2, 95, 88, 3, 2, 2, 2, 95, 89, 3, 2, 2, 2, 95, 90, 3, 2, 2, 2, 95, 91,
 	3, 2, 2, 2, 95, 92, 3, 2, 2, 2, 95, 93, 3, 2, 2, 2, 95, 94, 3, 2, 2, 2,
-	96, 21, 3, 2, 2, 2, 97, 98, 7, 31, 2, 2, 98, 23, 3, 2, 2, 2, 99, 100, 9,
+	96, 21, 3, 2, 2, 2, 97, 98, 7, 28, 2, 2, 98, 23, 3, 2, 2, 2, 99, 100, 9,
 	2, 2, 2, 100, 25, 3, 2, 2, 2, 101, 103, 5, 28, 15, 2, 102, 101, 3, 2, 2,
 	2, 103, 104, 3, 2, 2, 2, 104, 102, 3, 2, 2, 2, 104, 105, 3, 2, 2, 2, 105,
 	27, 3, 2, 2, 2, 106, 107, 5, 18, 10, 2, 107, 108, 5, 30, 16, 2, 108, 109,
 	5, 24, 13, 2, 109, 29, 3, 2, 2, 2, 110, 114, 5, 32, 17, 2, 111, 114, 7,
-	22, 2, 2, 112, 114, 7, 23, 2, 2, 113, 110, 3, 2, 2, 2, 113, 111, 3, 2,
+	19, 2, 2, 112, 114, 7, 20, 2, 2, 113, 110, 3, 2, 2, 2, 113, 111, 3, 2,
 	2, 2, 113, 112, 3, 2, 2, 2, 114, 31, 3, 2, 2, 2, 115, 116, 9, 3, 2, 2,
-	116, 33, 3, 2, 2, 2, 117, 118, 7, 31, 2, 2, 118, 35, 3, 2, 2, 2, 10, 41,
+	116, 33, 3, 2, 2, 2, 117, 118, 7, 28, 2, 2, 118, 35, 3, 2, 2, 2, 10, 41,
 	49, 60, 68, 78, 95, 104, 113,
 }
 var deserializer = antlr.NewATNDeserializer(nil)
@@ -71,14 +71,14 @@ var deserializedATN = deserializer.DeserializeFromUInt16(parserATN)
 
 var literalNames = []string{
 	"", "'IDX.CREATE'", "'SCHEMA'", "'IDX.DESTROY'", "'IDX.INSERT'", "'IDX.DEL'",
-	"'IDX.SELECT'", "'WHERE'", "'ORDERBY'", "'LIMIT'", "'true'", "'false'",
-	"'null'", "'UINT8'", "'UINT16'", "'UINT32'", "'UINT64'", "'FLOAT'", "'ENUM'",
-	"'STRING'", "'IN'", "'CONTAINS'", "'<'", "'>'", "'='", "'<='", "'>='",
+	"'IDX.SELECT'", "'WHERE'", "'ORDERBY'", "'LIMIT'", "'UINT8'", "'UINT16'",
+	"'UINT32'", "'UINT64'", "'FLOAT'", "'ENUM'", "'STRING'", "'IN'", "'CONTAINS'",
+	"'<'", "'>'", "'='", "'<='", "'>='",
 }
 var symbolicNames = []string{
-	"", "", "", "", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16",
-	"K_UINT32", "K_UINT64", "K_FLOAT", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS",
-	"K_LT", "K_BT", "K_EQ", "K_LE", "K_BE", "STRING", "NUMBER", "INT", "Identifier",
+	"", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16", "K_UINT32",
+	"K_UINT64", "K_FLOAT", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT",
+	"K_BT", "K_EQ", "K_LE", "K_BE", "STRING", "NUMBER", "INT", "Identifier",
 	"WS",
 }
 
@@ -125,28 +125,25 @@ const (
 	CQLParserT__6       = 7
 	CQLParserT__7       = 8
 	CQLParserT__8       = 9
-	CQLParserT__9       = 10
-	CQLParserT__10      = 11
-	CQLParserT__11      = 12
-	CQLParserK_UINT8    = 13
-	CQLParserK_UINT16   = 14
-	CQLParserK_UINT32   = 15
-	CQLParserK_UINT64   = 16
-	CQLParserK_FLOAT    = 17
-	CQLParserK_ENUM     = 18
-	CQLParserK_STRING   = 19
-	CQLParserK_IN       = 20
-	CQLParserK_CONTAINS = 21
-	CQLParserK_LT       = 22
-	CQLParserK_BT       = 23
-	CQLParserK_EQ       = 24
-	CQLParserK_LE       = 25
-	CQLParserK_BE       = 26
-	CQLParserSTRING     = 27
-	CQLParserNUMBER     = 28
-	CQLParserINT        = 29
-	CQLParserIdentifier = 30
-	CQLParserWS         = 31
+	CQLParserK_UINT8    = 10
+	CQLParserK_UINT16   = 11
+	CQLParserK_UINT32   = 12
+	CQLParserK_UINT64   = 13
+	CQLParserK_FLOAT    = 14
+	CQLParserK_ENUM     = 15
+	CQLParserK_STRING   = 16
+	CQLParserK_IN       = 17
+	CQLParserK_CONTAINS = 18
+	CQLParserK_LT       = 19
+	CQLParserK_BT       = 20
+	CQLParserK_EQ       = 21
+	CQLParserK_LE       = 22
+	CQLParserK_BE       = 23
+	CQLParserSTRING     = 24
+	CQLParserNUMBER     = 25
+	CQLParserINT        = 26
+	CQLParserIdentifier = 27
+	CQLParserWS         = 28
 )
 
 // CQLParser rules.
@@ -719,7 +716,7 @@ func (p *CQLParser) Insert() (localctx IInsertContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserT__9)|(1<<CQLParserT__10)|(1<<CQLParserT__11)|(1<<CQLParserSTRING)|(1<<CQLParserNUMBER))) != 0) {
+	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserNUMBER {
 		{
 			p.SetState(55)
 			p.Value()
@@ -870,7 +867,7 @@ func (p *CQLParser) Del() (localctx IDelContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserT__9)|(1<<CQLParserT__10)|(1<<CQLParserT__11)|(1<<CQLParserSTRING)|(1<<CQLParserNUMBER))) != 0) {
+	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserNUMBER {
 		{
 			p.SetState(63)
 			p.Value()
@@ -1626,12 +1623,12 @@ func NewValueContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 
 func (s *ValueContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ValueContext) STRING() antlr.TerminalNode {
-	return s.GetToken(CQLParserSTRING, 0)
-}
-
 func (s *ValueContext) NUMBER() antlr.TerminalNode {
 	return s.GetToken(CQLParserNUMBER, 0)
+}
+
+func (s *ValueContext) STRING() antlr.TerminalNode {
+	return s.GetToken(CQLParserSTRING, 0)
 }
 
 func (s *ValueContext) GetRuleContext() antlr.RuleContext {
@@ -1677,7 +1674,7 @@ func (p *CQLParser) Value() (localctx IValueContext) {
 	p.SetState(97)
 	_la = p.GetTokenStream().LA(1)
 
-	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserT__9)|(1<<CQLParserT__10)|(1<<CQLParserT__11)|(1<<CQLParserSTRING)|(1<<CQLParserNUMBER))) != 0) {
+	if !(_la == CQLParserSTRING || _la == CQLParserNUMBER) {
 		p.GetErrorHandler().RecoverInline(p)
 	} else {
 		p.GetErrorHandler().ReportMatch(p)

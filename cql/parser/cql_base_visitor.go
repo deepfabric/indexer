@@ -1,4 +1,4 @@
-// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
+// Generated from CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 

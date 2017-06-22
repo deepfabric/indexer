@@ -40,11 +40,8 @@ popType:
 docId: INT;
 
 value
-    : STRING
-    | NUMBER
-    | 'true'
-    | 'false'
-    | 'null'
+    : NUMBER
+    | STRING
     ;
 
 predicates: predicate+;
