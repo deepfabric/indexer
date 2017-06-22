@@ -43,25 +43,23 @@ type CqlTestVisitor struct {
 	BaseCQLVisitor
 }
 
-func (v *CqlTestVisitor) Visit(localctx ICqlContext) interface{} {
+func (v *CqlTestVisitor) Visit(tree antlr.ParseTree) interface{} {
 	fmt.Println("Visit...")
-	ctx := localctx.(*CqlContext)
-	return v.VisitChildren(ctx)
-}
-
-func (v *CqlTestVisitor) VisitChildren(node antlr.RuleNode) interface{} {
-	fmt.Printf("VisitChildren %v\n", node)
-	return nil
+	ctx := tree.(*CqlContext)
+	return v.VisitCql(ctx)
 }
 
 func (v *CqlTestVisitor) VisitCql(ctx *CqlContext) interface{} {
 	fmt.Println("VisitCql...")
-	return v.VisitChildren(ctx)
+	create := ctx.Create().(*CreateContext)
+	return v.VisitCreate(create)
 }
 
 func (v *CqlTestVisitor) VisitCreate(ctx *CreateContext) interface{} {
 	fmt.Println("VisitCreate...")
-	return v.VisitChildren(ctx)
+	indexName := ctx.IndexName().GetText()
+	fmt.Printf("indexName: %s\n", indexName)
+	return nil
 }
 
 func TestCqlVisitorCreate(t *testing.T) {
@@ -74,6 +72,5 @@ func TestCqlVisitorCreate(t *testing.T) {
 	//parser.BuildParseTrees = true
 	tree := parser.Cql()
 	visitor := new(CqlTestVisitor)
-	visitor.Visit(tree)
-	//visitor.VisitCql(tree.(CqlContext))
+	tree.Accept(visitor)
 }
