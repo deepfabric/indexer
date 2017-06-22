@@ -11,7 +11,7 @@ cql
     | query
     ;
 
-create: 'IDX.CREATE' indexName 'SCHEMA' (propertyDef)+;
+create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)* (enumPropDef)* (strPropDef)*;
 
 destroy: 'IDX.DESTROY' indexName;
 
@@ -23,18 +23,19 @@ query: 'IDX.SELECT' indexName 'WHERE' predicates 'ORDERBY' property ('LIMIT' lim
 
 indexName: Identifier;
 
-propertyDef: property popType;
+uintPropDef: property uintType;
+
+enumPropDef: property K_ENUM;
+
+strPropDef: property K_STRING;
 
 property: Identifier;
 
-popType:
+uintType:
     | K_UINT8
     | K_UINT16
     | K_UINT32
     | K_UINT64
-    | K_FLOAT
-    | K_ENUM
-    | K_STRING
     ;
 
 docId: INT;
@@ -68,7 +69,6 @@ K_UINT8: 'UINT8';
 K_UINT16: 'UINT16';
 K_UINT32: 'UINT32';
 K_UINT64: 'UINT64';
-K_FLOAT: 'FLOAT';
 K_ENUM: 'ENUM';
 K_STRING: 'STRING';
 K_IN: 'IN';

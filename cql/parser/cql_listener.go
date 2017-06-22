@@ -1,4 +1,4 @@
-// Generated from CQL.g4 by ANTLR 4.7.
+// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 
@@ -29,14 +29,20 @@ type CQLListener interface {
 	// EnterIndexName is called when entering the indexName production.
 	EnterIndexName(c *IndexNameContext)
 
-	// EnterPropertyDef is called when entering the propertyDef production.
-	EnterPropertyDef(c *PropertyDefContext)
+	// EnterUintPropDef is called when entering the uintPropDef production.
+	EnterUintPropDef(c *UintPropDefContext)
+
+	// EnterEnumPropDef is called when entering the enumPropDef production.
+	EnterEnumPropDef(c *EnumPropDefContext)
+
+	// EnterStrPropDef is called when entering the strPropDef production.
+	EnterStrPropDef(c *StrPropDefContext)
 
 	// EnterProperty is called when entering the property production.
 	EnterProperty(c *PropertyContext)
 
-	// EnterPopType is called when entering the popType production.
-	EnterPopType(c *PopTypeContext)
+	// EnterUintType is called when entering the uintType production.
+	EnterUintType(c *UintTypeContext)
 
 	// EnterDocId is called when entering the docId production.
 	EnterDocId(c *DocIdContext)
@@ -80,14 +86,20 @@ type CQLListener interface {
 	// ExitIndexName is called when exiting the indexName production.
 	ExitIndexName(c *IndexNameContext)
 
-	// ExitPropertyDef is called when exiting the propertyDef production.
-	ExitPropertyDef(c *PropertyDefContext)
+	// ExitUintPropDef is called when exiting the uintPropDef production.
+	ExitUintPropDef(c *UintPropDefContext)
+
+	// ExitEnumPropDef is called when exiting the enumPropDef production.
+	ExitEnumPropDef(c *EnumPropDefContext)
+
+	// ExitStrPropDef is called when exiting the strPropDef production.
+	ExitStrPropDef(c *StrPropDefContext)
 
 	// ExitProperty is called when exiting the property production.
 	ExitProperty(c *PropertyContext)
 
-	// ExitPopType is called when exiting the popType production.
-	ExitPopType(c *PopTypeContext)
+	// ExitUintType is called when exiting the uintType production.
+	ExitUintType(c *UintTypeContext)
 
 	// ExitDocId is called when exiting the docId production.
 	ExitDocId(c *DocIdContext)

@@ -1,4 +1,4 @@
-// Generated from CQL.g4 by ANTLR 4.7.
+// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 
@@ -63,11 +63,23 @@ func (s *BaseCQLListener) EnterIndexName(ctx *IndexNameContext) {}
 // ExitIndexName is called when production indexName is exited.
 func (s *BaseCQLListener) ExitIndexName(ctx *IndexNameContext) {}
 
-// EnterPropertyDef is called when production propertyDef is entered.
-func (s *BaseCQLListener) EnterPropertyDef(ctx *PropertyDefContext) {}
+// EnterUintPropDef is called when production uintPropDef is entered.
+func (s *BaseCQLListener) EnterUintPropDef(ctx *UintPropDefContext) {}
 
-// ExitPropertyDef is called when production propertyDef is exited.
-func (s *BaseCQLListener) ExitPropertyDef(ctx *PropertyDefContext) {}
+// ExitUintPropDef is called when production uintPropDef is exited.
+func (s *BaseCQLListener) ExitUintPropDef(ctx *UintPropDefContext) {}
+
+// EnterEnumPropDef is called when production enumPropDef is entered.
+func (s *BaseCQLListener) EnterEnumPropDef(ctx *EnumPropDefContext) {}
+
+// ExitEnumPropDef is called when production enumPropDef is exited.
+func (s *BaseCQLListener) ExitEnumPropDef(ctx *EnumPropDefContext) {}
+
+// EnterStrPropDef is called when production strPropDef is entered.
+func (s *BaseCQLListener) EnterStrPropDef(ctx *StrPropDefContext) {}
+
+// ExitStrPropDef is called when production strPropDef is exited.
+func (s *BaseCQLListener) ExitStrPropDef(ctx *StrPropDefContext) {}
 
 // EnterProperty is called when production property is entered.
 func (s *BaseCQLListener) EnterProperty(ctx *PropertyContext) {}
@@ -75,11 +87,11 @@ func (s *BaseCQLListener) EnterProperty(ctx *PropertyContext) {}
 // ExitProperty is called when production property is exited.
 func (s *BaseCQLListener) ExitProperty(ctx *PropertyContext) {}
 
-// EnterPopType is called when production popType is entered.
-func (s *BaseCQLListener) EnterPopType(ctx *PopTypeContext) {}
+// EnterUintType is called when production uintType is entered.
+func (s *BaseCQLListener) EnterUintType(ctx *UintTypeContext) {}
 
-// ExitPopType is called when production popType is exited.
-func (s *BaseCQLListener) ExitPopType(ctx *PopTypeContext) {}
+// ExitUintType is called when production uintType is exited.
+func (s *BaseCQLListener) ExitUintType(ctx *UintTypeContext) {}
 
 // EnterDocId is called when production docId is entered.
 func (s *BaseCQLListener) EnterDocId(ctx *DocIdContext) {}

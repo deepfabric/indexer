@@ -1,4 +1,4 @@
-// Generated from CQL.g4 by ANTLR 4.7.
+// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 
@@ -29,14 +29,20 @@ type CQLVisitor interface {
 	// Visit a parse tree produced by CQLParser#indexName.
 	VisitIndexName(ctx *IndexNameContext) interface{}
 
-	// Visit a parse tree produced by CQLParser#propertyDef.
-	VisitPropertyDef(ctx *PropertyDefContext) interface{}
+	// Visit a parse tree produced by CQLParser#uintPropDef.
+	VisitUintPropDef(ctx *UintPropDefContext) interface{}
+
+	// Visit a parse tree produced by CQLParser#enumPropDef.
+	VisitEnumPropDef(ctx *EnumPropDefContext) interface{}
+
+	// Visit a parse tree produced by CQLParser#strPropDef.
+	VisitStrPropDef(ctx *StrPropDefContext) interface{}
 
 	// Visit a parse tree produced by CQLParser#property.
 	VisitProperty(ctx *PropertyContext) interface{}
 
-	// Visit a parse tree produced by CQLParser#popType.
-	VisitPopType(ctx *PopTypeContext) interface{}
+	// Visit a parse tree produced by CQLParser#uintType.
+	VisitUintType(ctx *UintTypeContext) interface{}
 
 	// Visit a parse tree produced by CQLParser#docId.
 	VisitDocId(ctx *DocIdContext) interface{}

@@ -1,4 +1,4 @@
-// Generated from CQL.g4 by ANTLR 4.7.
+// Generated from /home/zhichyu/src/github.com/deepfabric/indexer/cql/parser/CQL.g4 by ANTLR 4.7.
 
 package parser // CQL
 
@@ -36,7 +36,15 @@ func (v *BaseCQLVisitor) VisitIndexName(ctx *IndexNameContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseCQLVisitor) VisitPropertyDef(ctx *PropertyDefContext) interface{} {
+func (v *BaseCQLVisitor) VisitUintPropDef(ctx *UintPropDefContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseCQLVisitor) VisitEnumPropDef(ctx *EnumPropDefContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseCQLVisitor) VisitStrPropDef(ctx *StrPropDefContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -44,7 +52,7 @@ func (v *BaseCQLVisitor) VisitProperty(ctx *PropertyContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseCQLVisitor) VisitPopType(ctx *PopTypeContext) interface{} {
+func (v *BaseCQLVisitor) VisitUintType(ctx *UintTypeContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
