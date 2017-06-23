@@ -84,21 +84,16 @@ func TestCqlListener(t *testing.T) {
 
 type CqlTestVisitor struct {
 	BaseCQLVisitor
-}
-
-func (v *CqlTestVisitor) Visit(tree antlr.ParseTree) interface{} {
-	fmt.Println("Visit...")
-	ctx := tree.(*CqlContext)
-	return v.VisitCql(ctx)
+	res interface{}
 }
 
 func (v *CqlTestVisitor) VisitCql(ctx *CqlContext) interface{} {
 	fmt.Printf("VisitCql %v...\n", ctx)
 	//If there are multiple subrules, than check one by one.
 	if create := ctx.Create(); create != nil {
-		return v.VisitCreate(create.(*CreateContext))
+		v.res = v.VisitCreate(create.(*CreateContext))
 	} else if destroy := ctx.Destroy(); destroy != nil {
-		return v.VisitDestroy(destroy.(*DestroyContext))
+		v.res = v.VisitDestroy(destroy.(*DestroyContext))
 	}
 	return nil
 }
@@ -107,14 +102,14 @@ func (v *CqlTestVisitor) VisitCreate(ctx *CreateContext) interface{} {
 	fmt.Println("VisitCreate...")
 	indexName := ctx.IndexName().GetText()
 	fmt.Printf("indexName: %s\n", indexName)
-	return nil
+	return fmt.Sprintf("Create %s", indexName)
 }
 
 func (v *CqlTestVisitor) VisitDestroy(ctx *DestroyContext) interface{} {
 	fmt.Println("VisitDestroy...")
 	indexName := ctx.IndexName().GetText()
 	fmt.Printf("indexName: %s\n", indexName)
-	return nil
+	return fmt.Sprintf("Destroy %s", indexName)
 }
 
 //POC of visitor
@@ -138,4 +133,5 @@ func TestCqlVisitor(t *testing.T) {
 
 	visitor := new(CqlTestVisitor)
 	tree.Accept(visitor)
+	fmt.Printf("the result of visitor: %v\n", visitor.res)
 }
