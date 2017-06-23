@@ -249,7 +249,7 @@ func (v *CqlTestVisitor) VisitDestroy(ctx *DestroyContext) interface{} {
 func TestCqlVisitor(t *testing.T) {
 	fmt.Println("================TestCqlVisitor================")
 
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64")
+	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 desc STRING date UINT64")
 	//input := antlr.NewInputStream("IDX.DESTROY orders")
 	lexer := NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
