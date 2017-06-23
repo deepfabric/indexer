@@ -84,12 +84,12 @@ func TestCqlListener(t *testing.T) {
 
 type CqlTestVisitor struct {
 	BaseCQLVisitor
-	res interface{}
+	res interface{} //record the result of visitor
 }
 
 func (v *CqlTestVisitor) VisitCql(ctx *CqlContext) interface{} {
 	fmt.Printf("VisitCql %v...\n", ctx)
-	//If there are multiple subrules, than check one by one.
+	//If there are multiple subrules, then check one by one.
 	if create := ctx.Create(); create != nil {
 		v.res = v.VisitCreate(create.(*CreateContext))
 	} else if destroy := ctx.Destroy(); destroy != nil {
