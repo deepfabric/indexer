@@ -72,6 +72,7 @@ func TestCqlParserError(t *testing.T) {
 	tcs := []ParserCase{
 		{"IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64", false},
 		{"IDX orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64", true},
+		{"IDX.CREATE orders SCHEMA object UINT64 price UINT32 number UINT32 date UINT64 desc STRING", false},
 	}
 	for i, tc := range tcs {
 		input := antlr.NewInputStream(tc.Input)
@@ -94,8 +95,6 @@ func TestCqlParserError(t *testing.T) {
 			}()
 			_ = parser.Cql()
 		}
-
-		//tree.(*CqlContext).(*antlr.BaseParserRuleContext).exc
 
 		if el.exp != nil {
 			fmt.Printf("parser raised exception %s\n", el.msg)
@@ -134,7 +133,7 @@ func (l *CqlTestListener) ExitCreate(ctx *CreateContext) {
 //POC of listener
 func TestCqlListener(t *testing.T) {
 	fmt.Println("================TestCqlListener================")
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64")
+	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64 desc STRING")
 	lexer := NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	parser := NewCQLParser(stream)
@@ -219,7 +218,7 @@ func (v *CqlTestVisitor) VisitUintPropDef(ctx *UintPropDefContext) interface{} {
 	} else {
 		//TODO: how to disable parser recovery?
 		//panic(fmt.Sprintf("incorrect uintType: %v", ctx.UintType().GetText()))
-		fmt.Printf("incorrect uintType: %v\n", ctx.UintType().GetText())
+		fmt.Printf("incorrect uintType: %v %v\n", pop.Name, ctx.UintType().GetText())
 	}
 	return pop
 }
@@ -249,7 +248,7 @@ func (v *CqlTestVisitor) VisitDestroy(ctx *DestroyContext) interface{} {
 func TestCqlVisitor(t *testing.T) {
 	fmt.Println("================TestCqlVisitor================")
 
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 desc STRING date UINT64")
+	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 number UINT32 date UINT64 desc STRING")
 	//input := antlr.NewInputStream("IDX.DESTROY orders")
 	lexer := NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)

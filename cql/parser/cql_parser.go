@@ -30,49 +30,49 @@ var parserATN = []uint16{
 	3, 11, 3, 12, 3, 12, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 5, 13, 116, 10,
 	13, 3, 14, 3, 14, 3, 15, 3, 15, 3, 16, 6, 16, 123, 10, 16, 13, 16, 14,
 	16, 124, 3, 17, 3, 17, 3, 17, 3, 17, 3, 18, 3, 18, 3, 18, 5, 18, 134, 10,
-	18, 3, 19, 3, 19, 3, 20, 3, 20, 3, 20, 2, 2, 21, 2, 4, 6, 8, 10, 12, 14,
-	16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 2, 4, 3, 2, 25, 26, 3,
-	2, 20, 24, 2, 137, 2, 45, 3, 2, 2, 2, 4, 47, 3, 2, 2, 2, 6, 68, 3, 2, 2,
-	2, 8, 71, 3, 2, 2, 2, 10, 79, 3, 2, 2, 2, 12, 87, 3, 2, 2, 2, 14, 97, 3,
-	2, 2, 2, 16, 99, 3, 2, 2, 2, 18, 102, 3, 2, 2, 2, 20, 105, 3, 2, 2, 2,
-	22, 108, 3, 2, 2, 2, 24, 115, 3, 2, 2, 2, 26, 117, 3, 2, 2, 2, 28, 119,
-	3, 2, 2, 2, 30, 122, 3, 2, 2, 2, 32, 126, 3, 2, 2, 2, 34, 133, 3, 2, 2,
-	2, 36, 135, 3, 2, 2, 2, 38, 137, 3, 2, 2, 2, 40, 46, 5, 4, 3, 2, 41, 46,
-	5, 6, 4, 2, 42, 46, 5, 8, 5, 2, 43, 46, 5, 10, 6, 2, 44, 46, 5, 12, 7,
-	2, 45, 40, 3, 2, 2, 2, 45, 41, 3, 2, 2, 2, 45, 42, 3, 2, 2, 2, 45, 43,
-	3, 2, 2, 2, 45, 44, 3, 2, 2, 2, 46, 3, 3, 2, 2, 2, 47, 48, 7, 3, 2, 2,
-	48, 49, 5, 14, 8, 2, 49, 53, 7, 4, 2, 2, 50, 52, 5, 16, 9, 2, 51, 50, 3,
-	2, 2, 2, 52, 55, 3, 2, 2, 2, 53, 51, 3, 2, 2, 2, 53, 54, 3, 2, 2, 2, 54,
-	59, 3, 2, 2, 2, 55, 53, 3, 2, 2, 2, 56, 58, 5, 18, 10, 2, 57, 56, 3, 2,
-	2, 2, 58, 61, 3, 2, 2, 2, 59, 57, 3, 2, 2, 2, 59, 60, 3, 2, 2, 2, 60, 65,
-	3, 2, 2, 2, 61, 59, 3, 2, 2, 2, 62, 64, 5, 20, 11, 2, 63, 62, 3, 2, 2,
-	2, 64, 67, 3, 2, 2, 2, 65, 63, 3, 2, 2, 2, 65, 66, 3, 2, 2, 2, 66, 5, 3,
-	2, 2, 2, 67, 65, 3, 2, 2, 2, 68, 69, 7, 5, 2, 2, 69, 70, 5, 14, 8, 2, 70,
-	7, 3, 2, 2, 2, 71, 72, 7, 6, 2, 2, 72, 73, 5, 14, 8, 2, 73, 75, 5, 26,
-	14, 2, 74, 76, 5, 28, 15, 2, 75, 74, 3, 2, 2, 2, 76, 77, 3, 2, 2, 2, 77,
-	75, 3, 2, 2, 2, 77, 78, 3, 2, 2, 2, 78, 9, 3, 2, 2, 2, 79, 80, 7, 7, 2,
-	2, 80, 81, 5, 14, 8, 2, 81, 83, 5, 26, 14, 2, 82, 84, 5, 28, 15, 2, 83,
-	82, 3, 2, 2, 2, 84, 85, 3, 2, 2, 2, 85, 83, 3, 2, 2, 2, 85, 86, 3, 2, 2,
-	2, 86, 11, 3, 2, 2, 2, 87, 88, 7, 8, 2, 2, 88, 89, 5, 14, 8, 2, 89, 90,
-	7, 9, 2, 2, 90, 91, 5, 30, 16, 2, 91, 92, 7, 10, 2, 2, 92, 95, 5, 22, 12,
-	2, 93, 94, 7, 11, 2, 2, 94, 96, 5, 38, 20, 2, 95, 93, 3, 2, 2, 2, 95, 96,
-	3, 2, 2, 2, 96, 13, 3, 2, 2, 2, 97, 98, 7, 28, 2, 2, 98, 15, 3, 2, 2, 2,
-	99, 100, 5, 22, 12, 2, 100, 101, 5, 24, 13, 2, 101, 17, 3, 2, 2, 2, 102,
-	103, 5, 22, 12, 2, 103, 104, 7, 16, 2, 2, 104, 19, 3, 2, 2, 2, 105, 106,
-	5, 22, 12, 2, 106, 107, 7, 17, 2, 2, 107, 21, 3, 2, 2, 2, 108, 109, 7,
-	28, 2, 2, 109, 23, 3, 2, 2, 2, 110, 116, 3, 2, 2, 2, 111, 116, 7, 12, 2,
-	2, 112, 116, 7, 13, 2, 2, 113, 116, 7, 14, 2, 2, 114, 116, 7, 15, 2, 2,
-	115, 110, 3, 2, 2, 2, 115, 111, 3, 2, 2, 2, 115, 112, 3, 2, 2, 2, 115,
-	113, 3, 2, 2, 2, 115, 114, 3, 2, 2, 2, 116, 25, 3, 2, 2, 2, 117, 118, 7,
-	27, 2, 2, 118, 27, 3, 2, 2, 2, 119, 120, 9, 2, 2, 2, 120, 29, 3, 2, 2,
-	2, 121, 123, 5, 32, 17, 2, 122, 121, 3, 2, 2, 2, 123, 124, 3, 2, 2, 2,
-	124, 122, 3, 2, 2, 2, 124, 125, 3, 2, 2, 2, 125, 31, 3, 2, 2, 2, 126, 127,
-	5, 22, 12, 2, 127, 128, 5, 34, 18, 2, 128, 129, 5, 28, 15, 2, 129, 33,
-	3, 2, 2, 2, 130, 134, 5, 36, 19, 2, 131, 134, 7, 18, 2, 2, 132, 134, 7,
-	19, 2, 2, 133, 130, 3, 2, 2, 2, 133, 131, 3, 2, 2, 2, 133, 132, 3, 2, 2,
-	2, 134, 35, 3, 2, 2, 2, 135, 136, 9, 3, 2, 2, 136, 37, 3, 2, 2, 2, 137,
-	138, 7, 27, 2, 2, 138, 39, 3, 2, 2, 2, 12, 45, 53, 59, 65, 77, 85, 95,
-	115, 124, 133,
+	18, 3, 19, 3, 19, 3, 20, 3, 20, 3, 20, 5, 53, 59, 65, 2, 21, 2, 4, 6, 8,
+	10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 2, 4, 3, 2,
+	25, 26, 3, 2, 20, 24, 2, 137, 2, 45, 3, 2, 2, 2, 4, 47, 3, 2, 2, 2, 6,
+	68, 3, 2, 2, 2, 8, 71, 3, 2, 2, 2, 10, 79, 3, 2, 2, 2, 12, 87, 3, 2, 2,
+	2, 14, 97, 3, 2, 2, 2, 16, 99, 3, 2, 2, 2, 18, 102, 3, 2, 2, 2, 20, 105,
+	3, 2, 2, 2, 22, 108, 3, 2, 2, 2, 24, 115, 3, 2, 2, 2, 26, 117, 3, 2, 2,
+	2, 28, 119, 3, 2, 2, 2, 30, 122, 3, 2, 2, 2, 32, 126, 3, 2, 2, 2, 34, 133,
+	3, 2, 2, 2, 36, 135, 3, 2, 2, 2, 38, 137, 3, 2, 2, 2, 40, 46, 5, 4, 3,
+	2, 41, 46, 5, 6, 4, 2, 42, 46, 5, 8, 5, 2, 43, 46, 5, 10, 6, 2, 44, 46,
+	5, 12, 7, 2, 45, 40, 3, 2, 2, 2, 45, 41, 3, 2, 2, 2, 45, 42, 3, 2, 2, 2,
+	45, 43, 3, 2, 2, 2, 45, 44, 3, 2, 2, 2, 46, 3, 3, 2, 2, 2, 47, 48, 7, 3,
+	2, 2, 48, 49, 5, 14, 8, 2, 49, 53, 7, 4, 2, 2, 50, 52, 5, 16, 9, 2, 51,
+	50, 3, 2, 2, 2, 52, 55, 3, 2, 2, 2, 53, 54, 3, 2, 2, 2, 53, 51, 3, 2, 2,
+	2, 54, 59, 3, 2, 2, 2, 55, 53, 3, 2, 2, 2, 56, 58, 5, 18, 10, 2, 57, 56,
+	3, 2, 2, 2, 58, 61, 3, 2, 2, 2, 59, 60, 3, 2, 2, 2, 59, 57, 3, 2, 2, 2,
+	60, 65, 3, 2, 2, 2, 61, 59, 3, 2, 2, 2, 62, 64, 5, 20, 11, 2, 63, 62, 3,
+	2, 2, 2, 64, 67, 3, 2, 2, 2, 65, 66, 3, 2, 2, 2, 65, 63, 3, 2, 2, 2, 66,
+	5, 3, 2, 2, 2, 67, 65, 3, 2, 2, 2, 68, 69, 7, 5, 2, 2, 69, 70, 5, 14, 8,
+	2, 70, 7, 3, 2, 2, 2, 71, 72, 7, 6, 2, 2, 72, 73, 5, 14, 8, 2, 73, 75,
+	5, 26, 14, 2, 74, 76, 5, 28, 15, 2, 75, 74, 3, 2, 2, 2, 76, 77, 3, 2, 2,
+	2, 77, 75, 3, 2, 2, 2, 77, 78, 3, 2, 2, 2, 78, 9, 3, 2, 2, 2, 79, 80, 7,
+	7, 2, 2, 80, 81, 5, 14, 8, 2, 81, 83, 5, 26, 14, 2, 82, 84, 5, 28, 15,
+	2, 83, 82, 3, 2, 2, 2, 84, 85, 3, 2, 2, 2, 85, 83, 3, 2, 2, 2, 85, 86,
+	3, 2, 2, 2, 86, 11, 3, 2, 2, 2, 87, 88, 7, 8, 2, 2, 88, 89, 5, 14, 8, 2,
+	89, 90, 7, 9, 2, 2, 90, 91, 5, 30, 16, 2, 91, 92, 7, 10, 2, 2, 92, 95,
+	5, 22, 12, 2, 93, 94, 7, 11, 2, 2, 94, 96, 5, 38, 20, 2, 95, 93, 3, 2,
+	2, 2, 95, 96, 3, 2, 2, 2, 96, 13, 3, 2, 2, 2, 97, 98, 7, 28, 2, 2, 98,
+	15, 3, 2, 2, 2, 99, 100, 5, 22, 12, 2, 100, 101, 5, 24, 13, 2, 101, 17,
+	3, 2, 2, 2, 102, 103, 5, 22, 12, 2, 103, 104, 7, 16, 2, 2, 104, 19, 3,
+	2, 2, 2, 105, 106, 5, 22, 12, 2, 106, 107, 7, 17, 2, 2, 107, 21, 3, 2,
+	2, 2, 108, 109, 7, 28, 2, 2, 109, 23, 3, 2, 2, 2, 110, 116, 3, 2, 2, 2,
+	111, 116, 7, 12, 2, 2, 112, 116, 7, 13, 2, 2, 113, 116, 7, 14, 2, 2, 114,
+	116, 7, 15, 2, 2, 115, 110, 3, 2, 2, 2, 115, 111, 3, 2, 2, 2, 115, 112,
+	3, 2, 2, 2, 115, 113, 3, 2, 2, 2, 115, 114, 3, 2, 2, 2, 116, 25, 3, 2,
+	2, 2, 117, 118, 7, 27, 2, 2, 118, 27, 3, 2, 2, 2, 119, 120, 9, 2, 2, 2,
+	120, 29, 3, 2, 2, 2, 121, 123, 5, 32, 17, 2, 122, 121, 3, 2, 2, 2, 123,
+	124, 3, 2, 2, 2, 124, 122, 3, 2, 2, 2, 124, 125, 3, 2, 2, 2, 125, 31, 3,
+	2, 2, 2, 126, 127, 5, 22, 12, 2, 127, 128, 5, 34, 18, 2, 128, 129, 5, 28,
+	15, 2, 129, 33, 3, 2, 2, 2, 130, 134, 5, 36, 19, 2, 131, 134, 7, 18, 2,
+	2, 132, 134, 7, 19, 2, 2, 133, 130, 3, 2, 2, 2, 133, 131, 3, 2, 2, 2, 133,
+	132, 3, 2, 2, 2, 134, 35, 3, 2, 2, 2, 135, 136, 9, 3, 2, 2, 136, 37, 3,
+	2, 2, 2, 137, 138, 7, 27, 2, 2, 138, 39, 3, 2, 2, 2, 12, 45, 53, 59, 65,
+	77, 85, 95, 115, 124, 133,
 }
 var deserializer = antlr.NewATNDeserializer(nil)
 var deserializedATN = deserializer.DeserializeFromUInt16(parserATN)
@@ -86,7 +86,7 @@ var literalNames = []string{
 var symbolicNames = []string{
 	"", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16", "K_UINT32",
 	"K_UINT64", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT", "K_BT",
-	"K_EQ", "K_LE", "K_BE", "STRING", "NUMBER", "INT", "Identifier", "WS",
+	"K_EQ", "K_LE", "K_BE", "STRING", "NUMBER", "INT", "IDENTIFIER", "WS",
 }
 
 var ruleNames = []string{
@@ -148,7 +148,7 @@ const (
 	CQLParserSTRING     = 23
 	CQLParserNUMBER     = 24
 	CQLParserINT        = 25
-	CQLParserIdentifier = 26
+	CQLParserIDENTIFIER = 26
 	CQLParserWS         = 27
 )
 
@@ -509,7 +509,6 @@ func (s *CreateContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 func (p *CQLParser) Create() (localctx ICreateContext) {
 	localctx = NewCreateContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 2, CQLParserRULE_create)
-	var _la int
 
 	defer func() {
 		p.ExitRule()
@@ -546,8 +545,8 @@ func (p *CQLParser) Create() (localctx ICreateContext) {
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
 
-	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
-		if _alt == 1 {
+	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1+1 {
 			{
 				p.SetState(48)
 				p.UintPropDef()
@@ -562,8 +561,8 @@ func (p *CQLParser) Create() (localctx ICreateContext) {
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 
-	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
-		if _alt == 1 {
+	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1+1 {
 			{
 				p.SetState(54)
 				p.EnumPropDef()
@@ -576,17 +575,19 @@ func (p *CQLParser) Create() (localctx ICreateContext) {
 	}
 	p.SetState(63)
 	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 
-	for _la == CQLParserIdentifier {
-		{
-			p.SetState(60)
-			p.StrPropDef()
+	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1+1 {
+			{
+				p.SetState(60)
+				p.StrPropDef()
+			}
+
 		}
-
 		p.SetState(65)
 		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 	}
 
 	return localctx
@@ -1240,8 +1241,8 @@ func NewIndexNameContext(parser antlr.Parser, parent antlr.ParserRuleContext, in
 
 func (s *IndexNameContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *IndexNameContext) Identifier() antlr.TerminalNode {
-	return s.GetToken(CQLParserIdentifier, 0)
+func (s *IndexNameContext) IDENTIFIER() antlr.TerminalNode {
+	return s.GetToken(CQLParserIDENTIFIER, 0)
 }
 
 func (s *IndexNameContext) GetRuleContext() antlr.RuleContext {
@@ -1297,7 +1298,7 @@ func (p *CQLParser) IndexName() (localctx IIndexNameContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(95)
-		p.Match(CQLParserIdentifier)
+		p.Match(CQLParserIDENTIFIER)
 	}
 
 	return localctx
@@ -1692,8 +1693,8 @@ func NewPropertyContext(parser antlr.Parser, parent antlr.ParserRuleContext, inv
 
 func (s *PropertyContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *PropertyContext) Identifier() antlr.TerminalNode {
-	return s.GetToken(CQLParserIdentifier, 0)
+func (s *PropertyContext) IDENTIFIER() antlr.TerminalNode {
+	return s.GetToken(CQLParserIDENTIFIER, 0)
 }
 
 func (s *PropertyContext) GetRuleContext() antlr.RuleContext {
@@ -1749,7 +1750,7 @@ func (p *CQLParser) Property() (localctx IPropertyContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(106)
-		p.Match(CQLParserIdentifier)
+		p.Match(CQLParserIDENTIFIER)
 	}
 
 	return localctx
@@ -1863,7 +1864,7 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
-	case CQLParserEOF, CQLParserIdentifier:
+	case CQLParserEOF, CQLParserIDENTIFIER:
 		p.EnterOuterAlt(localctx, 1)
 
 	case CQLParserK_UINT8:
@@ -2230,7 +2231,7 @@ func (p *CQLParser) Predicates() (localctx IPredicatesContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = _la == CQLParserIdentifier {
+	for ok := true; ok; ok = _la == CQLParserIDENTIFIER {
 		{
 			p.SetState(119)
 			p.Predicate()

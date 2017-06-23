@@ -11,7 +11,7 @@ cql
     | query
     ;
 
-create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)* (enumPropDef)* (strPropDef)*;
+create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)*? (enumPropDef)*? (strPropDef)*?;
 
 destroy: 'IDX.DESTROY' indexName;
 
@@ -21,7 +21,7 @@ del: 'IDX.DEL' indexName docId value+;
 
 query: 'IDX.SELECT' indexName 'WHERE' predicates 'ORDERBY' property ('LIMIT' limit)?;
 
-indexName: Identifier;
+indexName: IDENTIFIER;
 
 uintPropDef: property uintType;
 
@@ -29,7 +29,7 @@ enumPropDef: property K_ENUM;
 
 strPropDef: property K_STRING;
 
-property: Identifier;
+property: IDENTIFIER;
 
 uintType:
     | K_UINT8
@@ -115,26 +115,8 @@ fragment EXP
     ;
 
 
-Identifier
-    :   IdentifierNondigit
-        (   IdentifierNondigit
-        |   Digit
-        )*
-    ;
-
-fragment
-IdentifierNondigit
-    : Nondigit
-    ;
-
-fragment
-Nondigit
-    :   [a-zA-Z_]
-    ;
-
-fragment
-Digit
-    :   [0-9]
+IDENTIFIER
+    : [a-zA-Z_]([a-zA-Z0-9_])*
     ;
 
 // \- since - means "range" inside [...]
