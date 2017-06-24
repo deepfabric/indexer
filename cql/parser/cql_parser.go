@@ -16,63 +16,62 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 29, 140,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 28, 139,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
-	18, 4, 19, 9, 19, 4, 20, 9, 20, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 5, 2, 46,
-	10, 2, 3, 3, 3, 3, 3, 3, 3, 3, 7, 3, 52, 10, 3, 12, 3, 14, 3, 55, 11, 3,
-	3, 3, 7, 3, 58, 10, 3, 12, 3, 14, 3, 61, 11, 3, 3, 3, 7, 3, 64, 10, 3,
-	12, 3, 14, 3, 67, 11, 3, 3, 4, 3, 4, 3, 4, 3, 5, 3, 5, 3, 5, 3, 5, 6, 5,
-	76, 10, 5, 13, 5, 14, 5, 77, 3, 6, 3, 6, 3, 6, 3, 6, 6, 6, 84, 10, 6, 13,
-	6, 14, 6, 85, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 5, 7, 96,
-	10, 7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 3, 10, 3, 10, 3, 10, 3, 11, 3, 11,
-	3, 11, 3, 12, 3, 12, 3, 13, 3, 13, 3, 13, 3, 13, 3, 13, 5, 13, 116, 10,
-	13, 3, 14, 3, 14, 3, 15, 3, 15, 3, 16, 6, 16, 123, 10, 16, 13, 16, 14,
-	16, 124, 3, 17, 3, 17, 3, 17, 3, 17, 3, 18, 3, 18, 3, 18, 5, 18, 134, 10,
-	18, 3, 19, 3, 19, 3, 20, 3, 20, 3, 20, 5, 53, 59, 65, 2, 21, 2, 4, 6, 8,
-	10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 2, 4, 3, 2,
-	25, 26, 3, 2, 20, 24, 2, 137, 2, 45, 3, 2, 2, 2, 4, 47, 3, 2, 2, 2, 6,
-	68, 3, 2, 2, 2, 8, 71, 3, 2, 2, 2, 10, 79, 3, 2, 2, 2, 12, 87, 3, 2, 2,
-	2, 14, 97, 3, 2, 2, 2, 16, 99, 3, 2, 2, 2, 18, 102, 3, 2, 2, 2, 20, 105,
-	3, 2, 2, 2, 22, 108, 3, 2, 2, 2, 24, 115, 3, 2, 2, 2, 26, 117, 3, 2, 2,
-	2, 28, 119, 3, 2, 2, 2, 30, 122, 3, 2, 2, 2, 32, 126, 3, 2, 2, 2, 34, 133,
-	3, 2, 2, 2, 36, 135, 3, 2, 2, 2, 38, 137, 3, 2, 2, 2, 40, 46, 5, 4, 3,
-	2, 41, 46, 5, 6, 4, 2, 42, 46, 5, 8, 5, 2, 43, 46, 5, 10, 6, 2, 44, 46,
-	5, 12, 7, 2, 45, 40, 3, 2, 2, 2, 45, 41, 3, 2, 2, 2, 45, 42, 3, 2, 2, 2,
-	45, 43, 3, 2, 2, 2, 45, 44, 3, 2, 2, 2, 46, 3, 3, 2, 2, 2, 47, 48, 7, 3,
-	2, 2, 48, 49, 5, 14, 8, 2, 49, 53, 7, 4, 2, 2, 50, 52, 5, 16, 9, 2, 51,
-	50, 3, 2, 2, 2, 52, 55, 3, 2, 2, 2, 53, 54, 3, 2, 2, 2, 53, 51, 3, 2, 2,
-	2, 54, 59, 3, 2, 2, 2, 55, 53, 3, 2, 2, 2, 56, 58, 5, 18, 10, 2, 57, 56,
-	3, 2, 2, 2, 58, 61, 3, 2, 2, 2, 59, 60, 3, 2, 2, 2, 59, 57, 3, 2, 2, 2,
-	60, 65, 3, 2, 2, 2, 61, 59, 3, 2, 2, 2, 62, 64, 5, 20, 11, 2, 63, 62, 3,
-	2, 2, 2, 64, 67, 3, 2, 2, 2, 65, 66, 3, 2, 2, 2, 65, 63, 3, 2, 2, 2, 66,
-	5, 3, 2, 2, 2, 67, 65, 3, 2, 2, 2, 68, 69, 7, 5, 2, 2, 69, 70, 5, 14, 8,
-	2, 70, 7, 3, 2, 2, 2, 71, 72, 7, 6, 2, 2, 72, 73, 5, 14, 8, 2, 73, 75,
-	5, 26, 14, 2, 74, 76, 5, 28, 15, 2, 75, 74, 3, 2, 2, 2, 76, 77, 3, 2, 2,
-	2, 77, 75, 3, 2, 2, 2, 77, 78, 3, 2, 2, 2, 78, 9, 3, 2, 2, 2, 79, 80, 7,
-	7, 2, 2, 80, 81, 5, 14, 8, 2, 81, 83, 5, 26, 14, 2, 82, 84, 5, 28, 15,
-	2, 83, 82, 3, 2, 2, 2, 84, 85, 3, 2, 2, 2, 85, 83, 3, 2, 2, 2, 85, 86,
-	3, 2, 2, 2, 86, 11, 3, 2, 2, 2, 87, 88, 7, 8, 2, 2, 88, 89, 5, 14, 8, 2,
-	89, 90, 7, 9, 2, 2, 90, 91, 5, 30, 16, 2, 91, 92, 7, 10, 2, 2, 92, 95,
-	5, 22, 12, 2, 93, 94, 7, 11, 2, 2, 94, 96, 5, 38, 20, 2, 95, 93, 3, 2,
-	2, 2, 95, 96, 3, 2, 2, 2, 96, 13, 3, 2, 2, 2, 97, 98, 7, 28, 2, 2, 98,
-	15, 3, 2, 2, 2, 99, 100, 5, 22, 12, 2, 100, 101, 5, 24, 13, 2, 101, 17,
-	3, 2, 2, 2, 102, 103, 5, 22, 12, 2, 103, 104, 7, 16, 2, 2, 104, 19, 3,
-	2, 2, 2, 105, 106, 5, 22, 12, 2, 106, 107, 7, 17, 2, 2, 107, 21, 3, 2,
-	2, 2, 108, 109, 7, 28, 2, 2, 109, 23, 3, 2, 2, 2, 110, 116, 3, 2, 2, 2,
-	111, 116, 7, 12, 2, 2, 112, 116, 7, 13, 2, 2, 113, 116, 7, 14, 2, 2, 114,
-	116, 7, 15, 2, 2, 115, 110, 3, 2, 2, 2, 115, 111, 3, 2, 2, 2, 115, 112,
-	3, 2, 2, 2, 115, 113, 3, 2, 2, 2, 115, 114, 3, 2, 2, 2, 116, 25, 3, 2,
-	2, 2, 117, 118, 7, 27, 2, 2, 118, 27, 3, 2, 2, 2, 119, 120, 9, 2, 2, 2,
-	120, 29, 3, 2, 2, 2, 121, 123, 5, 32, 17, 2, 122, 121, 3, 2, 2, 2, 123,
-	124, 3, 2, 2, 2, 124, 122, 3, 2, 2, 2, 124, 125, 3, 2, 2, 2, 125, 31, 3,
-	2, 2, 2, 126, 127, 5, 22, 12, 2, 127, 128, 5, 34, 18, 2, 128, 129, 5, 28,
-	15, 2, 129, 33, 3, 2, 2, 2, 130, 134, 5, 36, 19, 2, 131, 134, 7, 18, 2,
-	2, 132, 134, 7, 19, 2, 2, 133, 130, 3, 2, 2, 2, 133, 131, 3, 2, 2, 2, 133,
-	132, 3, 2, 2, 2, 134, 35, 3, 2, 2, 2, 135, 136, 9, 3, 2, 2, 136, 37, 3,
-	2, 2, 2, 137, 138, 7, 27, 2, 2, 138, 39, 3, 2, 2, 2, 12, 45, 53, 59, 65,
-	77, 85, 95, 115, 124, 133,
+	18, 4, 19, 9, 19, 4, 20, 9, 20, 4, 21, 9, 21, 3, 2, 3, 2, 3, 2, 3, 2, 3,
+	2, 5, 2, 48, 10, 2, 3, 3, 3, 3, 3, 3, 3, 3, 7, 3, 54, 10, 3, 12, 3, 14,
+	3, 57, 11, 3, 3, 3, 7, 3, 60, 10, 3, 12, 3, 14, 3, 63, 11, 3, 3, 3, 7,
+	3, 66, 10, 3, 12, 3, 14, 3, 69, 11, 3, 3, 4, 3, 4, 3, 4, 3, 5, 3, 5, 3,
+	5, 3, 6, 3, 6, 3, 6, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 5,
+	7, 88, 10, 7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 6, 9, 95, 10, 9, 13, 9, 14,
+	9, 96, 3, 10, 3, 10, 3, 10, 3, 11, 3, 11, 3, 11, 3, 12, 3, 12, 3, 12, 3,
+	13, 3, 13, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 5, 14, 115, 10, 14, 3, 15,
+	3, 15, 3, 16, 3, 16, 3, 17, 6, 17, 122, 10, 17, 13, 17, 14, 17, 123, 3,
+	18, 3, 18, 3, 18, 3, 18, 3, 19, 3, 19, 3, 19, 5, 19, 133, 10, 19, 3, 20,
+	3, 20, 3, 21, 3, 21, 3, 21, 5, 55, 61, 67, 2, 22, 2, 4, 6, 8, 10, 12, 14,
+	16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 2, 4, 3, 2, 25, 26,
+	3, 2, 20, 24, 2, 134, 2, 47, 3, 2, 2, 2, 4, 49, 3, 2, 2, 2, 6, 70, 3, 2,
+	2, 2, 8, 73, 3, 2, 2, 2, 10, 76, 3, 2, 2, 2, 12, 79, 3, 2, 2, 2, 14, 89,
+	3, 2, 2, 2, 16, 91, 3, 2, 2, 2, 18, 98, 3, 2, 2, 2, 20, 101, 3, 2, 2, 2,
+	22, 104, 3, 2, 2, 2, 24, 107, 3, 2, 2, 2, 26, 114, 3, 2, 2, 2, 28, 116,
+	3, 2, 2, 2, 30, 118, 3, 2, 2, 2, 32, 121, 3, 2, 2, 2, 34, 125, 3, 2, 2,
+	2, 36, 132, 3, 2, 2, 2, 38, 134, 3, 2, 2, 2, 40, 136, 3, 2, 2, 2, 42, 48,
+	5, 4, 3, 2, 43, 48, 5, 6, 4, 2, 44, 48, 5, 8, 5, 2, 45, 48, 5, 10, 6, 2,
+	46, 48, 5, 12, 7, 2, 47, 42, 3, 2, 2, 2, 47, 43, 3, 2, 2, 2, 47, 44, 3,
+	2, 2, 2, 47, 45, 3, 2, 2, 2, 47, 46, 3, 2, 2, 2, 48, 3, 3, 2, 2, 2, 49,
+	50, 7, 3, 2, 2, 50, 51, 5, 14, 8, 2, 51, 55, 7, 4, 2, 2, 52, 54, 5, 18,
+	10, 2, 53, 52, 3, 2, 2, 2, 54, 57, 3, 2, 2, 2, 55, 56, 3, 2, 2, 2, 55,
+	53, 3, 2, 2, 2, 56, 61, 3, 2, 2, 2, 57, 55, 3, 2, 2, 2, 58, 60, 5, 20,
+	11, 2, 59, 58, 3, 2, 2, 2, 60, 63, 3, 2, 2, 2, 61, 62, 3, 2, 2, 2, 61,
+	59, 3, 2, 2, 2, 62, 67, 3, 2, 2, 2, 63, 61, 3, 2, 2, 2, 64, 66, 5, 22,
+	12, 2, 65, 64, 3, 2, 2, 2, 66, 69, 3, 2, 2, 2, 67, 68, 3, 2, 2, 2, 67,
+	65, 3, 2, 2, 2, 68, 5, 3, 2, 2, 2, 69, 67, 3, 2, 2, 2, 70, 71, 7, 5, 2,
+	2, 71, 72, 5, 14, 8, 2, 72, 7, 3, 2, 2, 2, 73, 74, 7, 6, 2, 2, 74, 75,
+	5, 16, 9, 2, 75, 9, 3, 2, 2, 2, 76, 77, 7, 7, 2, 2, 77, 78, 5, 16, 9, 2,
+	78, 11, 3, 2, 2, 2, 79, 80, 7, 8, 2, 2, 80, 81, 5, 14, 8, 2, 81, 82, 7,
+	9, 2, 2, 82, 83, 5, 32, 17, 2, 83, 84, 7, 10, 2, 2, 84, 87, 5, 24, 13,
+	2, 85, 86, 7, 11, 2, 2, 86, 88, 5, 40, 21, 2, 87, 85, 3, 2, 2, 2, 87, 88,
+	3, 2, 2, 2, 88, 13, 3, 2, 2, 2, 89, 90, 7, 27, 2, 2, 90, 15, 3, 2, 2, 2,
+	91, 92, 5, 14, 8, 2, 92, 94, 5, 28, 15, 2, 93, 95, 5, 30, 16, 2, 94, 93,
+	3, 2, 2, 2, 95, 96, 3, 2, 2, 2, 96, 94, 3, 2, 2, 2, 96, 97, 3, 2, 2, 2,
+	97, 17, 3, 2, 2, 2, 98, 99, 5, 24, 13, 2, 99, 100, 5, 26, 14, 2, 100, 19,
+	3, 2, 2, 2, 101, 102, 5, 24, 13, 2, 102, 103, 7, 16, 2, 2, 103, 21, 3,
+	2, 2, 2, 104, 105, 5, 24, 13, 2, 105, 106, 7, 17, 2, 2, 106, 23, 3, 2,
+	2, 2, 107, 108, 7, 27, 2, 2, 108, 25, 3, 2, 2, 2, 109, 115, 3, 2, 2, 2,
+	110, 115, 7, 12, 2, 2, 111, 115, 7, 13, 2, 2, 112, 115, 7, 14, 2, 2, 113,
+	115, 7, 15, 2, 2, 114, 109, 3, 2, 2, 2, 114, 110, 3, 2, 2, 2, 114, 111,
+	3, 2, 2, 2, 114, 112, 3, 2, 2, 2, 114, 113, 3, 2, 2, 2, 115, 27, 3, 2,
+	2, 2, 116, 117, 7, 26, 2, 2, 117, 29, 3, 2, 2, 2, 118, 119, 9, 2, 2, 2,
+	119, 31, 3, 2, 2, 2, 120, 122, 5, 34, 18, 2, 121, 120, 3, 2, 2, 2, 122,
+	123, 3, 2, 2, 2, 123, 121, 3, 2, 2, 2, 123, 124, 3, 2, 2, 2, 124, 33, 3,
+	2, 2, 2, 125, 126, 5, 24, 13, 2, 126, 127, 5, 36, 19, 2, 127, 128, 5, 30,
+	16, 2, 128, 35, 3, 2, 2, 2, 129, 133, 5, 38, 20, 2, 130, 133, 7, 18, 2,
+	2, 131, 133, 7, 19, 2, 2, 132, 129, 3, 2, 2, 2, 132, 130, 3, 2, 2, 2, 132,
+	131, 3, 2, 2, 2, 133, 37, 3, 2, 2, 2, 134, 135, 9, 3, 2, 2, 135, 39, 3,
+	2, 2, 2, 136, 137, 7, 26, 2, 2, 137, 41, 3, 2, 2, 2, 11, 47, 55, 61, 67,
+	87, 96, 114, 123, 132,
 }
 var deserializer = antlr.NewATNDeserializer(nil)
 var deserializedATN = deserializer.DeserializeFromUInt16(parserATN)
@@ -86,13 +85,13 @@ var literalNames = []string{
 var symbolicNames = []string{
 	"", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16", "K_UINT32",
 	"K_UINT64", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT", "K_BT",
-	"K_EQ", "K_LE", "K_BE", "STRING", "NUMBER", "INT", "IDENTIFIER", "WS",
+	"K_EQ", "K_LE", "K_BE", "STRING", "INT", "IDENTIFIER", "WS",
 }
 
 var ruleNames = []string{
-	"cql", "create", "destroy", "insert", "del", "query", "indexName", "uintPropDef",
-	"enumPropDef", "strPropDef", "property", "uintType", "docId", "value",
-	"predicates", "predicate", "relate", "compare", "limit",
+	"cql", "create", "destroy", "insert", "del", "query", "indexName", "document",
+	"uintPropDef", "enumPropDef", "strPropDef", "property", "uintType", "docId",
+	"value", "predicates", "predicate", "relate", "compare", "limit",
 }
 var decisionToDFA = make([]*antlr.DFA, len(deserializedATN.DecisionToState))
 
@@ -146,10 +145,9 @@ const (
 	CQLParserK_LE       = 21
 	CQLParserK_BE       = 22
 	CQLParserSTRING     = 23
-	CQLParserNUMBER     = 24
-	CQLParserINT        = 25
-	CQLParserIDENTIFIER = 26
-	CQLParserWS         = 27
+	CQLParserINT        = 24
+	CQLParserIDENTIFIER = 25
+	CQLParserWS         = 26
 )
 
 // CQLParser rules.
@@ -161,18 +159,19 @@ const (
 	CQLParserRULE_del         = 4
 	CQLParserRULE_query       = 5
 	CQLParserRULE_indexName   = 6
-	CQLParserRULE_uintPropDef = 7
-	CQLParserRULE_enumPropDef = 8
-	CQLParserRULE_strPropDef  = 9
-	CQLParserRULE_property    = 10
-	CQLParserRULE_uintType    = 11
-	CQLParserRULE_docId       = 12
-	CQLParserRULE_value       = 13
-	CQLParserRULE_predicates  = 14
-	CQLParserRULE_predicate   = 15
-	CQLParserRULE_relate      = 16
-	CQLParserRULE_compare     = 17
-	CQLParserRULE_limit       = 18
+	CQLParserRULE_document    = 7
+	CQLParserRULE_uintPropDef = 8
+	CQLParserRULE_enumPropDef = 9
+	CQLParserRULE_strPropDef  = 10
+	CQLParserRULE_property    = 11
+	CQLParserRULE_uintType    = 12
+	CQLParserRULE_docId       = 13
+	CQLParserRULE_value       = 14
+	CQLParserRULE_predicates  = 15
+	CQLParserRULE_predicate   = 16
+	CQLParserRULE_relate      = 17
+	CQLParserRULE_compare     = 18
+	CQLParserRULE_limit       = 19
 )
 
 // ICqlContext is an interface to support dynamic dispatch.
@@ -313,42 +312,42 @@ func (p *CQLParser) Cql() (localctx ICqlContext) {
 		}
 	}()
 
-	p.SetState(43)
+	p.SetState(45)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
 	case CQLParserT__0:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(38)
+			p.SetState(40)
 			p.Create()
 		}
 
 	case CQLParserT__2:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(39)
+			p.SetState(41)
 			p.Destroy()
 		}
 
 	case CQLParserT__3:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(40)
+			p.SetState(42)
 			p.Insert()
 		}
 
 	case CQLParserT__4:
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(41)
+			p.SetState(43)
 			p.Del()
 		}
 
 	case CQLParserT__5:
 		p.EnterOuterAlt(localctx, 5)
 		{
-			p.SetState(42)
+			p.SetState(44)
 			p.Query()
 		}
 
@@ -530,62 +529,62 @@ func (p *CQLParser) Create() (localctx ICreateContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(45)
+		p.SetState(47)
 		p.Match(CQLParserT__0)
 	}
 	{
-		p.SetState(46)
+		p.SetState(48)
 		p.IndexName()
 	}
 	{
-		p.SetState(47)
+		p.SetState(49)
 		p.Match(CQLParserT__1)
 	}
-	p.SetState(51)
+	p.SetState(53)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(48)
+				p.SetState(50)
 				p.UintPropDef()
 			}
 
 		}
-		p.SetState(53)
+		p.SetState(55)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
 	}
-	p.SetState(57)
+	p.SetState(59)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(54)
+				p.SetState(56)
 				p.EnumPropDef()
 			}
 
 		}
-		p.SetState(59)
+		p.SetState(61)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 	}
-	p.SetState(63)
+	p.SetState(65)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(60)
+				p.SetState(62)
 				p.StrPropDef()
 			}
 
 		}
-		p.SetState(65)
+		p.SetState(67)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 	}
@@ -693,11 +692,11 @@ func (p *CQLParser) Destroy() (localctx IDestroyContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(66)
+		p.SetState(68)
 		p.Match(CQLParserT__2)
 	}
 	{
-		p.SetState(67)
+		p.SetState(69)
 		p.IndexName()
 	}
 
@@ -742,47 +741,14 @@ func NewInsertContext(parser antlr.Parser, parent antlr.ParserRuleContext, invok
 
 func (s *InsertContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *InsertContext) IndexName() IIndexNameContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IIndexNameContext)(nil)).Elem(), 0)
+func (s *InsertContext) Document() IDocumentContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDocumentContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IIndexNameContext)
-}
-
-func (s *InsertContext) DocId() IDocIdContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDocIdContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IDocIdContext)
-}
-
-func (s *InsertContext) AllValue() []IValueContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IValueContext)(nil)).Elem())
-	var tst = make([]IValueContext, len(ts))
-
-	for i, t := range ts {
-		if t != nil {
-			tst[i] = t.(IValueContext)
-		}
-	}
-
-	return tst
-}
-
-func (s *InsertContext) Value(i int) IValueContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IValueContext)(nil)).Elem(), i)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IValueContext)
+	return t.(IDocumentContext)
 }
 
 func (s *InsertContext) GetRuleContext() antlr.RuleContext {
@@ -818,7 +784,6 @@ func (s *InsertContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 func (p *CQLParser) Insert() (localctx IInsertContext) {
 	localctx = NewInsertContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 6, CQLParserRULE_insert)
-	var _la int
 
 	defer func() {
 		p.ExitRule()
@@ -838,30 +803,12 @@ func (p *CQLParser) Insert() (localctx IInsertContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(69)
+		p.SetState(71)
 		p.Match(CQLParserT__3)
 	}
 	{
-		p.SetState(70)
-		p.IndexName()
-	}
-	{
-		p.SetState(71)
-		p.DocId()
-	}
-	p.SetState(73)
-	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
-
-	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserNUMBER {
-		{
-			p.SetState(72)
-			p.Value()
-		}
-
-		p.SetState(75)
-		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
+		p.SetState(72)
+		p.Document()
 	}
 
 	return localctx
@@ -905,47 +852,14 @@ func NewDelContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoking
 
 func (s *DelContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *DelContext) IndexName() IIndexNameContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IIndexNameContext)(nil)).Elem(), 0)
+func (s *DelContext) Document() IDocumentContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDocumentContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IIndexNameContext)
-}
-
-func (s *DelContext) DocId() IDocIdContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDocIdContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IDocIdContext)
-}
-
-func (s *DelContext) AllValue() []IValueContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IValueContext)(nil)).Elem())
-	var tst = make([]IValueContext, len(ts))
-
-	for i, t := range ts {
-		if t != nil {
-			tst[i] = t.(IValueContext)
-		}
-	}
-
-	return tst
-}
-
-func (s *DelContext) Value(i int) IValueContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IValueContext)(nil)).Elem(), i)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IValueContext)
+	return t.(IDocumentContext)
 }
 
 func (s *DelContext) GetRuleContext() antlr.RuleContext {
@@ -981,7 +895,6 @@ func (s *DelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 func (p *CQLParser) Del() (localctx IDelContext) {
 	localctx = NewDelContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 8, CQLParserRULE_del)
-	var _la int
 
 	defer func() {
 		p.ExitRule()
@@ -1001,30 +914,12 @@ func (p *CQLParser) Del() (localctx IDelContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(77)
+		p.SetState(74)
 		p.Match(CQLParserT__4)
 	}
 	{
-		p.SetState(78)
-		p.IndexName()
-	}
-	{
-		p.SetState(79)
-		p.DocId()
-	}
-	p.SetState(81)
-	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
-
-	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserNUMBER {
-		{
-			p.SetState(80)
-			p.Value()
-		}
-
-		p.SetState(83)
-		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
+		p.SetState(75)
+		p.Document()
 	}
 
 	return localctx
@@ -1161,40 +1056,40 @@ func (p *CQLParser) Query() (localctx IQueryContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(85)
+		p.SetState(77)
 		p.Match(CQLParserT__5)
 	}
 	{
-		p.SetState(86)
+		p.SetState(78)
 		p.IndexName()
 	}
 	{
-		p.SetState(87)
+		p.SetState(79)
 		p.Match(CQLParserT__6)
 	}
 	{
-		p.SetState(88)
+		p.SetState(80)
 		p.Predicates()
 	}
 	{
-		p.SetState(89)
+		p.SetState(81)
 		p.Match(CQLParserT__7)
 	}
 	{
-		p.SetState(90)
+		p.SetState(82)
 		p.Property()
 	}
-	p.SetState(93)
+	p.SetState(85)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == CQLParserT__8 {
 		{
-			p.SetState(91)
+			p.SetState(83)
 			p.Match(CQLParserT__8)
 		}
 		{
-			p.SetState(92)
+			p.SetState(84)
 			p.Limit()
 		}
 
@@ -1297,8 +1192,167 @@ func (p *CQLParser) IndexName() (localctx IIndexNameContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(95)
+		p.SetState(87)
 		p.Match(CQLParserIDENTIFIER)
+	}
+
+	return localctx
+}
+
+// IDocumentContext is an interface to support dynamic dispatch.
+type IDocumentContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsDocumentContext differentiates from other interfaces.
+	IsDocumentContext()
+}
+
+type DocumentContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyDocumentContext() *DocumentContext {
+	var p = new(DocumentContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = CQLParserRULE_document
+	return p
+}
+
+func (*DocumentContext) IsDocumentContext() {}
+
+func NewDocumentContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *DocumentContext {
+	var p = new(DocumentContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = CQLParserRULE_document
+
+	return p
+}
+
+func (s *DocumentContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *DocumentContext) IndexName() IIndexNameContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IIndexNameContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IIndexNameContext)
+}
+
+func (s *DocumentContext) DocId() IDocIdContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IDocIdContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IDocIdContext)
+}
+
+func (s *DocumentContext) AllValue() []IValueContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IValueContext)(nil)).Elem())
+	var tst = make([]IValueContext, len(ts))
+
+	for i, t := range ts {
+		if t != nil {
+			tst[i] = t.(IValueContext)
+		}
+	}
+
+	return tst
+}
+
+func (s *DocumentContext) Value(i int) IValueContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IValueContext)(nil)).Elem(), i)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IValueContext)
+}
+
+func (s *DocumentContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *DocumentContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *DocumentContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.EnterDocument(s)
+	}
+}
+
+func (s *DocumentContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.ExitDocument(s)
+	}
+}
+
+func (s *DocumentContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case CQLVisitor:
+		return t.VisitDocument(s)
+
+	default:
+		return t.VisitChildren(s)
+	}
+}
+
+func (p *CQLParser) Document() (localctx IDocumentContext) {
+	localctx = NewDocumentContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 14, CQLParserRULE_document)
+	var _la int
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(89)
+		p.IndexName()
+	}
+	{
+		p.SetState(90)
+		p.DocId()
+	}
+	p.SetState(92)
+	p.GetErrorHandler().Sync(p)
+	_la = p.GetTokenStream().LA(1)
+
+	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserINT {
+		{
+			p.SetState(91)
+			p.Value()
+		}
+
+		p.SetState(94)
+		p.GetErrorHandler().Sync(p)
+		_la = p.GetTokenStream().LA(1)
 	}
 
 	return localctx
@@ -1394,7 +1448,7 @@ func (s *UintPropDefContext) Accept(visitor antlr.ParseTreeVisitor) interface{} 
 
 func (p *CQLParser) UintPropDef() (localctx IUintPropDefContext) {
 	localctx = NewUintPropDefContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 14, CQLParserRULE_uintPropDef)
+	p.EnterRule(localctx, 16, CQLParserRULE_uintPropDef)
 
 	defer func() {
 		p.ExitRule()
@@ -1414,11 +1468,11 @@ func (p *CQLParser) UintPropDef() (localctx IUintPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(97)
+		p.SetState(96)
 		p.Property()
 	}
 	{
-		p.SetState(98)
+		p.SetState(97)
 		p.UintType()
 	}
 
@@ -1509,7 +1563,7 @@ func (s *EnumPropDefContext) Accept(visitor antlr.ParseTreeVisitor) interface{} 
 
 func (p *CQLParser) EnumPropDef() (localctx IEnumPropDefContext) {
 	localctx = NewEnumPropDefContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 16, CQLParserRULE_enumPropDef)
+	p.EnterRule(localctx, 18, CQLParserRULE_enumPropDef)
 
 	defer func() {
 		p.ExitRule()
@@ -1529,11 +1583,11 @@ func (p *CQLParser) EnumPropDef() (localctx IEnumPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(100)
+		p.SetState(99)
 		p.Property()
 	}
 	{
-		p.SetState(101)
+		p.SetState(100)
 		p.Match(CQLParserK_ENUM)
 	}
 
@@ -1624,7 +1678,7 @@ func (s *StrPropDefContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) StrPropDef() (localctx IStrPropDefContext) {
 	localctx = NewStrPropDefContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 18, CQLParserRULE_strPropDef)
+	p.EnterRule(localctx, 20, CQLParserRULE_strPropDef)
 
 	defer func() {
 		p.ExitRule()
@@ -1644,11 +1698,11 @@ func (p *CQLParser) StrPropDef() (localctx IStrPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(103)
+		p.SetState(102)
 		p.Property()
 	}
 	{
-		p.SetState(104)
+		p.SetState(103)
 		p.Match(CQLParserK_STRING)
 	}
 
@@ -1729,7 +1783,7 @@ func (s *PropertyContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Property() (localctx IPropertyContext) {
 	localctx = NewPropertyContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 20, CQLParserRULE_property)
+	p.EnterRule(localctx, 22, CQLParserRULE_property)
 
 	defer func() {
 		p.ExitRule()
@@ -1749,7 +1803,7 @@ func (p *CQLParser) Property() (localctx IPropertyContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(106)
+		p.SetState(105)
 		p.Match(CQLParserIDENTIFIER)
 	}
 
@@ -1842,7 +1896,7 @@ func (s *UintTypeContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	localctx = NewUintTypeContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 22, CQLParserRULE_uintType)
+	p.EnterRule(localctx, 24, CQLParserRULE_uintType)
 
 	defer func() {
 		p.ExitRule()
@@ -1860,7 +1914,7 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 		}
 	}()
 
-	p.SetState(113)
+	p.SetState(112)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
@@ -1870,28 +1924,28 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	case CQLParserK_UINT8:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(109)
+			p.SetState(108)
 			p.Match(CQLParserK_UINT8)
 		}
 
 	case CQLParserK_UINT16:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(110)
+			p.SetState(109)
 			p.Match(CQLParserK_UINT16)
 		}
 
 	case CQLParserK_UINT32:
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(111)
+			p.SetState(110)
 			p.Match(CQLParserK_UINT32)
 		}
 
 	case CQLParserK_UINT64:
 		p.EnterOuterAlt(localctx, 5)
 		{
-			p.SetState(112)
+			p.SetState(111)
 			p.Match(CQLParserK_UINT64)
 		}
 
@@ -1976,7 +2030,7 @@ func (s *DocIdContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) DocId() (localctx IDocIdContext) {
 	localctx = NewDocIdContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 24, CQLParserRULE_docId)
+	p.EnterRule(localctx, 26, CQLParserRULE_docId)
 
 	defer func() {
 		p.ExitRule()
@@ -1996,7 +2050,7 @@ func (p *CQLParser) DocId() (localctx IDocIdContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(115)
+		p.SetState(114)
 		p.Match(CQLParserINT)
 	}
 
@@ -2041,8 +2095,8 @@ func NewValueContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 
 func (s *ValueContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ValueContext) NUMBER() antlr.TerminalNode {
-	return s.GetToken(CQLParserNUMBER, 0)
+func (s *ValueContext) INT() antlr.TerminalNode {
+	return s.GetToken(CQLParserINT, 0)
 }
 
 func (s *ValueContext) STRING() antlr.TerminalNode {
@@ -2081,7 +2135,7 @@ func (s *ValueContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Value() (localctx IValueContext) {
 	localctx = NewValueContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 26, CQLParserRULE_value)
+	p.EnterRule(localctx, 28, CQLParserRULE_value)
 	var _la int
 
 	defer func() {
@@ -2101,10 +2155,10 @@ func (p *CQLParser) Value() (localctx IValueContext) {
 	}()
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(117)
+	p.SetState(116)
 	_la = p.GetTokenStream().LA(1)
 
-	if !(_la == CQLParserSTRING || _la == CQLParserNUMBER) {
+	if !(_la == CQLParserSTRING || _la == CQLParserINT) {
 		p.GetErrorHandler().RecoverInline(p)
 	} else {
 		p.GetErrorHandler().ReportMatch(p)
@@ -2207,7 +2261,7 @@ func (s *PredicatesContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Predicates() (localctx IPredicatesContext) {
 	localctx = NewPredicatesContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 28, CQLParserRULE_predicates)
+	p.EnterRule(localctx, 30, CQLParserRULE_predicates)
 	var _la int
 
 	defer func() {
@@ -2227,17 +2281,17 @@ func (p *CQLParser) Predicates() (localctx IPredicatesContext) {
 	}()
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(120)
+	p.SetState(119)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for ok := true; ok; ok = _la == CQLParserIDENTIFIER {
 		{
-			p.SetState(119)
+			p.SetState(118)
 			p.Predicate()
 		}
 
-		p.SetState(122)
+		p.SetState(121)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
@@ -2345,7 +2399,7 @@ func (s *PredicateContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Predicate() (localctx IPredicateContext) {
 	localctx = NewPredicateContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 30, CQLParserRULE_predicate)
+	p.EnterRule(localctx, 32, CQLParserRULE_predicate)
 
 	defer func() {
 		p.ExitRule()
@@ -2365,15 +2419,15 @@ func (p *CQLParser) Predicate() (localctx IPredicateContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(124)
+		p.SetState(123)
 		p.Property()
 	}
 	{
-		p.SetState(125)
+		p.SetState(124)
 		p.Relate()
 	}
 	{
-		p.SetState(126)
+		p.SetState(125)
 		p.Value()
 	}
 
@@ -2468,7 +2522,7 @@ func (s *RelateContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Relate() (localctx IRelateContext) {
 	localctx = NewRelateContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 32, CQLParserRULE_relate)
+	p.EnterRule(localctx, 34, CQLParserRULE_relate)
 
 	defer func() {
 		p.ExitRule()
@@ -2486,28 +2540,28 @@ func (p *CQLParser) Relate() (localctx IRelateContext) {
 		}
 	}()
 
-	p.SetState(131)
+	p.SetState(130)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
 	case CQLParserK_LT, CQLParserK_BT, CQLParserK_EQ, CQLParserK_LE, CQLParserK_BE:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(128)
+			p.SetState(127)
 			p.Compare()
 		}
 
 	case CQLParserK_IN:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(129)
+			p.SetState(128)
 			p.Match(CQLParserK_IN)
 		}
 
 	case CQLParserK_CONTAINS:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(130)
+			p.SetState(129)
 			p.Match(CQLParserK_CONTAINS)
 		}
 
@@ -2608,7 +2662,7 @@ func (s *CompareContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Compare() (localctx ICompareContext) {
 	localctx = NewCompareContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 34, CQLParserRULE_compare)
+	p.EnterRule(localctx, 36, CQLParserRULE_compare)
 	var _la int
 
 	defer func() {
@@ -2628,7 +2682,7 @@ func (p *CQLParser) Compare() (localctx ICompareContext) {
 	}()
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(133)
+	p.SetState(132)
 	_la = p.GetTokenStream().LA(1)
 
 	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserK_LT)|(1<<CQLParserK_BT)|(1<<CQLParserK_EQ)|(1<<CQLParserK_LE)|(1<<CQLParserK_BE))) != 0) {
@@ -2715,7 +2769,7 @@ func (s *LimitContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Limit() (localctx ILimitContext) {
 	localctx = NewLimitContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 36, CQLParserRULE_limit)
+	p.EnterRule(localctx, 38, CQLParserRULE_limit)
 
 	defer func() {
 		p.ExitRule()
@@ -2735,7 +2789,7 @@ func (p *CQLParser) Limit() (localctx ILimitContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(135)
+		p.SetState(134)
 		p.Match(CQLParserINT)
 	}
 

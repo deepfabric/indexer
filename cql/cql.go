@@ -3,6 +3,8 @@ package cql
 import (
 	"fmt"
 
+	"strconv"
+
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/deepfabric/indexer/cql/parser"
 	"github.com/pkg/errors"
@@ -34,15 +36,20 @@ type StrProp struct {
 }
 
 type Document struct {
+	DocID     uint64
 	UintProps []UintProp
 	EnumProps []EnumProp
 	StrProps  []StrProp
 }
 
+type DocumentWithIdx struct {
+	Document
+	Index string
+}
+
 type IndexDef struct {
-	Index     string
+	DocumentWithIdx
 	PropTypes map[string]int //property name -> type
-	DocProt   Document
 }
 
 type UintPred struct {
@@ -69,12 +76,11 @@ type CqlDestroy struct {
 }
 
 type CqlInsert struct {
-	Index string
-	Doc   Document
+	DocumentWithIdx
 }
 
 type CqlDel struct {
-	CqlInsert
+	DocumentWithIdx
 }
 
 type CqlQuery struct {
@@ -101,7 +107,8 @@ func (el *myErrListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbo
 
 type myCqlVisitor struct {
 	parser.BaseCQLVisitor
-	res interface{} //record the result of visitor
+	indexDefs map[string]IndexDef
+	res       interface{} //record the result of visitor
 }
 
 func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) interface{} {
@@ -110,27 +117,34 @@ func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) interface{} {
 		v.res = v.VisitCreate(create.(*parser.CreateContext))
 	} else if destroy := ctx.Destroy(); destroy != nil {
 		v.res = v.VisitDestroy(destroy.(*parser.DestroyContext))
+	} else if ins := ctx.Insert(); ins != nil {
+		v.res = v.VisitInsert(ins.(*parser.InsertContext))
+	} else if del := ctx.Del(); del != nil {
+		v.res = v.VisitDel(del.(*parser.DelContext))
 	}
-	return nil
+	return nil //TODO: better to log something and return error?
 }
 
 func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) interface{} {
-	q := new(CqlCreate)
-	q.PropTypes = make(map[string]int)
+	q := &CqlCreate{}
 	q.Index = ctx.IndexName().GetText()
+	q.PropTypes = make(map[string]int)
 	for _, popDef := range ctx.AllUintPropDef() {
 		pop := v.VisitUintPropDef(popDef.(*parser.UintPropDefContext))
-		q.DocProt.UintProps = append(q.DocProt.UintProps, pop.(UintProp))
+		if pop.(UintProp).ValLen == 0 {
+			continue
+		}
+		q.UintProps = append(q.UintProps, pop.(UintProp))
 	}
 	for _, popDef := range ctx.AllEnumPropDef() {
 		pop := v.VisitEnumPropDef(popDef.(*parser.EnumPropDefContext))
-		q.DocProt.EnumProps = append(q.DocProt.EnumProps, pop.(EnumProp))
+		q.EnumProps = append(q.EnumProps, pop.(EnumProp))
 	}
 	for _, popDef := range ctx.AllStrPropDef() {
 		pop := v.VisitStrPropDef(popDef.(*parser.StrPropDefContext))
-		q.DocProt.StrProps = append(q.DocProt.StrProps, pop.(StrProp))
+		q.StrProps = append(q.StrProps, pop.(StrProp))
 	}
-	for _, pop := range q.DocProt.UintProps {
+	for _, pop := range q.UintProps {
 		switch pop.ValLen {
 		case 1:
 			q.PropTypes[pop.Name] = TypeUint8
@@ -144,10 +158,10 @@ func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) interface{} {
 			panic(fmt.Sprintf("incorrect pop.ValLen %d", pop.ValLen))
 		}
 	}
-	for _, pop := range q.DocProt.EnumProps {
+	for _, pop := range q.EnumProps {
 		q.PropTypes[pop.Name] = TypeEnum
 	}
-	for _, pop := range q.DocProt.StrProps {
+	for _, pop := range q.StrProps {
 		q.PropTypes[pop.Name] = TypeStr
 	}
 	return q
@@ -186,9 +200,71 @@ func (v *myCqlVisitor) VisitStrPropDef(ctx *parser.StrPropDefContext) interface{
 }
 
 func (v *myCqlVisitor) VisitDestroy(ctx *parser.DestroyContext) interface{} {
-	var q CqlDestroy
+	q := &CqlDestroy{}
 	q.Index = ctx.IndexName().GetText()
 	return q
+}
+
+func (v *myCqlVisitor) VisitInsert(ctx *parser.InsertContext) interface{} {
+	itf := v.VisitDocument(ctx.Document().(*parser.DocumentContext))
+	if itf == nil {
+		return nil
+	}
+	doc := itf.(*DocumentWithIdx)
+	q := &CqlInsert{} //TODO: better way to copy doc?
+	q.DocumentWithIdx = *doc
+	return q
+}
+
+func (v *myCqlVisitor) VisitDel(ctx *parser.DelContext) interface{} {
+	itf := v.VisitDocument(ctx.Document().(*parser.DocumentContext))
+	if itf == nil {
+		return nil
+	}
+	doc := itf.(*DocumentWithIdx)
+	q := &CqlDel{} //TODO: better way to copy doc?
+	q.DocumentWithIdx = *doc
+	return q
+}
+
+func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) interface{} {
+	index := ctx.IndexName().GetText()
+	indexDef, ok := v.indexDefs[index]
+	if !ok {
+		fmt.Printf("failed to find the definion of index %s\n", index)
+		return nil //TODO: it's better to log something and return error?
+	} else if len(indexDef.PropTypes) != len(ctx.AllValue()) {
+		fmt.Printf("incorrect number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
+		return nil
+	}
+	doc := &DocumentWithIdx{}
+	*doc = indexDef.DocumentWithIdx
+	doc.Index = ctx.IndexName().GetText()
+	u64, err := strconv.ParseUint(ctx.DocId().GetText(), 10, 64)
+	if err != nil {
+		return nil
+	}
+	doc.DocID = u64
+
+	vals := ctx.AllValue()
+	for i := 0; i < len(doc.UintProps); i++ {
+		u64, err := strconv.ParseUint(vals[i].GetText(), 10, 64)
+		if err != nil {
+			return nil
+		}
+		doc.UintProps[i].Val = u64
+	}
+	for i := 0; i < len(doc.EnumProps); i++ {
+		tmp, err := strconv.Atoi(vals[i+len(doc.UintProps)].GetText())
+		if err != nil {
+			return nil
+		}
+		doc.EnumProps[i].Val = tmp
+	}
+	for i := 0; i < len(doc.StrProps); i++ {
+		doc.StrProps[i].Val = vals[i+len(doc.UintProps)+len(doc.EnumProps)].GetText()
+	}
+	return doc
 }
 
 //ParseCql parse CQL. res type is one of CqlCreate/CqlDestroy/CqlInsert/CqlDel/CqlQuery.
@@ -206,7 +282,7 @@ func ParseCql(cql string, indexDefs map[string]IndexDef) (res interface{}, err e
 		return
 	}
 
-	visitor := new(myCqlVisitor)
+	visitor := &myCqlVisitor{indexDefs: indexDefs}
 	tree.Accept(visitor)
 	res = visitor.res
 

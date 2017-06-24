@@ -130,18 +130,24 @@ func (l *CqlTestListener) ExitCreate(ctx *CreateContext) {
 	fmt.Printf("create indexName: %v\n", ctx.IndexName().GetText())
 }
 
-//POC of listener
+//POC of listener. Printing every token's type helps to find grammer ambiguity.
 func TestCqlListener(t *testing.T) {
 	fmt.Println("================TestCqlListener================")
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64 desc STRING")
-	lexer := NewCQLLexer(input)
-	stream := antlr.NewCommonTokenStream(lexer, 0)
-	parser := NewCQLParser(stream)
-	//parser.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
-	//parser.BuildParseTrees = true
-	tree := parser.Cql()
-	listener := NewCqlTestListener()
-	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+	tcs := []string{
+		"IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64 desc STRING",
+		"IDX.INSERT orders 615 11 22 33 44 \"description\"",
+	}
+	for _, tc := range tcs {
+		input := antlr.NewInputStream(tc)
+		lexer := NewCQLLexer(input)
+		stream := antlr.NewCommonTokenStream(lexer, 0)
+		parser := NewCQLParser(stream)
+		//parser.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+		//parser.BuildParseTrees = true
+		tree := parser.Cql()
+		listener := NewCqlTestListener()
+		antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+	}
 }
 
 type CqlTestVisitor struct {
@@ -189,6 +195,9 @@ func (v *CqlTestVisitor) VisitCreate(ctx *CreateContext) interface{} {
 	var doc Document
 	for _, popDef := range ctx.AllUintPropDef() {
 		pop := v.VisitUintPropDef(popDef.(*UintPropDefContext))
+		if pop.(UintProp).ValLen == 0 {
+			continue
+		}
 		doc.UintProps = append(doc.UintProps, pop.(UintProp))
 	}
 	for _, popDef := range ctx.AllEnumPropDef() {
@@ -248,7 +257,7 @@ func (v *CqlTestVisitor) VisitDestroy(ctx *DestroyContext) interface{} {
 func TestCqlVisitor(t *testing.T) {
 	fmt.Println("================TestCqlVisitor================")
 
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 number UINT32 date UINT64 desc STRING")
+	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 number UINT32 date UINT64 price FLOAT desc STRING")
 	//input := antlr.NewInputStream("IDX.DESTROY orders")
 	lexer := NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)

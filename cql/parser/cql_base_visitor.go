@@ -36,6 +36,10 @@ func (v *BaseCQLVisitor) VisitIndexName(ctx *IndexNameContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseCQLVisitor) VisitDocument(ctx *DocumentContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseCQLVisitor) VisitUintPropDef(ctx *UintPropDefContext) interface{} {
 	return v.VisitChildren(ctx)
 }

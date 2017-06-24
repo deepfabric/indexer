@@ -29,6 +29,9 @@ type CQLListener interface {
 	// EnterIndexName is called when entering the indexName production.
 	EnterIndexName(c *IndexNameContext)
 
+	// EnterDocument is called when entering the document production.
+	EnterDocument(c *DocumentContext)
+
 	// EnterUintPropDef is called when entering the uintPropDef production.
 	EnterUintPropDef(c *UintPropDefContext)
 
@@ -85,6 +88,9 @@ type CQLListener interface {
 
 	// ExitIndexName is called when exiting the indexName production.
 	ExitIndexName(c *IndexNameContext)
+
+	// ExitDocument is called when exiting the document production.
+	ExitDocument(c *DocumentContext)
 
 	// ExitUintPropDef is called when exiting the uintPropDef production.
 	ExitUintPropDef(c *UintPropDefContext)

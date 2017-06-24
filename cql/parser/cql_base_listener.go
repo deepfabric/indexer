@@ -63,6 +63,12 @@ func (s *BaseCQLListener) EnterIndexName(ctx *IndexNameContext) {}
 // ExitIndexName is called when production indexName is exited.
 func (s *BaseCQLListener) ExitIndexName(ctx *IndexNameContext) {}
 
+// EnterDocument is called when production document is entered.
+func (s *BaseCQLListener) EnterDocument(ctx *DocumentContext) {}
+
+// ExitDocument is called when production document is exited.
+func (s *BaseCQLListener) ExitDocument(ctx *DocumentContext) {}
+
 // EnterUintPropDef is called when production uintPropDef is entered.
 func (s *BaseCQLListener) EnterUintPropDef(ctx *UintPropDefContext) {}
 

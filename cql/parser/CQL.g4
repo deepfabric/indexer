@@ -15,13 +15,15 @@ create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)*? (enumPropDef)*? (strProp
 
 destroy: 'IDX.DESTROY' indexName;
 
-insert: 'IDX.INSERT' indexName docId value+;
+insert: 'IDX.INSERT' document;
 
-del: 'IDX.DEL' indexName docId value+;
+del: 'IDX.DEL' document;
 
 query: 'IDX.SELECT' indexName 'WHERE' predicates 'ORDERBY' property ('LIMIT' limit)?;
 
 indexName: IDENTIFIER;
+
+document: indexName docId value+;
 
 uintPropDef: property uintType;
 
@@ -41,7 +43,7 @@ uintType:
 docId: INT;
 
 value
-    : NUMBER
+    : INT
     | STRING
     ;
 
@@ -99,14 +101,10 @@ fragment HEX
     ;
 
 
-NUMBER
-    : '-'? INT '.' [0-9] + EXP? | '-'? INT EXP | '-'? INT
-    ;
-
-
 INT
     : '0' | [1-9] [0-9]*
     ;
+
 
 // no leading zeros
 

@@ -29,6 +29,9 @@ type CQLVisitor interface {
 	// Visit a parse tree produced by CQLParser#indexName.
 	VisitIndexName(ctx *IndexNameContext) interface{}
 
+	// Visit a parse tree produced by CQLParser#document.
+	VisitDocument(ctx *DocumentContext) interface{}
+
 	// Visit a parse tree produced by CQLParser#uintPropDef.
 	VisitUintPropDef(ctx *UintPropDefContext) interface{}
 
