@@ -16,82 +16,97 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 28, 139,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 31, 173,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
-	18, 4, 19, 9, 19, 4, 20, 9, 20, 4, 21, 9, 21, 3, 2, 3, 2, 3, 2, 3, 2, 3,
-	2, 5, 2, 48, 10, 2, 3, 3, 3, 3, 3, 3, 3, 3, 7, 3, 54, 10, 3, 12, 3, 14,
-	3, 57, 11, 3, 3, 3, 7, 3, 60, 10, 3, 12, 3, 14, 3, 63, 11, 3, 3, 3, 7,
-	3, 66, 10, 3, 12, 3, 14, 3, 69, 11, 3, 3, 4, 3, 4, 3, 4, 3, 5, 3, 5, 3,
-	5, 3, 6, 3, 6, 3, 6, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 3, 7, 5,
-	7, 88, 10, 7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 6, 9, 95, 10, 9, 13, 9, 14,
-	9, 96, 3, 10, 3, 10, 3, 10, 3, 11, 3, 11, 3, 11, 3, 12, 3, 12, 3, 12, 3,
-	13, 3, 13, 3, 14, 3, 14, 3, 14, 3, 14, 3, 14, 5, 14, 115, 10, 14, 3, 15,
-	3, 15, 3, 16, 3, 16, 3, 17, 6, 17, 122, 10, 17, 13, 17, 14, 17, 123, 3,
-	18, 3, 18, 3, 18, 3, 18, 3, 19, 3, 19, 3, 19, 5, 19, 133, 10, 19, 3, 20,
-	3, 20, 3, 21, 3, 21, 3, 21, 5, 55, 61, 67, 2, 22, 2, 4, 6, 8, 10, 12, 14,
-	16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 2, 4, 3, 2, 25, 26,
-	3, 2, 20, 24, 2, 134, 2, 47, 3, 2, 2, 2, 4, 49, 3, 2, 2, 2, 6, 70, 3, 2,
-	2, 2, 8, 73, 3, 2, 2, 2, 10, 76, 3, 2, 2, 2, 12, 79, 3, 2, 2, 2, 14, 89,
-	3, 2, 2, 2, 16, 91, 3, 2, 2, 2, 18, 98, 3, 2, 2, 2, 20, 101, 3, 2, 2, 2,
-	22, 104, 3, 2, 2, 2, 24, 107, 3, 2, 2, 2, 26, 114, 3, 2, 2, 2, 28, 116,
-	3, 2, 2, 2, 30, 118, 3, 2, 2, 2, 32, 121, 3, 2, 2, 2, 34, 125, 3, 2, 2,
-	2, 36, 132, 3, 2, 2, 2, 38, 134, 3, 2, 2, 2, 40, 136, 3, 2, 2, 2, 42, 48,
-	5, 4, 3, 2, 43, 48, 5, 6, 4, 2, 44, 48, 5, 8, 5, 2, 45, 48, 5, 10, 6, 2,
-	46, 48, 5, 12, 7, 2, 47, 42, 3, 2, 2, 2, 47, 43, 3, 2, 2, 2, 47, 44, 3,
-	2, 2, 2, 47, 45, 3, 2, 2, 2, 47, 46, 3, 2, 2, 2, 48, 3, 3, 2, 2, 2, 49,
-	50, 7, 3, 2, 2, 50, 51, 5, 14, 8, 2, 51, 55, 7, 4, 2, 2, 52, 54, 5, 18,
-	10, 2, 53, 52, 3, 2, 2, 2, 54, 57, 3, 2, 2, 2, 55, 56, 3, 2, 2, 2, 55,
-	53, 3, 2, 2, 2, 56, 61, 3, 2, 2, 2, 57, 55, 3, 2, 2, 2, 58, 60, 5, 20,
-	11, 2, 59, 58, 3, 2, 2, 2, 60, 63, 3, 2, 2, 2, 61, 62, 3, 2, 2, 2, 61,
-	59, 3, 2, 2, 2, 62, 67, 3, 2, 2, 2, 63, 61, 3, 2, 2, 2, 64, 66, 5, 22,
-	12, 2, 65, 64, 3, 2, 2, 2, 66, 69, 3, 2, 2, 2, 67, 68, 3, 2, 2, 2, 67,
-	65, 3, 2, 2, 2, 68, 5, 3, 2, 2, 2, 69, 67, 3, 2, 2, 2, 70, 71, 7, 5, 2,
-	2, 71, 72, 5, 14, 8, 2, 72, 7, 3, 2, 2, 2, 73, 74, 7, 6, 2, 2, 74, 75,
-	5, 16, 9, 2, 75, 9, 3, 2, 2, 2, 76, 77, 7, 7, 2, 2, 77, 78, 5, 16, 9, 2,
-	78, 11, 3, 2, 2, 2, 79, 80, 7, 8, 2, 2, 80, 81, 5, 14, 8, 2, 81, 82, 7,
-	9, 2, 2, 82, 83, 5, 32, 17, 2, 83, 84, 7, 10, 2, 2, 84, 87, 5, 24, 13,
-	2, 85, 86, 7, 11, 2, 2, 86, 88, 5, 40, 21, 2, 87, 85, 3, 2, 2, 2, 87, 88,
-	3, 2, 2, 2, 88, 13, 3, 2, 2, 2, 89, 90, 7, 27, 2, 2, 90, 15, 3, 2, 2, 2,
-	91, 92, 5, 14, 8, 2, 92, 94, 5, 28, 15, 2, 93, 95, 5, 30, 16, 2, 94, 93,
-	3, 2, 2, 2, 95, 96, 3, 2, 2, 2, 96, 94, 3, 2, 2, 2, 96, 97, 3, 2, 2, 2,
-	97, 17, 3, 2, 2, 2, 98, 99, 5, 24, 13, 2, 99, 100, 5, 26, 14, 2, 100, 19,
-	3, 2, 2, 2, 101, 102, 5, 24, 13, 2, 102, 103, 7, 16, 2, 2, 103, 21, 3,
-	2, 2, 2, 104, 105, 5, 24, 13, 2, 105, 106, 7, 17, 2, 2, 106, 23, 3, 2,
-	2, 2, 107, 108, 7, 27, 2, 2, 108, 25, 3, 2, 2, 2, 109, 115, 3, 2, 2, 2,
-	110, 115, 7, 12, 2, 2, 111, 115, 7, 13, 2, 2, 112, 115, 7, 14, 2, 2, 113,
-	115, 7, 15, 2, 2, 114, 109, 3, 2, 2, 2, 114, 110, 3, 2, 2, 2, 114, 111,
-	3, 2, 2, 2, 114, 112, 3, 2, 2, 2, 114, 113, 3, 2, 2, 2, 115, 27, 3, 2,
-	2, 2, 116, 117, 7, 26, 2, 2, 117, 29, 3, 2, 2, 2, 118, 119, 9, 2, 2, 2,
-	119, 31, 3, 2, 2, 2, 120, 122, 5, 34, 18, 2, 121, 120, 3, 2, 2, 2, 122,
-	123, 3, 2, 2, 2, 123, 121, 3, 2, 2, 2, 123, 124, 3, 2, 2, 2, 124, 33, 3,
-	2, 2, 2, 125, 126, 5, 24, 13, 2, 126, 127, 5, 36, 19, 2, 127, 128, 5, 30,
-	16, 2, 128, 35, 3, 2, 2, 2, 129, 133, 5, 38, 20, 2, 130, 133, 7, 18, 2,
-	2, 131, 133, 7, 19, 2, 2, 132, 129, 3, 2, 2, 2, 132, 130, 3, 2, 2, 2, 132,
-	131, 3, 2, 2, 2, 133, 37, 3, 2, 2, 2, 134, 135, 9, 3, 2, 2, 135, 39, 3,
-	2, 2, 2, 136, 137, 7, 26, 2, 2, 137, 41, 3, 2, 2, 2, 11, 47, 55, 61, 67,
-	87, 96, 114, 123, 132,
+	18, 4, 19, 9, 19, 4, 20, 9, 20, 4, 21, 9, 21, 4, 22, 9, 22, 4, 23, 9, 23,
+	3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 5, 2, 52, 10, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+	7, 3, 58, 10, 3, 12, 3, 14, 3, 61, 11, 3, 3, 3, 7, 3, 64, 10, 3, 12, 3,
+	14, 3, 67, 11, 3, 3, 3, 7, 3, 70, 10, 3, 12, 3, 14, 3, 73, 11, 3, 3, 4,
+	3, 4, 3, 4, 3, 5, 3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 3, 7, 3, 7, 3, 7, 3, 7,
+	7, 7, 88, 10, 7, 12, 7, 14, 7, 91, 11, 7, 3, 7, 7, 7, 94, 10, 7, 12, 7,
+	14, 7, 97, 11, 7, 3, 7, 7, 7, 100, 10, 7, 12, 7, 14, 7, 103, 11, 7, 3,
+	7, 3, 7, 5, 7, 107, 10, 7, 3, 7, 3, 7, 5, 7, 111, 10, 7, 3, 8, 3, 8, 3,
+	9, 3, 9, 3, 9, 6, 9, 118, 10, 9, 13, 9, 14, 9, 119, 3, 10, 3, 10, 3, 10,
+	3, 11, 3, 11, 3, 11, 3, 12, 3, 12, 3, 12, 3, 13, 3, 13, 3, 14, 3, 14, 3,
+	15, 3, 15, 3, 15, 3, 15, 3, 15, 5, 15, 140, 10, 15, 3, 16, 3, 16, 3, 17,
+	3, 17, 3, 18, 3, 18, 3, 18, 3, 18, 3, 19, 3, 19, 3, 19, 3, 19, 3, 20, 3,
+	20, 3, 20, 3, 20, 3, 21, 3, 21, 3, 22, 3, 22, 3, 22, 3, 22, 7, 22, 164,
+	10, 22, 12, 22, 14, 22, 167, 11, 22, 3, 22, 3, 22, 3, 23, 3, 23, 3, 23,
+	5, 59, 65, 71, 2, 24, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+	30, 32, 34, 36, 38, 40, 42, 44, 2, 4, 3, 2, 28, 29, 3, 2, 23, 27, 2, 168,
+	2, 51, 3, 2, 2, 2, 4, 53, 3, 2, 2, 2, 6, 74, 3, 2, 2, 2, 8, 77, 3, 2, 2,
+	2, 10, 80, 3, 2, 2, 2, 12, 83, 3, 2, 2, 2, 14, 112, 3, 2, 2, 2, 16, 114,
+	3, 2, 2, 2, 18, 121, 3, 2, 2, 2, 20, 124, 3, 2, 2, 2, 22, 127, 3, 2, 2,
+	2, 24, 130, 3, 2, 2, 2, 26, 132, 3, 2, 2, 2, 28, 139, 3, 2, 2, 2, 30, 141,
+	3, 2, 2, 2, 32, 143, 3, 2, 2, 2, 34, 145, 3, 2, 2, 2, 36, 149, 3, 2, 2,
+	2, 38, 153, 3, 2, 2, 2, 40, 157, 3, 2, 2, 2, 42, 159, 3, 2, 2, 2, 44, 170,
+	3, 2, 2, 2, 46, 52, 5, 4, 3, 2, 47, 52, 5, 6, 4, 2, 48, 52, 5, 8, 5, 2,
+	49, 52, 5, 10, 6, 2, 50, 52, 5, 12, 7, 2, 51, 46, 3, 2, 2, 2, 51, 47, 3,
+	2, 2, 2, 51, 48, 3, 2, 2, 2, 51, 49, 3, 2, 2, 2, 51, 50, 3, 2, 2, 2, 52,
+	3, 3, 2, 2, 2, 53, 54, 7, 3, 2, 2, 54, 55, 5, 14, 8, 2, 55, 59, 7, 4, 2,
+	2, 56, 58, 5, 18, 10, 2, 57, 56, 3, 2, 2, 2, 58, 61, 3, 2, 2, 2, 59, 60,
+	3, 2, 2, 2, 59, 57, 3, 2, 2, 2, 60, 65, 3, 2, 2, 2, 61, 59, 3, 2, 2, 2,
+	62, 64, 5, 20, 11, 2, 63, 62, 3, 2, 2, 2, 64, 67, 3, 2, 2, 2, 65, 66, 3,
+	2, 2, 2, 65, 63, 3, 2, 2, 2, 66, 71, 3, 2, 2, 2, 67, 65, 3, 2, 2, 2, 68,
+	70, 5, 22, 12, 2, 69, 68, 3, 2, 2, 2, 70, 73, 3, 2, 2, 2, 71, 72, 3, 2,
+	2, 2, 71, 69, 3, 2, 2, 2, 72, 5, 3, 2, 2, 2, 73, 71, 3, 2, 2, 2, 74, 75,
+	7, 5, 2, 2, 75, 76, 5, 14, 8, 2, 76, 7, 3, 2, 2, 2, 77, 78, 7, 6, 2, 2,
+	78, 79, 5, 16, 9, 2, 79, 9, 3, 2, 2, 2, 80, 81, 7, 7, 2, 2, 81, 82, 5,
+	16, 9, 2, 82, 11, 3, 2, 2, 2, 83, 84, 7, 8, 2, 2, 84, 85, 5, 14, 8, 2,
+	85, 89, 7, 9, 2, 2, 86, 88, 5, 34, 18, 2, 87, 86, 3, 2, 2, 2, 88, 91, 3,
+	2, 2, 2, 89, 87, 3, 2, 2, 2, 89, 90, 3, 2, 2, 2, 90, 95, 3, 2, 2, 2, 91,
+	89, 3, 2, 2, 2, 92, 94, 5, 36, 19, 2, 93, 92, 3, 2, 2, 2, 94, 97, 3, 2,
+	2, 2, 95, 93, 3, 2, 2, 2, 95, 96, 3, 2, 2, 2, 96, 101, 3, 2, 2, 2, 97,
+	95, 3, 2, 2, 2, 98, 100, 5, 38, 20, 2, 99, 98, 3, 2, 2, 2, 100, 103, 3,
+	2, 2, 2, 101, 99, 3, 2, 2, 2, 101, 102, 3, 2, 2, 2, 102, 106, 3, 2, 2,
+	2, 103, 101, 3, 2, 2, 2, 104, 105, 7, 10, 2, 2, 105, 107, 5, 24, 13, 2,
+	106, 104, 3, 2, 2, 2, 106, 107, 3, 2, 2, 2, 107, 110, 3, 2, 2, 2, 108,
+	109, 7, 11, 2, 2, 109, 111, 5, 44, 23, 2, 110, 108, 3, 2, 2, 2, 110, 111,
+	3, 2, 2, 2, 111, 13, 3, 2, 2, 2, 112, 113, 7, 30, 2, 2, 113, 15, 3, 2,
+	2, 2, 114, 115, 5, 14, 8, 2, 115, 117, 5, 30, 16, 2, 116, 118, 5, 32, 17,
+	2, 117, 116, 3, 2, 2, 2, 118, 119, 3, 2, 2, 2, 119, 117, 3, 2, 2, 2, 119,
+	120, 3, 2, 2, 2, 120, 17, 3, 2, 2, 2, 121, 122, 5, 26, 14, 2, 122, 123,
+	5, 28, 15, 2, 123, 19, 3, 2, 2, 2, 124, 125, 5, 26, 14, 2, 125, 126, 7,
+	19, 2, 2, 126, 21, 3, 2, 2, 2, 127, 128, 5, 26, 14, 2, 128, 129, 7, 20,
+	2, 2, 129, 23, 3, 2, 2, 2, 130, 131, 5, 26, 14, 2, 131, 25, 3, 2, 2, 2,
+	132, 133, 7, 30, 2, 2, 133, 27, 3, 2, 2, 2, 134, 140, 3, 2, 2, 2, 135,
+	140, 7, 15, 2, 2, 136, 140, 7, 16, 2, 2, 137, 140, 7, 17, 2, 2, 138, 140,
+	7, 18, 2, 2, 139, 134, 3, 2, 2, 2, 139, 135, 3, 2, 2, 2, 139, 136, 3, 2,
+	2, 2, 139, 137, 3, 2, 2, 2, 139, 138, 3, 2, 2, 2, 140, 29, 3, 2, 2, 2,
+	141, 142, 7, 29, 2, 2, 142, 31, 3, 2, 2, 2, 143, 144, 9, 2, 2, 2, 144,
+	33, 3, 2, 2, 2, 145, 146, 5, 26, 14, 2, 146, 147, 5, 40, 21, 2, 147, 148,
+	7, 29, 2, 2, 148, 35, 3, 2, 2, 2, 149, 150, 5, 26, 14, 2, 150, 151, 7,
+	21, 2, 2, 151, 152, 5, 42, 22, 2, 152, 37, 3, 2, 2, 2, 153, 154, 5, 26,
+	14, 2, 154, 155, 7, 22, 2, 2, 155, 156, 7, 28, 2, 2, 156, 39, 3, 2, 2,
+	2, 157, 158, 9, 3, 2, 2, 158, 41, 3, 2, 2, 2, 159, 160, 7, 12, 2, 2, 160,
+	165, 7, 29, 2, 2, 161, 162, 7, 13, 2, 2, 162, 164, 7, 29, 2, 2, 163, 161,
+	3, 2, 2, 2, 164, 167, 3, 2, 2, 2, 165, 163, 3, 2, 2, 2, 165, 166, 3, 2,
+	2, 2, 166, 168, 3, 2, 2, 2, 167, 165, 3, 2, 2, 2, 168, 169, 7, 14, 2, 2,
+	169, 43, 3, 2, 2, 2, 170, 171, 7, 29, 2, 2, 171, 45, 3, 2, 2, 2, 14, 51,
+	59, 65, 71, 89, 95, 101, 106, 110, 119, 139, 165,
 }
 var deserializer = antlr.NewATNDeserializer(nil)
 var deserializedATN = deserializer.DeserializeFromUInt16(parserATN)
 
 var literalNames = []string{
 	"", "'IDX.CREATE'", "'SCHEMA'", "'IDX.DESTROY'", "'IDX.INSERT'", "'IDX.DEL'",
-	"'IDX.SELECT'", "'WHERE'", "'ORDERBY'", "'LIMIT'", "'UINT8'", "'UINT16'",
-	"'UINT32'", "'UINT64'", "'ENUM'", "'STRING'", "'IN'", "'CONTAINS'", "'<'",
-	"'>'", "'='", "'<='", "'>='",
+	"'IDX.SELECT'", "'WHERE'", "'ORDERBY'", "'LIMIT'", "'['", "','", "']'",
+	"'UINT8'", "'UINT16'", "'UINT32'", "'UINT64'", "'ENUM'", "'STRING'", "'IN'",
+	"'CONTAINS'", "'<'", "'>'", "'='", "'<='", "'>='",
 }
 var symbolicNames = []string{
-	"", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16", "K_UINT32",
-	"K_UINT64", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT", "K_BT",
-	"K_EQ", "K_LE", "K_BE", "STRING", "INT", "IDENTIFIER", "WS",
+	"", "", "", "", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16",
+	"K_UINT32", "K_UINT64", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT",
+	"K_BT", "K_EQ", "K_LE", "K_BE", "STRING", "INT", "IDENTIFIER", "WS",
 }
 
 var ruleNames = []string{
 	"cql", "create", "destroy", "insert", "del", "query", "indexName", "document",
-	"uintPropDef", "enumPropDef", "strPropDef", "property", "uintType", "docId",
-	"value", "predicates", "predicate", "relate", "compare", "limit",
+	"uintPropDef", "enumPropDef", "strPropDef", "order", "property", "uintType",
+	"docId", "value", "uintPred", "enumPred", "strPred", "compare", "intList",
+	"limit",
 }
 var decisionToDFA = make([]*antlr.DFA, len(deserializedATN.DecisionToState))
 
@@ -131,23 +146,26 @@ const (
 	CQLParserT__6       = 7
 	CQLParserT__7       = 8
 	CQLParserT__8       = 9
-	CQLParserK_UINT8    = 10
-	CQLParserK_UINT16   = 11
-	CQLParserK_UINT32   = 12
-	CQLParserK_UINT64   = 13
-	CQLParserK_ENUM     = 14
-	CQLParserK_STRING   = 15
-	CQLParserK_IN       = 16
-	CQLParserK_CONTAINS = 17
-	CQLParserK_LT       = 18
-	CQLParserK_BT       = 19
-	CQLParserK_EQ       = 20
-	CQLParserK_LE       = 21
-	CQLParserK_BE       = 22
-	CQLParserSTRING     = 23
-	CQLParserINT        = 24
-	CQLParserIDENTIFIER = 25
-	CQLParserWS         = 26
+	CQLParserT__9       = 10
+	CQLParserT__10      = 11
+	CQLParserT__11      = 12
+	CQLParserK_UINT8    = 13
+	CQLParserK_UINT16   = 14
+	CQLParserK_UINT32   = 15
+	CQLParserK_UINT64   = 16
+	CQLParserK_ENUM     = 17
+	CQLParserK_STRING   = 18
+	CQLParserK_IN       = 19
+	CQLParserK_CONTAINS = 20
+	CQLParserK_LT       = 21
+	CQLParserK_BT       = 22
+	CQLParserK_EQ       = 23
+	CQLParserK_LE       = 24
+	CQLParserK_BE       = 25
+	CQLParserSTRING     = 26
+	CQLParserINT        = 27
+	CQLParserIDENTIFIER = 28
+	CQLParserWS         = 29
 )
 
 // CQLParser rules.
@@ -163,15 +181,17 @@ const (
 	CQLParserRULE_uintPropDef = 8
 	CQLParserRULE_enumPropDef = 9
 	CQLParserRULE_strPropDef  = 10
-	CQLParserRULE_property    = 11
-	CQLParserRULE_uintType    = 12
-	CQLParserRULE_docId       = 13
-	CQLParserRULE_value       = 14
-	CQLParserRULE_predicates  = 15
-	CQLParserRULE_predicate   = 16
-	CQLParserRULE_relate      = 17
-	CQLParserRULE_compare     = 18
-	CQLParserRULE_limit       = 19
+	CQLParserRULE_order       = 11
+	CQLParserRULE_property    = 12
+	CQLParserRULE_uintType    = 13
+	CQLParserRULE_docId       = 14
+	CQLParserRULE_value       = 15
+	CQLParserRULE_uintPred    = 16
+	CQLParserRULE_enumPred    = 17
+	CQLParserRULE_strPred     = 18
+	CQLParserRULE_compare     = 19
+	CQLParserRULE_intList     = 20
+	CQLParserRULE_limit       = 21
 )
 
 // ICqlContext is an interface to support dynamic dispatch.
@@ -312,42 +332,42 @@ func (p *CQLParser) Cql() (localctx ICqlContext) {
 		}
 	}()
 
-	p.SetState(45)
+	p.SetState(49)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
 	case CQLParserT__0:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(40)
+			p.SetState(44)
 			p.Create()
 		}
 
 	case CQLParserT__2:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(41)
+			p.SetState(45)
 			p.Destroy()
 		}
 
 	case CQLParserT__3:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(42)
+			p.SetState(46)
 			p.Insert()
 		}
 
 	case CQLParserT__4:
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(43)
+			p.SetState(47)
 			p.Del()
 		}
 
 	case CQLParserT__5:
 		p.EnterOuterAlt(localctx, 5)
 		{
-			p.SetState(44)
+			p.SetState(48)
 			p.Query()
 		}
 
@@ -529,62 +549,62 @@ func (p *CQLParser) Create() (localctx ICreateContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(47)
+		p.SetState(51)
 		p.Match(CQLParserT__0)
 	}
 	{
-		p.SetState(48)
+		p.SetState(52)
 		p.IndexName()
 	}
 	{
-		p.SetState(49)
+		p.SetState(53)
 		p.Match(CQLParserT__1)
 	}
-	p.SetState(53)
+	p.SetState(57)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(50)
+				p.SetState(54)
 				p.UintPropDef()
 			}
 
 		}
-		p.SetState(55)
+		p.SetState(59)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
 	}
-	p.SetState(59)
+	p.SetState(63)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(56)
+				p.SetState(60)
 				p.EnumPropDef()
 			}
 
 		}
-		p.SetState(61)
+		p.SetState(65)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 	}
-	p.SetState(65)
+	p.SetState(69)
 	p.GetErrorHandler().Sync(p)
 	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 
 	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1+1 {
 			{
-				p.SetState(62)
+				p.SetState(66)
 				p.StrPropDef()
 			}
 
 		}
-		p.SetState(67)
+		p.SetState(71)
 		p.GetErrorHandler().Sync(p)
 		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 	}
@@ -692,11 +712,11 @@ func (p *CQLParser) Destroy() (localctx IDestroyContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(68)
+		p.SetState(72)
 		p.Match(CQLParserT__2)
 	}
 	{
-		p.SetState(69)
+		p.SetState(73)
 		p.IndexName()
 	}
 
@@ -803,11 +823,11 @@ func (p *CQLParser) Insert() (localctx IInsertContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(71)
+		p.SetState(75)
 		p.Match(CQLParserT__3)
 	}
 	{
-		p.SetState(72)
+		p.SetState(76)
 		p.Document()
 	}
 
@@ -914,11 +934,11 @@ func (p *CQLParser) Del() (localctx IDelContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(74)
+		p.SetState(78)
 		p.Match(CQLParserT__4)
 	}
 	{
-		p.SetState(75)
+		p.SetState(79)
 		p.Document()
 	}
 
@@ -973,24 +993,83 @@ func (s *QueryContext) IndexName() IIndexNameContext {
 	return t.(IIndexNameContext)
 }
 
-func (s *QueryContext) Predicates() IPredicatesContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPredicatesContext)(nil)).Elem(), 0)
+func (s *QueryContext) AllUintPred() []IUintPredContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IUintPredContext)(nil)).Elem())
+	var tst = make([]IUintPredContext, len(ts))
 
-	if t == nil {
-		return nil
+	for i, t := range ts {
+		if t != nil {
+			tst[i] = t.(IUintPredContext)
+		}
 	}
 
-	return t.(IPredicatesContext)
+	return tst
 }
 
-func (s *QueryContext) Property() IPropertyContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPropertyContext)(nil)).Elem(), 0)
+func (s *QueryContext) UintPred(i int) IUintPredContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IUintPredContext)(nil)).Elem(), i)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IPropertyContext)
+	return t.(IUintPredContext)
+}
+
+func (s *QueryContext) AllEnumPred() []IEnumPredContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IEnumPredContext)(nil)).Elem())
+	var tst = make([]IEnumPredContext, len(ts))
+
+	for i, t := range ts {
+		if t != nil {
+			tst[i] = t.(IEnumPredContext)
+		}
+	}
+
+	return tst
+}
+
+func (s *QueryContext) EnumPred(i int) IEnumPredContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IEnumPredContext)(nil)).Elem(), i)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IEnumPredContext)
+}
+
+func (s *QueryContext) AllStrPred() []IStrPredContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IStrPredContext)(nil)).Elem())
+	var tst = make([]IStrPredContext, len(ts))
+
+	for i, t := range ts {
+		if t != nil {
+			tst[i] = t.(IStrPredContext)
+		}
+	}
+
+	return tst
+}
+
+func (s *QueryContext) StrPred(i int) IStrPredContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IStrPredContext)(nil)).Elem(), i)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IStrPredContext)
+}
+
+func (s *QueryContext) Order() IOrderContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IOrderContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IOrderContext)
 }
 
 func (s *QueryContext) Limit() ILimitContext {
@@ -1054,42 +1133,93 @@ func (p *CQLParser) Query() (localctx IQueryContext) {
 		}
 	}()
 
+	var _alt int
+
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(77)
+		p.SetState(81)
 		p.Match(CQLParserT__5)
 	}
 	{
-		p.SetState(78)
+		p.SetState(82)
 		p.IndexName()
 	}
 	{
-		p.SetState(79)
+		p.SetState(83)
 		p.Match(CQLParserT__6)
 	}
-	{
-		p.SetState(80)
-		p.Predicates()
+	p.SetState(87)
+	p.GetErrorHandler().Sync(p)
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 4, p.GetParserRuleContext())
+
+	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1 {
+			{
+				p.SetState(84)
+				p.UintPred()
+			}
+
+		}
+		p.SetState(89)
+		p.GetErrorHandler().Sync(p)
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 4, p.GetParserRuleContext())
 	}
-	{
-		p.SetState(81)
-		p.Match(CQLParserT__7)
+	p.SetState(93)
+	p.GetErrorHandler().Sync(p)
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 5, p.GetParserRuleContext())
+
+	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1 {
+			{
+				p.SetState(90)
+				p.EnumPred()
+			}
+
+		}
+		p.SetState(95)
+		p.GetErrorHandler().Sync(p)
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 5, p.GetParserRuleContext())
 	}
-	{
-		p.SetState(82)
-		p.Property()
+	p.SetState(99)
+	p.GetErrorHandler().Sync(p)
+	_la = p.GetTokenStream().LA(1)
+
+	for _la == CQLParserIDENTIFIER {
+		{
+			p.SetState(96)
+			p.StrPred()
+		}
+
+		p.SetState(101)
+		p.GetErrorHandler().Sync(p)
+		_la = p.GetTokenStream().LA(1)
 	}
-	p.SetState(85)
+	p.SetState(104)
+	p.GetErrorHandler().Sync(p)
+	_la = p.GetTokenStream().LA(1)
+
+	if _la == CQLParserT__7 {
+		{
+			p.SetState(102)
+			p.Match(CQLParserT__7)
+		}
+		{
+			p.SetState(103)
+			p.Order()
+		}
+
+	}
+	p.SetState(108)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == CQLParserT__8 {
 		{
-			p.SetState(83)
+			p.SetState(106)
 			p.Match(CQLParserT__8)
 		}
 		{
-			p.SetState(84)
+			p.SetState(107)
 			p.Limit()
 		}
 
@@ -1192,7 +1322,7 @@ func (p *CQLParser) IndexName() (localctx IIndexNameContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(87)
+		p.SetState(110)
 		p.Match(CQLParserIDENTIFIER)
 	}
 
@@ -1333,24 +1463,24 @@ func (p *CQLParser) Document() (localctx IDocumentContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(89)
+		p.SetState(112)
 		p.IndexName()
 	}
 	{
-		p.SetState(90)
+		p.SetState(113)
 		p.DocId()
 	}
-	p.SetState(92)
+	p.SetState(115)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserINT {
 		{
-			p.SetState(91)
+			p.SetState(114)
 			p.Value()
 		}
 
-		p.SetState(94)
+		p.SetState(117)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
 	}
@@ -1468,11 +1598,11 @@ func (p *CQLParser) UintPropDef() (localctx IUintPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(96)
+		p.SetState(119)
 		p.Property()
 	}
 	{
-		p.SetState(97)
+		p.SetState(120)
 		p.UintType()
 	}
 
@@ -1583,11 +1713,11 @@ func (p *CQLParser) EnumPropDef() (localctx IEnumPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(99)
+		p.SetState(122)
 		p.Property()
 	}
 	{
-		p.SetState(100)
+		p.SetState(123)
 		p.Match(CQLParserK_ENUM)
 	}
 
@@ -1698,12 +1828,119 @@ func (p *CQLParser) StrPropDef() (localctx IStrPropDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(102)
+		p.SetState(125)
 		p.Property()
 	}
 	{
-		p.SetState(103)
+		p.SetState(126)
 		p.Match(CQLParserK_STRING)
+	}
+
+	return localctx
+}
+
+// IOrderContext is an interface to support dynamic dispatch.
+type IOrderContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsOrderContext differentiates from other interfaces.
+	IsOrderContext()
+}
+
+type OrderContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyOrderContext() *OrderContext {
+	var p = new(OrderContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = CQLParserRULE_order
+	return p
+}
+
+func (*OrderContext) IsOrderContext() {}
+
+func NewOrderContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *OrderContext {
+	var p = new(OrderContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = CQLParserRULE_order
+
+	return p
+}
+
+func (s *OrderContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *OrderContext) Property() IPropertyContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPropertyContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IPropertyContext)
+}
+
+func (s *OrderContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *OrderContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *OrderContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.EnterOrder(s)
+	}
+}
+
+func (s *OrderContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.ExitOrder(s)
+	}
+}
+
+func (s *OrderContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case CQLVisitor:
+		return t.VisitOrder(s)
+
+	default:
+		return t.VisitChildren(s)
+	}
+}
+
+func (p *CQLParser) Order() (localctx IOrderContext) {
+	localctx = NewOrderContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 22, CQLParserRULE_order)
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(128)
+		p.Property()
 	}
 
 	return localctx
@@ -1783,7 +2020,7 @@ func (s *PropertyContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Property() (localctx IPropertyContext) {
 	localctx = NewPropertyContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 22, CQLParserRULE_property)
+	p.EnterRule(localctx, 24, CQLParserRULE_property)
 
 	defer func() {
 		p.ExitRule()
@@ -1803,7 +2040,7 @@ func (p *CQLParser) Property() (localctx IPropertyContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(105)
+		p.SetState(130)
 		p.Match(CQLParserIDENTIFIER)
 	}
 
@@ -1896,7 +2133,7 @@ func (s *UintTypeContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	localctx = NewUintTypeContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 24, CQLParserRULE_uintType)
+	p.EnterRule(localctx, 26, CQLParserRULE_uintType)
 
 	defer func() {
 		p.ExitRule()
@@ -1914,7 +2151,7 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 		}
 	}()
 
-	p.SetState(112)
+	p.SetState(137)
 	p.GetErrorHandler().Sync(p)
 
 	switch p.GetTokenStream().LA(1) {
@@ -1924,28 +2161,28 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	case CQLParserK_UINT8:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(108)
+			p.SetState(133)
 			p.Match(CQLParserK_UINT8)
 		}
 
 	case CQLParserK_UINT16:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(109)
+			p.SetState(134)
 			p.Match(CQLParserK_UINT16)
 		}
 
 	case CQLParserK_UINT32:
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(110)
+			p.SetState(135)
 			p.Match(CQLParserK_UINT32)
 		}
 
 	case CQLParserK_UINT64:
 		p.EnterOuterAlt(localctx, 5)
 		{
-			p.SetState(111)
+			p.SetState(136)
 			p.Match(CQLParserK_UINT64)
 		}
 
@@ -2030,7 +2267,7 @@ func (s *DocIdContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) DocId() (localctx IDocIdContext) {
 	localctx = NewDocIdContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 26, CQLParserRULE_docId)
+	p.EnterRule(localctx, 28, CQLParserRULE_docId)
 
 	defer func() {
 		p.ExitRule()
@@ -2050,7 +2287,7 @@ func (p *CQLParser) DocId() (localctx IDocIdContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(114)
+		p.SetState(139)
 		p.Match(CQLParserINT)
 	}
 
@@ -2135,7 +2372,7 @@ func (s *ValueContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Value() (localctx IValueContext) {
 	localctx = NewValueContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 28, CQLParserRULE_value)
+	p.EnterRule(localctx, 30, CQLParserRULE_value)
 	var _la int
 
 	defer func() {
@@ -2155,7 +2392,7 @@ func (p *CQLParser) Value() (localctx IValueContext) {
 	}()
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(116)
+	p.SetState(141)
 	_la = p.GetTokenStream().LA(1)
 
 	if !(_la == CQLParserSTRING || _la == CQLParserINT) {
@@ -2168,176 +2405,45 @@ func (p *CQLParser) Value() (localctx IValueContext) {
 	return localctx
 }
 
-// IPredicatesContext is an interface to support dynamic dispatch.
-type IPredicatesContext interface {
+// IUintPredContext is an interface to support dynamic dispatch.
+type IUintPredContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// IsPredicatesContext differentiates from other interfaces.
-	IsPredicatesContext()
+	// IsUintPredContext differentiates from other interfaces.
+	IsUintPredContext()
 }
 
-type PredicatesContext struct {
+type UintPredContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyPredicatesContext() *PredicatesContext {
-	var p = new(PredicatesContext)
+func NewEmptyUintPredContext() *UintPredContext {
+	var p = new(UintPredContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = CQLParserRULE_predicates
+	p.RuleIndex = CQLParserRULE_uintPred
 	return p
 }
 
-func (*PredicatesContext) IsPredicatesContext() {}
+func (*UintPredContext) IsUintPredContext() {}
 
-func NewPredicatesContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *PredicatesContext {
-	var p = new(PredicatesContext)
+func NewUintPredContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UintPredContext {
+	var p = new(UintPredContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = CQLParserRULE_predicates
+	p.RuleIndex = CQLParserRULE_uintPred
 
 	return p
 }
 
-func (s *PredicatesContext) GetParser() antlr.Parser { return s.parser }
+func (s *UintPredContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *PredicatesContext) AllPredicate() []IPredicateContext {
-	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IPredicateContext)(nil)).Elem())
-	var tst = make([]IPredicateContext, len(ts))
-
-	for i, t := range ts {
-		if t != nil {
-			tst[i] = t.(IPredicateContext)
-		}
-	}
-
-	return tst
-}
-
-func (s *PredicatesContext) Predicate(i int) IPredicateContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPredicateContext)(nil)).Elem(), i)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IPredicateContext)
-}
-
-func (s *PredicatesContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *PredicatesContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
-	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-func (s *PredicatesContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.EnterPredicates(s)
-	}
-}
-
-func (s *PredicatesContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.ExitPredicates(s)
-	}
-}
-
-func (s *PredicatesContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case CQLVisitor:
-		return t.VisitPredicates(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
-func (p *CQLParser) Predicates() (localctx IPredicatesContext) {
-	localctx = NewPredicatesContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 30, CQLParserRULE_predicates)
-	var _la int
-
-	defer func() {
-		p.ExitRule()
-	}()
-
-	defer func() {
-		if err := recover(); err != nil {
-			if v, ok := err.(antlr.RecognitionException); ok {
-				localctx.SetException(v)
-				p.GetErrorHandler().ReportError(p, v)
-				p.GetErrorHandler().Recover(p, v)
-			} else {
-				panic(err)
-			}
-		}
-	}()
-
-	p.EnterOuterAlt(localctx, 1)
-	p.SetState(119)
-	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
-
-	for ok := true; ok; ok = _la == CQLParserIDENTIFIER {
-		{
-			p.SetState(118)
-			p.Predicate()
-		}
-
-		p.SetState(121)
-		p.GetErrorHandler().Sync(p)
-		_la = p.GetTokenStream().LA(1)
-	}
-
-	return localctx
-}
-
-// IPredicateContext is an interface to support dynamic dispatch.
-type IPredicateContext interface {
-	antlr.ParserRuleContext
-
-	// GetParser returns the parser.
-	GetParser() antlr.Parser
-
-	// IsPredicateContext differentiates from other interfaces.
-	IsPredicateContext()
-}
-
-type PredicateContext struct {
-	*antlr.BaseParserRuleContext
-	parser antlr.Parser
-}
-
-func NewEmptyPredicateContext() *PredicateContext {
-	var p = new(PredicateContext)
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = CQLParserRULE_predicate
-	return p
-}
-
-func (*PredicateContext) IsPredicateContext() {}
-
-func NewPredicateContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *PredicateContext {
-	var p = new(PredicateContext)
-
-	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
-
-	p.parser = parser
-	p.RuleIndex = CQLParserRULE_predicate
-
-	return p
-}
-
-func (s *PredicateContext) GetParser() antlr.Parser { return s.parser }
-
-func (s *PredicateContext) Property() IPropertyContext {
+func (s *UintPredContext) Property() IPropertyContext {
 	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPropertyContext)(nil)).Elem(), 0)
 
 	if t == nil {
@@ -2347,59 +2453,53 @@ func (s *PredicateContext) Property() IPropertyContext {
 	return t.(IPropertyContext)
 }
 
-func (s *PredicateContext) Relate() IRelateContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IRelateContext)(nil)).Elem(), 0)
+func (s *UintPredContext) Compare() ICompareContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*ICompareContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IRelateContext)
+	return t.(ICompareContext)
 }
 
-func (s *PredicateContext) Value() IValueContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IValueContext)(nil)).Elem(), 0)
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IValueContext)
+func (s *UintPredContext) INT() antlr.TerminalNode {
+	return s.GetToken(CQLParserINT, 0)
 }
 
-func (s *PredicateContext) GetRuleContext() antlr.RuleContext {
+func (s *UintPredContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *PredicateContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *UintPredContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *PredicateContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *UintPredContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.EnterPredicate(s)
+		listenerT.EnterUintPred(s)
 	}
 }
 
-func (s *PredicateContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *UintPredContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.ExitPredicate(s)
+		listenerT.ExitUintPred(s)
 	}
 }
 
-func (s *PredicateContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *UintPredContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case CQLVisitor:
-		return t.VisitPredicate(s)
+		return t.VisitUintPred(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *CQLParser) Predicate() (localctx IPredicateContext) {
-	localctx = NewPredicateContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 32, CQLParserRULE_predicate)
+func (p *CQLParser) UintPred() (localctx IUintPredContext) {
+	localctx = NewUintPredContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 32, CQLParserRULE_uintPred)
 
 	defer func() {
 		p.ExitRule()
@@ -2419,110 +2519,116 @@ func (p *CQLParser) Predicate() (localctx IPredicateContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(123)
+		p.SetState(143)
 		p.Property()
 	}
 	{
-		p.SetState(124)
-		p.Relate()
+		p.SetState(144)
+		p.Compare()
 	}
 	{
-		p.SetState(125)
-		p.Value()
+		p.SetState(145)
+		p.Match(CQLParserINT)
 	}
 
 	return localctx
 }
 
-// IRelateContext is an interface to support dynamic dispatch.
-type IRelateContext interface {
+// IEnumPredContext is an interface to support dynamic dispatch.
+type IEnumPredContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// IsRelateContext differentiates from other interfaces.
-	IsRelateContext()
+	// IsEnumPredContext differentiates from other interfaces.
+	IsEnumPredContext()
 }
 
-type RelateContext struct {
+type EnumPredContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyRelateContext() *RelateContext {
-	var p = new(RelateContext)
+func NewEmptyEnumPredContext() *EnumPredContext {
+	var p = new(EnumPredContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = CQLParserRULE_relate
+	p.RuleIndex = CQLParserRULE_enumPred
 	return p
 }
 
-func (*RelateContext) IsRelateContext() {}
+func (*EnumPredContext) IsEnumPredContext() {}
 
-func NewRelateContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *RelateContext {
-	var p = new(RelateContext)
+func NewEnumPredContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *EnumPredContext {
+	var p = new(EnumPredContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = CQLParserRULE_relate
+	p.RuleIndex = CQLParserRULE_enumPred
 
 	return p
 }
 
-func (s *RelateContext) GetParser() antlr.Parser { return s.parser }
+func (s *EnumPredContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *RelateContext) Compare() ICompareContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*ICompareContext)(nil)).Elem(), 0)
+func (s *EnumPredContext) Property() IPropertyContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPropertyContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(ICompareContext)
+	return t.(IPropertyContext)
 }
 
-func (s *RelateContext) K_IN() antlr.TerminalNode {
+func (s *EnumPredContext) K_IN() antlr.TerminalNode {
 	return s.GetToken(CQLParserK_IN, 0)
 }
 
-func (s *RelateContext) K_CONTAINS() antlr.TerminalNode {
-	return s.GetToken(CQLParserK_CONTAINS, 0)
+func (s *EnumPredContext) IntList() IIntListContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IIntListContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IIntListContext)
 }
 
-func (s *RelateContext) GetRuleContext() antlr.RuleContext {
+func (s *EnumPredContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *RelateContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *EnumPredContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *RelateContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *EnumPredContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.EnterRelate(s)
+		listenerT.EnterEnumPred(s)
 	}
 }
 
-func (s *RelateContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *EnumPredContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(CQLListener); ok {
-		listenerT.ExitRelate(s)
+		listenerT.ExitEnumPred(s)
 	}
 }
 
-func (s *RelateContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *EnumPredContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case CQLVisitor:
-		return t.VisitRelate(s)
+		return t.VisitEnumPred(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *CQLParser) Relate() (localctx IRelateContext) {
-	localctx = NewRelateContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 34, CQLParserRULE_relate)
+func (p *CQLParser) EnumPred() (localctx IEnumPredContext) {
+	localctx = NewEnumPredContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 34, CQLParserRULE_enumPred)
 
 	defer func() {
 		p.ExitRule()
@@ -2540,33 +2646,141 @@ func (p *CQLParser) Relate() (localctx IRelateContext) {
 		}
 	}()
 
-	p.SetState(130)
-	p.GetErrorHandler().Sync(p)
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(147)
+		p.Property()
+	}
+	{
+		p.SetState(148)
+		p.Match(CQLParserK_IN)
+	}
+	{
+		p.SetState(149)
+		p.IntList()
+	}
 
-	switch p.GetTokenStream().LA(1) {
-	case CQLParserK_LT, CQLParserK_BT, CQLParserK_EQ, CQLParserK_LE, CQLParserK_BE:
-		p.EnterOuterAlt(localctx, 1)
-		{
-			p.SetState(127)
-			p.Compare()
-		}
+	return localctx
+}
 
-	case CQLParserK_IN:
-		p.EnterOuterAlt(localctx, 2)
-		{
-			p.SetState(128)
-			p.Match(CQLParserK_IN)
-		}
+// IStrPredContext is an interface to support dynamic dispatch.
+type IStrPredContext interface {
+	antlr.ParserRuleContext
 
-	case CQLParserK_CONTAINS:
-		p.EnterOuterAlt(localctx, 3)
-		{
-			p.SetState(129)
-			p.Match(CQLParserK_CONTAINS)
-		}
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsStrPredContext differentiates from other interfaces.
+	IsStrPredContext()
+}
+
+type StrPredContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyStrPredContext() *StrPredContext {
+	var p = new(StrPredContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = CQLParserRULE_strPred
+	return p
+}
+
+func (*StrPredContext) IsStrPredContext() {}
+
+func NewStrPredContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StrPredContext {
+	var p = new(StrPredContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = CQLParserRULE_strPred
+
+	return p
+}
+
+func (s *StrPredContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *StrPredContext) Property() IPropertyContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IPropertyContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IPropertyContext)
+}
+
+func (s *StrPredContext) K_CONTAINS() antlr.TerminalNode {
+	return s.GetToken(CQLParserK_CONTAINS, 0)
+}
+
+func (s *StrPredContext) STRING() antlr.TerminalNode {
+	return s.GetToken(CQLParserSTRING, 0)
+}
+
+func (s *StrPredContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *StrPredContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *StrPredContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.EnterStrPred(s)
+	}
+}
+
+func (s *StrPredContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.ExitStrPred(s)
+	}
+}
+
+func (s *StrPredContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case CQLVisitor:
+		return t.VisitStrPred(s)
 
 	default:
-		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
+		return t.VisitChildren(s)
+	}
+}
+
+func (p *CQLParser) StrPred() (localctx IStrPredContext) {
+	localctx = NewStrPredContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 36, CQLParserRULE_strPred)
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(151)
+		p.Property()
+	}
+	{
+		p.SetState(152)
+		p.Match(CQLParserK_CONTAINS)
+	}
+	{
+		p.SetState(153)
+		p.Match(CQLParserSTRING)
 	}
 
 	return localctx
@@ -2662,7 +2876,7 @@ func (s *CompareContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Compare() (localctx ICompareContext) {
 	localctx = NewCompareContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 36, CQLParserRULE_compare)
+	p.EnterRule(localctx, 38, CQLParserRULE_compare)
 	var _la int
 
 	defer func() {
@@ -2682,7 +2896,7 @@ func (p *CQLParser) Compare() (localctx ICompareContext) {
 	}()
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(132)
+	p.SetState(155)
 	_la = p.GetTokenStream().LA(1)
 
 	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserK_LT)|(1<<CQLParserK_BT)|(1<<CQLParserK_EQ)|(1<<CQLParserK_LE)|(1<<CQLParserK_BE))) != 0) {
@@ -2690,6 +2904,138 @@ func (p *CQLParser) Compare() (localctx ICompareContext) {
 	} else {
 		p.GetErrorHandler().ReportMatch(p)
 		p.Consume()
+	}
+
+	return localctx
+}
+
+// IIntListContext is an interface to support dynamic dispatch.
+type IIntListContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsIntListContext differentiates from other interfaces.
+	IsIntListContext()
+}
+
+type IntListContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyIntListContext() *IntListContext {
+	var p = new(IntListContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = CQLParserRULE_intList
+	return p
+}
+
+func (*IntListContext) IsIntListContext() {}
+
+func NewIntListContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *IntListContext {
+	var p = new(IntListContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = CQLParserRULE_intList
+
+	return p
+}
+
+func (s *IntListContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *IntListContext) AllINT() []antlr.TerminalNode {
+	return s.GetTokens(CQLParserINT)
+}
+
+func (s *IntListContext) INT(i int) antlr.TerminalNode {
+	return s.GetToken(CQLParserINT, i)
+}
+
+func (s *IntListContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *IntListContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *IntListContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.EnterIntList(s)
+	}
+}
+
+func (s *IntListContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(CQLListener); ok {
+		listenerT.ExitIntList(s)
+	}
+}
+
+func (s *IntListContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case CQLVisitor:
+		return t.VisitIntList(s)
+
+	default:
+		return t.VisitChildren(s)
+	}
+}
+
+func (p *CQLParser) IntList() (localctx IIntListContext) {
+	localctx = NewIntListContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 40, CQLParserRULE_intList)
+	var _la int
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(157)
+		p.Match(CQLParserT__9)
+	}
+	{
+		p.SetState(158)
+		p.Match(CQLParserINT)
+	}
+	p.SetState(163)
+	p.GetErrorHandler().Sync(p)
+	_la = p.GetTokenStream().LA(1)
+
+	for _la == CQLParserT__10 {
+		{
+			p.SetState(159)
+			p.Match(CQLParserT__10)
+		}
+		{
+			p.SetState(160)
+			p.Match(CQLParserINT)
+		}
+
+		p.SetState(165)
+		p.GetErrorHandler().Sync(p)
+		_la = p.GetTokenStream().LA(1)
+	}
+	{
+		p.SetState(166)
+		p.Match(CQLParserT__11)
 	}
 
 	return localctx
@@ -2769,7 +3115,7 @@ func (s *LimitContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 
 func (p *CQLParser) Limit() (localctx ILimitContext) {
 	localctx = NewLimitContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 38, CQLParserRULE_limit)
+	p.EnterRule(localctx, 42, CQLParserRULE_limit)
 
 	defer func() {
 		p.ExitRule()
@@ -2789,7 +3135,7 @@ func (p *CQLParser) Limit() (localctx ILimitContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(134)
+		p.SetState(168)
 		p.Match(CQLParserINT)
 	}
 

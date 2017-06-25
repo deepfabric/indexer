@@ -52,6 +52,10 @@ func (v *BaseCQLVisitor) VisitStrPropDef(ctx *StrPropDefContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseCQLVisitor) VisitOrder(ctx *OrderContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseCQLVisitor) VisitProperty(ctx *PropertyContext) interface{} {
 	return v.VisitChildren(ctx)
 }
@@ -68,19 +72,23 @@ func (v *BaseCQLVisitor) VisitValue(ctx *ValueContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseCQLVisitor) VisitPredicates(ctx *PredicatesContext) interface{} {
+func (v *BaseCQLVisitor) VisitUintPred(ctx *UintPredContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseCQLVisitor) VisitPredicate(ctx *PredicateContext) interface{} {
+func (v *BaseCQLVisitor) VisitEnumPred(ctx *EnumPredContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseCQLVisitor) VisitRelate(ctx *RelateContext) interface{} {
+func (v *BaseCQLVisitor) VisitStrPred(ctx *StrPredContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
 func (v *BaseCQLVisitor) VisitCompare(ctx *CompareContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseCQLVisitor) VisitIntList(ctx *IntListContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

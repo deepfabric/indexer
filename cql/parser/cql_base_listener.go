@@ -87,6 +87,12 @@ func (s *BaseCQLListener) EnterStrPropDef(ctx *StrPropDefContext) {}
 // ExitStrPropDef is called when production strPropDef is exited.
 func (s *BaseCQLListener) ExitStrPropDef(ctx *StrPropDefContext) {}
 
+// EnterOrder is called when production order is entered.
+func (s *BaseCQLListener) EnterOrder(ctx *OrderContext) {}
+
+// ExitOrder is called when production order is exited.
+func (s *BaseCQLListener) ExitOrder(ctx *OrderContext) {}
+
 // EnterProperty is called when production property is entered.
 func (s *BaseCQLListener) EnterProperty(ctx *PropertyContext) {}
 
@@ -111,29 +117,35 @@ func (s *BaseCQLListener) EnterValue(ctx *ValueContext) {}
 // ExitValue is called when production value is exited.
 func (s *BaseCQLListener) ExitValue(ctx *ValueContext) {}
 
-// EnterPredicates is called when production predicates is entered.
-func (s *BaseCQLListener) EnterPredicates(ctx *PredicatesContext) {}
+// EnterUintPred is called when production uintPred is entered.
+func (s *BaseCQLListener) EnterUintPred(ctx *UintPredContext) {}
 
-// ExitPredicates is called when production predicates is exited.
-func (s *BaseCQLListener) ExitPredicates(ctx *PredicatesContext) {}
+// ExitUintPred is called when production uintPred is exited.
+func (s *BaseCQLListener) ExitUintPred(ctx *UintPredContext) {}
 
-// EnterPredicate is called when production predicate is entered.
-func (s *BaseCQLListener) EnterPredicate(ctx *PredicateContext) {}
+// EnterEnumPred is called when production enumPred is entered.
+func (s *BaseCQLListener) EnterEnumPred(ctx *EnumPredContext) {}
 
-// ExitPredicate is called when production predicate is exited.
-func (s *BaseCQLListener) ExitPredicate(ctx *PredicateContext) {}
+// ExitEnumPred is called when production enumPred is exited.
+func (s *BaseCQLListener) ExitEnumPred(ctx *EnumPredContext) {}
 
-// EnterRelate is called when production relate is entered.
-func (s *BaseCQLListener) EnterRelate(ctx *RelateContext) {}
+// EnterStrPred is called when production strPred is entered.
+func (s *BaseCQLListener) EnterStrPred(ctx *StrPredContext) {}
 
-// ExitRelate is called when production relate is exited.
-func (s *BaseCQLListener) ExitRelate(ctx *RelateContext) {}
+// ExitStrPred is called when production strPred is exited.
+func (s *BaseCQLListener) ExitStrPred(ctx *StrPredContext) {}
 
 // EnterCompare is called when production compare is entered.
 func (s *BaseCQLListener) EnterCompare(ctx *CompareContext) {}
 
 // ExitCompare is called when production compare is exited.
 func (s *BaseCQLListener) ExitCompare(ctx *CompareContext) {}
+
+// EnterIntList is called when production intList is entered.
+func (s *BaseCQLListener) EnterIntList(ctx *IntListContext) {}
+
+// ExitIntList is called when production intList is exited.
+func (s *BaseCQLListener) ExitIntList(ctx *IntListContext) {}
 
 // EnterLimit is called when production limit is entered.
 func (s *BaseCQLListener) EnterLimit(ctx *LimitContext) {}

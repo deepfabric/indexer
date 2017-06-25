@@ -136,6 +136,7 @@ func TestCqlListener(t *testing.T) {
 	tcs := []string{
 		"IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64 desc STRING",
 		"IDX.INSERT orders 615 11 22 33 44 \"description\"",
+		"IDX.SELECT orders WHERE price>=30 price<40 date<2017 type IN [1,3] desc CONTAINS \"pen\" ORDERBY date",
 	}
 	for _, tc := range tcs {
 		input := antlr.NewInputStream(tc)

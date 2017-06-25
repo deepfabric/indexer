@@ -19,7 +19,7 @@ insert: 'IDX.INSERT' document;
 
 del: 'IDX.DEL' document;
 
-query: 'IDX.SELECT' indexName 'WHERE' predicates 'ORDERBY' property ('LIMIT' limit)?;
+query: 'IDX.SELECT' indexName 'WHERE' (uintPred)* (enumPred)* (strPred)* ('ORDERBY' order)? ('LIMIT' limit)?;
 
 indexName: IDENTIFIER;
 
@@ -30,6 +30,8 @@ uintPropDef: property uintType;
 enumPropDef: property K_ENUM;
 
 strPropDef: property K_STRING;
+
+order: property;
 
 property: IDENTIFIER;
 
@@ -47,15 +49,11 @@ value
     | STRING
     ;
 
-predicates: predicate+;
+uintPred: property compare INT;
 
-predicate: property relate value;
+enumPred: property K_IN intList;
 
-relate
-    : compare
-    | K_IN
-    | K_CONTAINS
-    ;
+strPred: property K_CONTAINS STRING;
 
 compare
     : K_LT
@@ -64,6 +62,8 @@ compare
     | K_LE
     | K_BE
     ;
+
+intList: '[' INT (',' INT)* ']';
 
 limit: INT;
 

@@ -41,6 +41,9 @@ type CQLListener interface {
 	// EnterStrPropDef is called when entering the strPropDef production.
 	EnterStrPropDef(c *StrPropDefContext)
 
+	// EnterOrder is called when entering the order production.
+	EnterOrder(c *OrderContext)
+
 	// EnterProperty is called when entering the property production.
 	EnterProperty(c *PropertyContext)
 
@@ -53,17 +56,20 @@ type CQLListener interface {
 	// EnterValue is called when entering the value production.
 	EnterValue(c *ValueContext)
 
-	// EnterPredicates is called when entering the predicates production.
-	EnterPredicates(c *PredicatesContext)
+	// EnterUintPred is called when entering the uintPred production.
+	EnterUintPred(c *UintPredContext)
 
-	// EnterPredicate is called when entering the predicate production.
-	EnterPredicate(c *PredicateContext)
+	// EnterEnumPred is called when entering the enumPred production.
+	EnterEnumPred(c *EnumPredContext)
 
-	// EnterRelate is called when entering the relate production.
-	EnterRelate(c *RelateContext)
+	// EnterStrPred is called when entering the strPred production.
+	EnterStrPred(c *StrPredContext)
 
 	// EnterCompare is called when entering the compare production.
 	EnterCompare(c *CompareContext)
+
+	// EnterIntList is called when entering the intList production.
+	EnterIntList(c *IntListContext)
 
 	// EnterLimit is called when entering the limit production.
 	EnterLimit(c *LimitContext)
@@ -101,6 +107,9 @@ type CQLListener interface {
 	// ExitStrPropDef is called when exiting the strPropDef production.
 	ExitStrPropDef(c *StrPropDefContext)
 
+	// ExitOrder is called when exiting the order production.
+	ExitOrder(c *OrderContext)
+
 	// ExitProperty is called when exiting the property production.
 	ExitProperty(c *PropertyContext)
 
@@ -113,17 +122,20 @@ type CQLListener interface {
 	// ExitValue is called when exiting the value production.
 	ExitValue(c *ValueContext)
 
-	// ExitPredicates is called when exiting the predicates production.
-	ExitPredicates(c *PredicatesContext)
+	// ExitUintPred is called when exiting the uintPred production.
+	ExitUintPred(c *UintPredContext)
 
-	// ExitPredicate is called when exiting the predicate production.
-	ExitPredicate(c *PredicateContext)
+	// ExitEnumPred is called when exiting the enumPred production.
+	ExitEnumPred(c *EnumPredContext)
 
-	// ExitRelate is called when exiting the relate production.
-	ExitRelate(c *RelateContext)
+	// ExitStrPred is called when exiting the strPred production.
+	ExitStrPred(c *StrPredContext)
 
 	// ExitCompare is called when exiting the compare production.
 	ExitCompare(c *CompareContext)
+
+	// ExitIntList is called when exiting the intList production.
+	ExitIntList(c *IntListContext)
 
 	// ExitLimit is called when exiting the limit production.
 	ExitLimit(c *LimitContext)

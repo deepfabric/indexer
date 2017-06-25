@@ -15,12 +15,13 @@ func TestParseCql(t *testing.T) {
 		"IDX.INSERT orders 615 11 22 33 44 \"description\"",
 		"IDX.DEL orders 615 11 22 33 44 \"description\"",
 		"IDX.DESTROY orders",
+		"IDX.SELECT orders WHERE price>=30 price<40 date<2017 type IN [1,3] desc CONTAINS \"pen\" ORDERBY date",
 	}
 	indexDefs := make(map[string]IndexDef)
-	for _, tc := range tcs {
+	for i, tc := range tcs {
 		res, err := ParseCql(tc, indexDefs)
 		if err != nil {
-			t.Fatalf("%+v", err)
+			t.Fatalf("case %d, error %+v", i, err)
 		}
 		switch res.(type) {
 		case *CqlCreate:
@@ -37,9 +38,12 @@ func TestParseCql(t *testing.T) {
 		case *CqlDel:
 			cqlDel := res.(*CqlDel)
 			fmt.Printf("Del %v\n", cqlDel)
+		case *CqlQuery:
+			cqlQuery := res.(*CqlQuery)
+			fmt.Printf("Select %v\n", cqlQuery)
 		default:
 			//There shouldn't be any parsing error for above test cases.
-			t.Fatalf("res %+v\n", res)
+			t.Fatalf("case %d, res %+v\n", i, res)
 		}
 	}
 }

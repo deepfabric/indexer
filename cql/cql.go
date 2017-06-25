@@ -63,8 +63,8 @@ type EnumPred struct {
 }
 
 type StrPred struct {
-	Name      string
-	ContWords []string
+	Name     string
+	ContWord string
 }
 
 type CqlCreate struct {
@@ -86,7 +86,7 @@ type CqlDel struct {
 type CqlQuery struct {
 	Index     string
 	UintPreds []UintPred
-	EnumPreds []UintPred
+	EnumPreds []EnumPred
 	StrPreds  []StrPred
 	OrderBy   string
 	Limit     int
@@ -121,6 +121,8 @@ func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) interface{} {
 		v.res = v.VisitInsert(ins.(*parser.InsertContext))
 	} else if del := ctx.Del(); del != nil {
 		v.res = v.VisitDel(del.(*parser.DelContext))
+	} else if query := ctx.Query(); query != nil {
+		v.res = v.VisitQuery(query.(*parser.QueryContext))
 	}
 	return nil //TODO: better to log something and return error?
 }
@@ -265,6 +267,93 @@ func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) interface{} {
 		doc.StrProps[i].Val = vals[i+len(doc.UintProps)+len(doc.EnumProps)].GetText()
 	}
 	return doc
+}
+
+func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) interface{} {
+	q := &CqlQuery{}
+	var err error
+	q.Index = ctx.IndexName().GetText()
+	if ordCtx := ctx.Order(); ordCtx != nil {
+		q.OrderBy = ordCtx.GetText()
+	}
+	if lmtCtx := ctx.Limit(); lmtCtx != nil {
+		q.Limit, err = strconv.Atoi(lmtCtx.GetText())
+		if err != nil {
+			return nil
+		}
+	}
+	for _, predCtx := range ctx.AllUintPred() {
+		if pred, err := v.VisitUintPred(predCtx.(*parser.UintPredContext)); err == nil {
+			q.UintPreds = append(q.UintPreds, *pred)
+		}
+	}
+	for _, predCtx := range ctx.AllEnumPred() {
+		if pred, err := v.VisitEnumPred(predCtx.(*parser.EnumPredContext)); err == nil {
+			q.EnumPreds = append(q.EnumPreds, *pred)
+		}
+	}
+	for _, predCtx := range ctx.AllStrPred() {
+		if pred, err := v.VisitStrPred(predCtx.(*parser.StrPredContext)); err == nil {
+			q.StrPreds = append(q.StrPreds, *pred)
+		}
+	}
+	return q
+}
+
+func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (pred *UintPred, err error) {
+	var val uint64
+	pred = &UintPred{Low: 0, High: ^uint64(0)}
+	pred.Name = ctx.Property().GetText()
+	val, err = strconv.ParseUint(ctx.INT().GetText(), 10, 64)
+	if err != nil {
+		return
+	}
+	cmp := ctx.Compare().(*parser.CompareContext)
+	if lt := cmp.K_LT(); lt != nil {
+		pred.High = val - 1
+	} else if bt := cmp.K_BT(); bt != nil {
+		pred.Low = val + 1
+	} else if eq := cmp.K_EQ(); eq != nil {
+		pred.Low = val
+		pred.High = val
+	} else if le := cmp.K_LE(); le != nil {
+		pred.High = val
+	} else if be := cmp.K_BE(); be != nil {
+		pred.Low = val
+	} else {
+		//TODO: how to disable parser recovery?
+		//TODO: logging
+		fmt.Printf("incorrect compare: %v\n", cmp.GetText())
+	}
+	return
+}
+
+func (v *myCqlVisitor) VisitEnumPred(ctx *parser.EnumPredContext) (pred *EnumPred, err error) {
+	pred = &EnumPred{}
+	pred.Name = ctx.Property().GetText()
+	pred.InVals, err = v.VisitIntList(ctx.IntList().(*parser.IntListContext))
+	return
+}
+
+func (v *myCqlVisitor) VisitIntList(ctx *parser.IntListContext) (intList []int, err error) {
+	intList = make([]int, 0, len(ctx.AllINT()))
+	var val int
+	for _, it := range ctx.AllINT() {
+		val, err = strconv.Atoi(it.GetText())
+		if err != nil {
+			err = errors.Errorf("failed to convert following text to integer: %s\n", it.GetText())
+			return
+		}
+		intList = append(intList, val)
+	}
+	return
+}
+
+func (v *myCqlVisitor) VisitStrPred(ctx *parser.StrPredContext) (pred *StrPred, err error) {
+	pred = &StrPred{}
+	pred.Name = ctx.Property().GetText()
+	pred.ContWord = ctx.STRING().GetText()
+	return
 }
 
 //ParseCql parse CQL. res type is one of CqlCreate/CqlDestroy/CqlInsert/CqlDel/CqlQuery.

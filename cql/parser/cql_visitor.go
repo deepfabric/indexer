@@ -41,6 +41,9 @@ type CQLVisitor interface {
 	// Visit a parse tree produced by CQLParser#strPropDef.
 	VisitStrPropDef(ctx *StrPropDefContext) interface{}
 
+	// Visit a parse tree produced by CQLParser#order.
+	VisitOrder(ctx *OrderContext) interface{}
+
 	// Visit a parse tree produced by CQLParser#property.
 	VisitProperty(ctx *PropertyContext) interface{}
 
@@ -53,17 +56,20 @@ type CQLVisitor interface {
 	// Visit a parse tree produced by CQLParser#value.
 	VisitValue(ctx *ValueContext) interface{}
 
-	// Visit a parse tree produced by CQLParser#predicates.
-	VisitPredicates(ctx *PredicatesContext) interface{}
+	// Visit a parse tree produced by CQLParser#uintPred.
+	VisitUintPred(ctx *UintPredContext) interface{}
 
-	// Visit a parse tree produced by CQLParser#predicate.
-	VisitPredicate(ctx *PredicateContext) interface{}
+	// Visit a parse tree produced by CQLParser#enumPred.
+	VisitEnumPred(ctx *EnumPredContext) interface{}
 
-	// Visit a parse tree produced by CQLParser#relate.
-	VisitRelate(ctx *RelateContext) interface{}
+	// Visit a parse tree produced by CQLParser#strPred.
+	VisitStrPred(ctx *StrPredContext) interface{}
 
 	// Visit a parse tree produced by CQLParser#compare.
 	VisitCompare(ctx *CompareContext) interface{}
+
+	// Visit a parse tree produced by CQLParser#intList.
+	VisitIntList(ctx *IntListContext) interface{}
 
 	// Visit a parse tree produced by CQLParser#limit.
 	VisitLimit(ctx *LimitContext) interface{}
