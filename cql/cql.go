@@ -83,11 +83,11 @@ type CqlDel struct {
 	DocumentWithIdx
 }
 
-type CqlQuery struct {
+type CqlSelect struct {
 	Index     string
-	UintPreds []UintPred
-	EnumPreds []EnumPred
-	StrPreds  []StrPred
+	UintPreds map[string]UintPred
+	EnumPreds map[string]EnumPred
+	StrPreds  map[string]StrPred
 	OrderBy   string
 	Limit     int
 }
@@ -108,43 +108,49 @@ func (el *myErrListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbo
 type myCqlVisitor struct {
 	parser.BaseCQLVisitor
 	indexDefs map[string]IndexDef
-	res       interface{} //record the result of visitor
+	res       interface{} //record the intermediate and final result of visitor
 }
 
-func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) interface{} {
+func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) (err interface{}) {
 	//If there are multiple subrules, then check one by one.
 	if create := ctx.Create(); create != nil {
-		v.res = v.VisitCreate(create.(*parser.CreateContext))
+		err = v.VisitCreate(create.(*parser.CreateContext))
 	} else if destroy := ctx.Destroy(); destroy != nil {
-		v.res = v.VisitDestroy(destroy.(*parser.DestroyContext))
+		err = v.VisitDestroy(destroy.(*parser.DestroyContext))
 	} else if ins := ctx.Insert(); ins != nil {
-		v.res = v.VisitInsert(ins.(*parser.InsertContext))
+		err = v.VisitInsert(ins.(*parser.InsertContext))
 	} else if del := ctx.Del(); del != nil {
-		v.res = v.VisitDel(del.(*parser.DelContext))
+		err = v.VisitDel(del.(*parser.DelContext))
 	} else if query := ctx.Query(); query != nil {
-		v.res = v.VisitQuery(query.(*parser.QueryContext))
+		err = v.VisitQuery(query.(*parser.QueryContext))
+	} else {
+		err = errors.Errorf("unsupported subrule of cql")
 	}
-	return nil //TODO: better to log something and return error?
+	//v.res has already be populated
+	return
 }
 
-func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) interface{} {
+func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) (err interface{}) {
 	q := &CqlCreate{}
 	q.Index = ctx.IndexName().GetText()
 	q.PropTypes = make(map[string]int)
 	for _, popDef := range ctx.AllUintPropDef() {
-		pop := v.VisitUintPropDef(popDef.(*parser.UintPropDefContext))
-		if pop.(UintProp).ValLen == 0 {
-			continue
+		if err = v.VisitUintPropDef(popDef.(*parser.UintPropDefContext)); err != nil {
+			return
 		}
-		q.UintProps = append(q.UintProps, pop.(UintProp))
+		q.UintProps = append(q.UintProps, v.res.(UintProp))
 	}
 	for _, popDef := range ctx.AllEnumPropDef() {
-		pop := v.VisitEnumPropDef(popDef.(*parser.EnumPropDefContext))
-		q.EnumProps = append(q.EnumProps, pop.(EnumProp))
+		if err = v.VisitEnumPropDef(popDef.(*parser.EnumPropDefContext)); err != nil {
+			return
+		}
+		q.EnumProps = append(q.EnumProps, v.res.(EnumProp))
 	}
 	for _, popDef := range ctx.AllStrPropDef() {
-		pop := v.VisitStrPropDef(popDef.(*parser.StrPropDefContext))
-		q.StrProps = append(q.StrProps, pop.(StrProp))
+		if err = v.VisitStrPropDef(popDef.(*parser.StrPropDefContext)); err != nil {
+			return
+		}
+		q.StrProps = append(q.StrProps, v.res.(StrProp))
 	}
 	for _, pop := range q.UintProps {
 		switch pop.ValLen {
@@ -157,7 +163,8 @@ func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) interface{} {
 		case 8:
 			q.PropTypes[pop.Name] = TypeUint64
 		default:
-			panic(fmt.Sprintf("incorrect pop.ValLen %d", pop.ValLen))
+			err = errors.Errorf("incorrect pop.ValLen %d", pop.ValLen)
+			return
 		}
 	}
 	for _, pop := range q.EnumProps {
@@ -166,11 +173,12 @@ func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) interface{} {
 	for _, pop := range q.StrProps {
 		q.PropTypes[pop.Name] = TypeStr
 	}
-	return q
+	v.res = q
+	return
 }
 
-func (v *myCqlVisitor) VisitUintPropDef(ctx *parser.UintPropDefContext) interface{} {
-	pop := UintProp{}
+func (v *myCqlVisitor) VisitUintPropDef(ctx *parser.UintPropDefContext) (err interface{}) {
+	var pop UintProp
 	pop.Name = ctx.Property().GetText()
 	uintType := ctx.UintType().(*parser.UintTypeContext)
 	if u8 := uintType.K_UINT8(); u8 != nil {
@@ -183,129 +191,189 @@ func (v *myCqlVisitor) VisitUintPropDef(ctx *parser.UintPropDefContext) interfac
 		pop.ValLen = 8
 	} else {
 		//TODO: how to disable parser recovery?
-		//TODO: logging
-		fmt.Printf("incorrect uintType: %v %v\n", pop.Name, ctx.UintType().GetText())
+		err = errors.Errorf("incorrect uintType: %v %v\n", pop.Name, ctx.UintType().GetText())
+		return
 	}
-	return pop
+	v.res = pop
+	return
 }
 
-func (v *myCqlVisitor) VisitEnumPropDef(ctx *parser.EnumPropDefContext) interface{} {
-	pop := EnumProp{}
+func (v *myCqlVisitor) VisitEnumPropDef(ctx *parser.EnumPropDefContext) (err interface{}) {
+	var pop EnumProp
 	pop.Name = ctx.Property().GetText()
-	return pop
+	v.res = pop
+	return
 }
 
-func (v *myCqlVisitor) VisitStrPropDef(ctx *parser.StrPropDefContext) interface{} {
-	pop := StrProp{}
+func (v *myCqlVisitor) VisitStrPropDef(ctx *parser.StrPropDefContext) (err interface{}) {
+	var pop StrProp
 	pop.Name = ctx.Property().GetText()
-	return pop
+	v.res = pop
+	return
 }
 
-func (v *myCqlVisitor) VisitDestroy(ctx *parser.DestroyContext) interface{} {
+func (v *myCqlVisitor) VisitDestroy(ctx *parser.DestroyContext) (err interface{}) {
 	q := &CqlDestroy{}
 	q.Index = ctx.IndexName().GetText()
-	return q
+	v.res = q
+	return
 }
 
-func (v *myCqlVisitor) VisitInsert(ctx *parser.InsertContext) interface{} {
-	itf := v.VisitDocument(ctx.Document().(*parser.DocumentContext))
-	if itf == nil {
-		return nil
+func (v *myCqlVisitor) VisitInsert(ctx *parser.InsertContext) (err interface{}) {
+	if err = v.VisitDocument(ctx.Document().(*parser.DocumentContext)); err != nil {
+		return
 	}
-	doc := itf.(*DocumentWithIdx)
 	q := &CqlInsert{} //TODO: better way to copy doc?
-	q.DocumentWithIdx = *doc
-	return q
+	q.DocumentWithIdx = *(v.res.(*DocumentWithIdx))
+	v.res = q
+	return
 }
 
-func (v *myCqlVisitor) VisitDel(ctx *parser.DelContext) interface{} {
-	itf := v.VisitDocument(ctx.Document().(*parser.DocumentContext))
-	if itf == nil {
-		return nil
+func (v *myCqlVisitor) VisitDel(ctx *parser.DelContext) (err interface{}) {
+	if err = v.VisitDocument(ctx.Document().(*parser.DocumentContext)); err != nil {
+		return
 	}
-	doc := itf.(*DocumentWithIdx)
 	q := &CqlDel{} //TODO: better way to copy doc?
-	q.DocumentWithIdx = *doc
-	return q
+	q.DocumentWithIdx = *(v.res.(*DocumentWithIdx))
+	v.res = q
+	return
 }
 
-func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) interface{} {
+func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface{}) {
 	index := ctx.IndexName().GetText()
 	indexDef, ok := v.indexDefs[index]
 	if !ok {
-		fmt.Printf("failed to find the definion of index %s\n", index)
-		return nil //TODO: it's better to log something and return error?
+		err = errors.Errorf("failed to find the definion of index %s\n", index)
+		return
 	} else if len(indexDef.PropTypes) != len(ctx.AllValue()) {
-		fmt.Printf("incorrect number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
-		return nil
+		err = errors.Errorf("incorrect number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
+		return
 	}
 	doc := &DocumentWithIdx{}
 	*doc = indexDef.DocumentWithIdx
 	doc.Index = ctx.IndexName().GetText()
-	u64, err := strconv.ParseUint(ctx.DocId().GetText(), 10, 64)
+	var tmpU64 uint64
+	var tmpInt int
+	tmpU64, err = strconv.ParseUint(ctx.DocId().GetText(), 10, 64)
 	if err != nil {
-		return nil
+		err = errors.Wrap(err.(error), "")
+		return
 	}
-	doc.DocID = u64
+	doc.DocID = tmpU64
 
 	vals := ctx.AllValue()
 	for i := 0; i < len(doc.UintProps); i++ {
-		u64, err := strconv.ParseUint(vals[i].GetText(), 10, 64)
+		tmpU64, err = strconv.ParseUint(vals[i].GetText(), 10, 64)
 		if err != nil {
-			return nil
+			err = errors.Wrap(err.(error), "")
+			return
 		}
-		doc.UintProps[i].Val = u64
+		doc.UintProps[i].Val = tmpU64
 	}
 	for i := 0; i < len(doc.EnumProps); i++ {
-		tmp, err := strconv.Atoi(vals[i+len(doc.UintProps)].GetText())
+		tmpInt, err = strconv.Atoi(vals[i+len(doc.UintProps)].GetText())
 		if err != nil {
-			return nil
+			err = errors.Wrap(err.(error), "")
+			return
 		}
-		doc.EnumProps[i].Val = tmp
+		doc.EnumProps[i].Val = tmpInt
 	}
 	for i := 0; i < len(doc.StrProps); i++ {
 		doc.StrProps[i].Val = vals[i+len(doc.UintProps)+len(doc.EnumProps)].GetText()
 	}
-	return doc
+	v.res = doc
+	return
 }
 
-func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) interface{} {
-	q := &CqlQuery{}
-	var err error
-	q.Index = ctx.IndexName().GetText()
+func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) (err interface{}) {
+	q := &CqlSelect{
+		Index:     ctx.IndexName().GetText(),
+		UintPreds: make(map[string]UintPred),
+		EnumPreds: make(map[string]EnumPred),
+		StrPreds:  make(map[string]StrPred),
+	}
 	if ordCtx := ctx.Order(); ordCtx != nil {
 		q.OrderBy = ordCtx.GetText()
 	}
 	if lmtCtx := ctx.Limit(); lmtCtx != nil {
 		q.Limit, err = strconv.Atoi(lmtCtx.GetText())
 		if err != nil {
-			return nil
+			err = errors.Wrap(err.(error), "")
+			return
 		}
 	}
 	for _, predCtx := range ctx.AllUintPred() {
-		if pred, err := v.VisitUintPred(predCtx.(*parser.UintPredContext)); err == nil {
-			q.UintPreds = append(q.UintPreds, *pred)
+		if err = v.VisitUintPred(predCtx.(*parser.UintPredContext)); err != nil {
+			return
 		}
+		uintPred := *(v.res.(*UintPred))
+		uintPred2, ok := q.UintPreds[uintPred.Name]
+		if ok {
+			//fold multiple UintPred of the same property into one
+			uintPred.Low = maxU64(uintPred.Low, uintPred2.Low)
+			uintPred.High = minU64(uintPred.High, uintPred2.High)
+		}
+		q.UintPreds[uintPred.Name] = uintPred
 	}
 	for _, predCtx := range ctx.AllEnumPred() {
-		if pred, err := v.VisitEnumPred(predCtx.(*parser.EnumPredContext)); err == nil {
-			q.EnumPreds = append(q.EnumPreds, *pred)
+		if err = v.VisitEnumPred(predCtx.(*parser.EnumPredContext)); err != nil {
+			return
 		}
+		enumPred := *(v.res.(*EnumPred))
+		if _, ok := q.EnumPreds[enumPred.Name]; ok {
+			err = errors.Errorf("invalid query due to multiple EnumPred of property %s", enumPred.Name)
+			return
+		}
+		q.EnumPreds[enumPred.Name] = enumPred
 	}
 	for _, predCtx := range ctx.AllStrPred() {
-		if pred, err := v.VisitStrPred(predCtx.(*parser.StrPredContext)); err == nil {
-			q.StrPreds = append(q.StrPreds, *pred)
+		if err = v.VisitStrPred(predCtx.(*parser.StrPredContext)); err != nil {
+			return
 		}
+		strPred := *(v.res.(*StrPred))
+		if _, ok := q.StrPreds[strPred.Name]; ok {
+			err = errors.Errorf("invalid query due to multiple StrPred of property %s", strPred.Name)
+			return
+		}
+		q.StrPreds[strPred.Name] = strPred
 	}
-	return q
+	v.res = q
+	return
 }
 
-func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (pred *UintPred, err error) {
+//https://stackoverflow.com/questions/27516387/what-is-the-correct-way-to-find-the-min-between-two-integers-in-go
+func minU64(a, b uint64) uint64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxU64(a, b uint64) uint64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+//https://stackoverflow.com/questions/44222554/how-to-remove-quotes-from-around-a-string-in-golang
+func stripQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+	return s
+}
+
+func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (err interface{}) {
 	var val uint64
-	pred = &UintPred{Low: 0, High: ^uint64(0)}
+	pred := &UintPred{Low: 0, High: ^uint64(0)}
 	pred.Name = ctx.Property().GetText()
 	val, err = strconv.ParseUint(ctx.INT().GetText(), 10, 64)
 	if err != nil {
+		err = errors.Wrap(err.(error), "")
 		return
 	}
 	cmp := ctx.Compare().(*parser.CompareContext)
@@ -322,37 +390,44 @@ func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (pred *UintPre
 		pred.Low = val
 	} else {
 		//TODO: how to disable parser recovery?
-		//TODO: logging
-		fmt.Printf("incorrect compare: %v\n", cmp.GetText())
+		err = errors.Errorf("incorrect compare: %v\n", cmp.GetText())
+		return
 	}
+	v.res = pred
 	return
 }
 
-func (v *myCqlVisitor) VisitEnumPred(ctx *parser.EnumPredContext) (pred *EnumPred, err error) {
-	pred = &EnumPred{}
+func (v *myCqlVisitor) VisitEnumPred(ctx *parser.EnumPredContext) (err interface{}) {
+	pred := &EnumPred{}
 	pred.Name = ctx.Property().GetText()
-	pred.InVals, err = v.VisitIntList(ctx.IntList().(*parser.IntListContext))
+	if err = v.VisitIntList(ctx.IntList().(*parser.IntListContext)); err != nil {
+		return
+	}
+	pred.InVals = v.res.([]int)
+	v.res = pred
 	return
 }
 
-func (v *myCqlVisitor) VisitIntList(ctx *parser.IntListContext) (intList []int, err error) {
-	intList = make([]int, 0, len(ctx.AllINT()))
+func (v *myCqlVisitor) VisitIntList(ctx *parser.IntListContext) (err interface{}) {
+	intList := make([]int, 0, len(ctx.AllINT()))
 	var val int
 	for _, it := range ctx.AllINT() {
 		val, err = strconv.Atoi(it.GetText())
 		if err != nil {
-			err = errors.Errorf("failed to convert following text to integer: %s\n", it.GetText())
+			err = errors.Wrap(err.(error), "")
 			return
 		}
 		intList = append(intList, val)
 	}
+	v.res = intList
 	return
 }
 
-func (v *myCqlVisitor) VisitStrPred(ctx *parser.StrPredContext) (pred *StrPred, err error) {
-	pred = &StrPred{}
+func (v *myCqlVisitor) VisitStrPred(ctx *parser.StrPredContext) (err interface{}) {
+	pred := &StrPred{}
 	pred.Name = ctx.Property().GetText()
-	pred.ContWord = ctx.STRING().GetText()
+	pred.ContWord = stripQuote(ctx.STRING().GetText())
+	v.res = pred
 	return
 }
 
@@ -372,8 +447,10 @@ func ParseCql(cql string, indexDefs map[string]IndexDef) (res interface{}, err e
 	}
 
 	visitor := &myCqlVisitor{indexDefs: indexDefs}
-	tree.Accept(visitor)
+	if err1 := tree.Accept(visitor); err1 != nil {
+		err = err1.(error) //panic: interface conversion: interface is nil, not error
+		return
+	}
 	res = visitor.res
-
 	return
 }
