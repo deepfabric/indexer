@@ -2,7 +2,6 @@ package cql
 
 import (
 	"fmt"
-
 	"strconv"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -92,17 +91,33 @@ type CqlSelect struct {
 	Limit     int
 }
 
-type myErrListener struct {
+type VerboseErrorListener struct {
 	antlr.DefaultErrorListener
-	exp antlr.RecognitionException
-	msg string
+	err error
 }
 
-func (el *myErrListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
+func (el *VerboseErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
 	parser := recognizer.(antlr.Parser)
 	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
-	el.msg = fmt.Sprintf("rule stack: %v, line %d:%d at %v: %s\n", stack, line, column, offendingSymbol, msg)
-	el.exp = e
+	el.err = errors.Errorf("rule stack: %v, line %d:%d at %v: %s\n", stack, line, column, offendingSymbol, msg)
+}
+
+func (el *VerboseErrorListener) ReportAmbiguity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, exact bool, ambigAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportAmbiguity %v %v %v %v %v\n", stack, startIndex, stopIndex, exact, ambigAlts, configs)
+}
+
+func (el *VerboseErrorListener) ReportAttemptingFullContext(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, conflictingAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportAttemptingFullContext %v %v %v %v\n", stack, startIndex, stopIndex, conflictingAlts, configs)
+}
+
+func (el *VerboseErrorListener) ReportContextSensitivity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex, prediction int, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportContextSensitivity %v %v %v %v\n", stack, startIndex, stopIndex, prediction, configs)
 }
 
 type myCqlVisitor struct {
@@ -163,7 +178,7 @@ func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) (err interface{}) 
 		case 8:
 			q.PropTypes[pop.Name] = TypeUint64
 		default:
-			err = errors.Errorf("incorrect pop.ValLen %d", pop.ValLen)
+			err = errors.Errorf("invalid pop.ValLen %d", pop.ValLen)
 			return
 		}
 	}
@@ -190,9 +205,7 @@ func (v *myCqlVisitor) VisitUintPropDef(ctx *parser.UintPropDefContext) (err int
 	} else if u64 := uintType.K_UINT64(); u64 != nil {
 		pop.ValLen = 8
 	} else {
-		//TODO: how to disable parser recovery?
-		err = errors.Errorf("incorrect uintType: %v %v\n", pop.Name, ctx.UintType().GetText())
-		return
+		panic(fmt.Sprintf("invalid uintType: %v\n", ctx.UintType().GetText()))
 	}
 	v.res = pop
 	return
@@ -246,7 +259,7 @@ func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface
 		err = errors.Errorf("failed to find the definion of index %s\n", index)
 		return
 	} else if len(indexDef.PropTypes) != len(ctx.AllValue()) {
-		err = errors.Errorf("incorrect number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
+		err = errors.Errorf("invalid number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
 		return
 	}
 	doc := &DocumentWithIdx{}
@@ -389,9 +402,7 @@ func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (err interface
 	} else if be := cmp.K_BE(); be != nil {
 		pred.Low = val
 	} else {
-		//TODO: how to disable parser recovery?
-		err = errors.Errorf("incorrect compare: %v\n", cmp.GetText())
-		return
+		panic(fmt.Sprintf("invalid compare: %v\n", cmp.GetText()))
 	}
 	v.res = pred
 	return
@@ -437,12 +448,12 @@ func ParseCql(cql string, indexDefs map[string]IndexDef) (res interface{}, err e
 	lexer := parser.NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	parser := parser.NewCQLParser(stream)
-	el := new(myErrListener)
+	el := new(VerboseErrorListener)
 	parser.AddErrorListener(el)
 
 	tree := parser.Cql()
-	if el.exp != nil {
-		err = errors.Errorf("ParseCql error: %s", el.msg)
+	if el.err != nil {
+		err = el.err
 		return
 	}
 

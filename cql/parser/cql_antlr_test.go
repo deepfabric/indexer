@@ -4,62 +4,36 @@ import (
 	"testing"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
+	"github.com/pkg/errors"
 )
 
 type VerboseErrorListener struct {
 	antlr.DefaultErrorListener
-	exp antlr.RecognitionException
-	msg string
+	err error
 }
 
 func (el *VerboseErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
 	parser := recognizer.(antlr.Parser)
 	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
-	el.msg = fmt.Sprintf("rule stack: %v, line %d:%d at %v: %s\n", stack, line, column, offendingSymbol, msg)
-	el.exp = e
+	el.err = errors.Errorf("rule stack: %v, line %d:%d at %v: %s\n", stack, line, column, offendingSymbol, msg)
 }
 
-//revised from antlr.BailErrorStrategy at github.com/antlr/antlr4/runtime/Go/antlr/error_strategy.go
-//original antlr.BailErrorStrategy BUG: panic: interface conversion: interface is nil, not antlr.ParserRuleContext
-type BailErrorStrategy struct {
-	antlr.DefaultErrorStrategy
+func (el *VerboseErrorListener) ReportAmbiguity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, exact bool, ambigAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportAmbiguity %v %v %v %v %v\n", stack, startIndex, stopIndex, exact, ambigAlts, configs)
 }
 
-func NewBailErrorStrategy() *BailErrorStrategy {
-	b := new(BailErrorStrategy)
-	return b
+func (el *VerboseErrorListener) ReportAttemptingFullContext(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, conflictingAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportAttemptingFullContext %v %v %v %v\n", stack, startIndex, stopIndex, conflictingAlts, configs)
 }
 
-// Instead of recovering from exception {@code e}, re-panic it wrapped
-// in a {@link ParseCancellationException} so it is not caught by the
-// rule func catches. Use {@link Exception//getCause()} to get the
-// original {@link RecognitionException}.
-//
-func (b *BailErrorStrategy) Recover(recognizer antlr.Parser, e antlr.RecognitionException) {
-	context := recognizer.GetParserRuleContext()
-	for context != nil {
-		context.SetException(e)
-		if parent := context.GetParent(); parent != nil {
-			context = parent.(antlr.ParserRuleContext)
-		} else {
-			break
-		}
-	}
-	fmt.Printf("Recover %+v\n", e)
-	panic(antlr.NewParseCancellationException()) // TODO we don't emit e properly
-}
-
-// Make sure we don't attempt to recover inline if the parser
-// successfully recovers, it won't panic an exception.
-//
-func (b *BailErrorStrategy) RecoverInline(recognizer antlr.Parser) antlr.Token {
-	b.Recover(recognizer, antlr.NewInputMisMatchException(recognizer))
-	return nil
-}
-
-// Make sure we don't attempt to recover from problems in subrules.//
-func (b *BailErrorStrategy) Sync(recognizer antlr.Parser) {
-	// pass
+func (el *VerboseErrorListener) ReportContextSensitivity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex, prediction int, configs antlr.ATNConfigSet) {
+	parser := recognizer.(antlr.Parser)
+	stack := parser.GetRuleInvocationStack(parser.GetParserRuleContext())
+	el.err = errors.Errorf("rule stack: %v, ReportContextSensitivity %v %v %v %v\n", stack, startIndex, stopIndex, prediction, configs)
 }
 
 type ParserCase struct {
@@ -70,37 +44,28 @@ type ParserCase struct {
 func TestCqlParserError(t *testing.T) {
 	fmt.Println("================TestCqlParserError================")
 	tcs := []ParserCase{
-		{"IDX.CREATE orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64", false},
+		//normal case
+		{"IDX.CREATE orders SCHEMA object UINT64 price UINT32 number UINT32 date UINT64 type ENUM desc STRING", false},
+		//invalid token: "IDX"
 		{"IDX orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64", true},
-		{"IDX.CREATE orders SCHEMA object UINT64 price UINT32 number UINT32 date UINT64 desc STRING", false},
+		//invalid order of "desc STRING type ENUM"
+		{"IDX.CREATE orders SCHEMA object UINT64 price UINT32 number UINT32 date UINT64 desc STRING type ENUM", true},
 	}
 	for i, tc := range tcs {
 		input := antlr.NewInputStream(tc.Input)
 		lexer := NewCQLLexer(input)
 		stream := antlr.NewCommonTokenStream(lexer, 0)
 		parser := NewCQLParser(stream)
+
 		el := new(VerboseErrorListener)
 		parser.AddErrorListener(el)
-		parser.SetErrorHandler(NewBailErrorStrategy())
-		{
-			//TODO: how to disable parser recovery?
-			defer func() {
-				if e := recover(); e != nil {
-					if re, ok := e.(*antlr.ParseCancellationException); ok {
-						fmt.Printf("catched ParseCancellationException %+v\n", re)
-					} else {
-						panic(e)
-					}
-				}
-			}()
-			_ = parser.Cql()
-		}
+		_ = parser.Cql()
 
-		if el.exp != nil {
-			fmt.Printf("parser raised exception %s\n", el.msg)
+		if el.err != nil {
+			fmt.Printf("parser raised exception %+v\n", el.err)
 		}
-		if (tc.ExpectError && el.exp == nil) || (!tc.ExpectError && el.exp != nil) {
-			t.Fatalf("case %d failed. has %v, want %v", i, !tc.ExpectError, tc.ExpectError)
+		if (tc.ExpectError && el.err == nil) || (!tc.ExpectError && el.err != nil) {
+			t.Fatalf("case %d failed. have %v, want %v", i, !tc.ExpectError, tc.ExpectError)
 		}
 	}
 }
@@ -226,9 +191,7 @@ func (v *CqlTestVisitor) VisitUintPropDef(ctx *UintPropDefContext) interface{} {
 	} else if u64 := uintType.K_UINT64(); u64 != nil {
 		pop.ValLen = 8
 	} else {
-		//TODO: how to disable parser recovery?
-		//panic(fmt.Sprintf("incorrect uintType: %v", ctx.UintType().GetText()))
-		fmt.Printf("incorrect uintType: %v %v\n", pop.Name, ctx.UintType().GetText())
+		panic(fmt.Sprintf("invalid uintType: %v", ctx.UintType().GetText()))
 	}
 	return pop
 }
@@ -258,7 +221,7 @@ func (v *CqlTestVisitor) VisitDestroy(ctx *DestroyContext) interface{} {
 func TestCqlVisitor(t *testing.T) {
 	fmt.Println("================TestCqlVisitor================")
 
-	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 number UINT32 date UINT64 price FLOAT desc STRING")
+	input := antlr.NewInputStream("IDX.CREATE orders SCHEMA object UINT64 number UINT32 date UINT64 price UINT16 desc STRING")
 	//input := antlr.NewInputStream("IDX.DESTROY orders")
 	lexer := NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -268,9 +231,8 @@ func TestCqlVisitor(t *testing.T) {
 	//parser.BuildParseTrees = true
 
 	tree := parser.Cql()
-	if el.exp != nil {
-		fmt.Printf("parser raised exception %+v\n", el.exp)
-		t.Fatalf(el.msg)
+	if el.err != nil {
+		t.Fatalf("parser raised exception %+v\n", el.err)
 	}
 
 	visitor := new(CqlTestVisitor)

@@ -35,8 +35,8 @@ order: property;
 
 property: IDENTIFIER;
 
-uintType:
-    | K_UINT8
+uintType
+    : K_UINT8
     | K_UINT16
     | K_UINT32
     | K_UINT64
