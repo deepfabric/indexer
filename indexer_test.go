@@ -1,9 +1,11 @@
 package indexer
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/RoaringBitmap/roaring"
 	"github.com/juju/testing/checkers"
 
 	"github.com/deepfabric/indexer/cql"
@@ -121,7 +123,7 @@ func TestIndexNormal(t *testing.T) {
 	for i := 0; i < 2000; i++ {
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * j)
+			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
 		ins := &cql.CqlInsert{
 			DocumentWithIdx: doc,
@@ -131,10 +133,26 @@ func TestIndexNormal(t *testing.T) {
 		}
 	}
 
+	var rb *roaring.Bitmap
+	cs := &cql.CqlSelect{
+		Index: doc.Index,
+		UintPreds: map[string]cql.UintPred{
+			"price": cql.UintPred{
+				Name: "price",
+				Low:  uint64(30),
+				High: uint64(100),
+			},
+		},
+	}
+	if rb, err = ind1.Select(cs); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Println(rb.String())
+
 	for i := 0; i < 2000; i++ {
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * j)
+			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
 		del := &cql.CqlDel{
 			DocumentWithIdx: doc,

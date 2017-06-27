@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/RoaringBitmap/roaring"
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
 )
@@ -105,4 +106,52 @@ func (ind *Index) Del(q *cql.CqlDel) (found bool, err error) {
 		}
 	}
 	return
+}
+
+func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
+	var bkd *bkdtree.BkdTree
+	var ok bool
+	visitor := &bkdVisitor{
+		docs: roaring.NewBitmap(),
+	}
+
+	for _, uintPred := range q.UintPreds {
+		bkd, ok = ind.bkds[uintPred.Name]
+		if !ok {
+			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
+			return
+		}
+		visitor.lowPoint = bkdtree.Point{
+			Vals: []uint64{uintPred.Low},
+		}
+		visitor.highPoint = bkdtree.Point{
+			Vals: []uint64{uintPred.High},
+		}
+		err = bkd.Intersect(visitor)
+		if err != nil {
+			return
+		}
+		visitor.prevDocs = visitor.docs
+	}
+	rb = visitor.prevDocs
+	return
+}
+
+type bkdVisitor struct {
+	lowPoint  bkdtree.Point
+	highPoint bkdtree.Point
+	prevDocs  *roaring.Bitmap
+	docs      *roaring.Bitmap
+}
+
+func (v *bkdVisitor) GetLowPoint() bkdtree.Point { return v.lowPoint }
+
+func (v *bkdVisitor) GetHighPoint() bkdtree.Point { return v.highPoint }
+
+func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
+	docID := uint32(point.UserData)
+	//TODO: add uint64 support for roaring.Bitmap?
+	if v.prevDocs == nil || v.prevDocs.Contains(docID) {
+		v.docs.Add(docID)
+	}
 }
