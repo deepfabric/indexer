@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"container/heap"
 	"time"
 
 	"github.com/pkg/errors"
@@ -116,6 +117,9 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
 	}
 
 	for _, uintPred := range q.UintPreds {
+		if q.OrderBy == uintPred.Name {
+			continue
+		}
 		bkd, ok = ind.bkds[uintPred.Name]
 		if !ok {
 			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
@@ -133,6 +137,37 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
 		}
 		visitor.prevDocs = visitor.docs
 	}
+
+	if q.OrderBy != "" {
+		var uintPred cql.UintPred
+		if uintPred, ok = q.UintPreds[q.OrderBy]; !ok {
+			err = errors.Errorf("invalid ORDERBY %s", q.OrderBy)
+			return
+		}
+		bkd, ok = ind.bkds[uintPred.Name]
+		if !ok {
+			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
+			return
+		}
+		visitor.lowPoint = bkdtree.Point{
+			Vals: []uint64{uintPred.Low},
+		}
+		visitor.highPoint = bkdtree.Point{
+			Vals: []uint64{uintPred.High},
+		}
+		visitor.limit = q.Limit
+		visitor.h = &bkdtree.PointMaxHeap{}
+		err = bkd.Intersect(visitor)
+		if err != nil {
+			return
+		}
+		rb = roaring.NewBitmap()
+		for _, point := range *visitor.h {
+			rb.Add(uint32(point.UserData))
+		}
+		visitor.prevDocs = rb
+	}
+
 	rb = visitor.prevDocs
 	return
 }
@@ -142,6 +177,8 @@ type bkdVisitor struct {
 	highPoint bkdtree.Point
 	prevDocs  *roaring.Bitmap
 	docs      *roaring.Bitmap
+	limit     int
+	h         *bkdtree.PointMaxHeap
 }
 
 func (v *bkdVisitor) GetLowPoint() bkdtree.Point { return v.lowPoint }
@@ -152,6 +189,16 @@ func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
 	docID := uint32(point.UserData)
 	//TODO: add uint64 support for roaring.Bitmap?
 	if v.prevDocs == nil || v.prevDocs.Contains(docID) {
-		v.docs.Add(docID)
+		if v.limit == 0 {
+			v.docs.Add(docID)
+		} else {
+			lenH := len(*v.h)
+			if lenH < v.limit {
+				v.h.Push(point)
+			} else if point.LessThan((*v.h)[lenH-1]) {
+				(*v.h)[lenH-1] = point
+				heap.Fix(v.h, lenH-1)
+			}
+		}
 	}
 }

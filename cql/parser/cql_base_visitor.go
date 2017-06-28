@@ -52,6 +52,10 @@ func (v *BaseCQLVisitor) VisitStrPropDef(ctx *StrPropDefContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseCQLVisitor) VisitOrderLimit(ctx *OrderLimitContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseCQLVisitor) VisitOrder(ctx *OrderContext) interface{} {
 	return v.VisitChildren(ctx)
 }

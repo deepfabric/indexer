@@ -41,6 +41,9 @@ type CQLListener interface {
 	// EnterStrPropDef is called when entering the strPropDef production.
 	EnterStrPropDef(c *StrPropDefContext)
 
+	// EnterOrderLimit is called when entering the orderLimit production.
+	EnterOrderLimit(c *OrderLimitContext)
+
 	// EnterOrder is called when entering the order production.
 	EnterOrder(c *OrderContext)
 
@@ -106,6 +109,9 @@ type CQLListener interface {
 
 	// ExitStrPropDef is called when exiting the strPropDef production.
 	ExitStrPropDef(c *StrPropDefContext)
+
+	// ExitOrderLimit is called when exiting the orderLimit production.
+	ExitOrderLimit(c *OrderLimitContext)
 
 	// ExitOrder is called when exiting the order production.
 	ExitOrder(c *OrderContext)

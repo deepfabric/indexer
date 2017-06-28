@@ -1,17 +1,20 @@
 
-/** Derived from github.com/RedisLabsModules/secondary/docs/Commands.md */
+/** Derived from github.com/RedisLabsModules/secondary/docs/Commands.md
+
+https://stackoverflow.com/questions/44796556/how-to-tell-if-antlr4-parser-consumed-all-tokens-of-the-tokenstream
+ */
 
 grammar CQL;
 
 cql
-    : create
-    | destroy
-    | insert
-    | del
-    | query
+    : create EOF
+    | destroy EOF
+    | insert EOF
+    | del EOF
+    | query EOF
     ;
 
-create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)*? (enumPropDef)*? (strPropDef)*?;
+create: 'IDX.CREATE' indexName 'SCHEMA' (uintPropDef)* (enumPropDef)* (strPropDef)*;
 
 destroy: 'IDX.DESTROY' indexName;
 
@@ -19,7 +22,7 @@ insert: 'IDX.INSERT' document;
 
 del: 'IDX.DEL' document;
 
-query: 'IDX.SELECT' indexName 'WHERE' (uintPred)* (enumPred)* (strPred)* ('ORDERBY' order)? ('LIMIT' limit)?;
+query: 'IDX.SELECT' indexName 'WHERE' (uintPred)* (enumPred)* (strPred)* orderLimit?;
 
 indexName: IDENTIFIER;
 
@@ -30,6 +33,8 @@ uintPropDef: property uintType;
 enumPropDef: property K_ENUM;
 
 strPropDef: property K_STRING;
+
+orderLimit: 'ORDERBY' order ('LIMIT' limit)?;
 
 order: property;
 

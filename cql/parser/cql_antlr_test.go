@@ -50,6 +50,8 @@ func TestCqlParserError(t *testing.T) {
 		{"IDX orders SCHEMA object UINT64 price FLOAT number UINT32 date UINT64", true},
 		//invalid order of "desc STRING type ENUM"
 		{"IDX.CREATE orders SCHEMA object UINT64 price UINT32 number UINT32 date UINT64 desc STRING type ENUM", true},
+		//invalid query due to LIMIT without ORDERBY
+		{"IDX.SELECT orders WHERE price>=30 price<=40 type IN [1,3] LIMIT 30", true},
 	}
 	for i, tc := range tcs {
 		input := antlr.NewInputStream(tc.Input)
@@ -61,6 +63,7 @@ func TestCqlParserError(t *testing.T) {
 		parser.AddErrorListener(el)
 		_ = parser.Cql()
 
+		fmt.Println(input)
 		if el.err != nil {
 			fmt.Printf("parser raised exception %+v\n", el.err)
 		}

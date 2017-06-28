@@ -87,6 +87,12 @@ func (s *BaseCQLListener) EnterStrPropDef(ctx *StrPropDefContext) {}
 // ExitStrPropDef is called when production strPropDef is exited.
 func (s *BaseCQLListener) ExitStrPropDef(ctx *StrPropDefContext) {}
 
+// EnterOrderLimit is called when production orderLimit is entered.
+func (s *BaseCQLListener) EnterOrderLimit(ctx *OrderLimitContext) {}
+
+// ExitOrderLimit is called when production orderLimit is exited.
+func (s *BaseCQLListener) ExitOrderLimit(ctx *OrderLimitContext) {}
+
 // EnterOrder is called when production order is entered.
 func (s *BaseCQLListener) EnterOrder(ctx *OrderContext) {}
 

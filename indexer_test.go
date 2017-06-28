@@ -11,6 +11,10 @@ import (
 	"github.com/deepfabric/indexer/cql"
 )
 
+const (
+	BkdCapTest = 10000
+)
+
 func newTestIndex1() (ind *Index) {
 	ind = &Index{
 		Conf: IndexConf{
@@ -21,7 +25,7 @@ func newTestIndex1() (ind *Index) {
 				dir:         "/tmp",
 				cptInterval: 30 * time.Minute,
 			},
-			cap: 100000,
+			cap: BkdCapTest,
 		},
 	}
 	return
@@ -120,7 +124,7 @@ func TestIndexNormal(t *testing.T) {
 		Index: "orders",
 	}
 
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < BkdCapTest; i++ {
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
@@ -134,13 +138,15 @@ func TestIndexNormal(t *testing.T) {
 	}
 
 	var rb *roaring.Bitmap
+	low := 30
+	high := 600
 	cs := &cql.CqlSelect{
 		Index: doc.Index,
 		UintPreds: map[string]cql.UintPred{
 			"price": cql.UintPred{
 				Name: "price",
-				Low:  uint64(30),
-				High: uint64(100),
+				Low:  uint64(low),
+				High: uint64(high),
 			},
 		},
 	}
@@ -148,8 +154,24 @@ func TestIndexNormal(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Println(rb.String())
+	// low <= 2*i <= high, (low+1)/2 <= i <= high/2
+	want := high/2 - (low+1)/2 + 1
+	if rb.GetCardinality() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", rb.GetCardinality(), want)
+	}
 
-	for i := 0; i < 2000; i++ {
+	cs.OrderBy = "price"
+	cs.Limit = 20
+	if rb, err = ind1.Select(cs); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Println(rb.String())
+	want = cs.Limit
+	if rb.GetCardinality() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", rb.GetCardinality(), want)
+	}
+
+	for i := 0; i < BkdCapTest; i++ {
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))

@@ -17,6 +17,8 @@ func TestParseCql(t *testing.T) {
 		"IDX.DEL orders 615 11 22 33 44 \"description\"",
 		"IDX.DESTROY orders",
 		"IDX.SELECT orders WHERE price>=30 price<40 date<2017 type IN [1,3] desc CONTAINS \"pen\" ORDERBY date",
+		"IDX.SELECT orders WHERE price>=30 price<=40 date<2017 type IN [1,3] ORDERBY date LIMIT 30",
+		"IDX.SELECT orders WHERE price>=30 price<=40 type IN [1,3]",
 	}
 	indexDefs := make(map[string]IndexDef)
 	for i, tc := range tcs {
@@ -101,5 +103,17 @@ func TestParseCqlSelect(t *testing.T) {
 	res, err = ParseCql("IDX.SELECT orders WHERE desc CONTAINS \"pen\" desc CONTAINS \"pencil\"", nil)
 	if err == nil {
 		t.Fatalf("incorrect StrPred type, have %v, want error", res)
+	}
+
+	//TESTCASE: invalid query due to OBDERBY property doesn't occur in WHERE
+	res, err = ParseCql("IDX.SELECT orders WHERE price>=30 price<=40 ORDERBY date", nil)
+	if err == nil {
+		t.Fatalf("invalid OBDERBY, have %v, want error", res)
+	}
+
+	//TESTCASE: invalid query due to OBDERBY property doesn't occur as a UintPred
+	res, err = ParseCql("IDX.SELECT orders WHERE price>=30 price<=40 type IN [1,3] ORDERBY type", nil)
+	if err == nil {
+		t.Fatalf("invalid OBDERBY, have %v, want error", res)
 	}
 }

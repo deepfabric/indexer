@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	DEFAULT_LIMIT = 100
+)
+
+const (
 	TypeUint8 = iota //0
 	TypeUint16
 	TypeUint32
@@ -305,17 +309,8 @@ func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) (err interface{}) {
 		EnumPreds: make(map[string]EnumPred),
 		StrPreds:  make(map[string]StrPred),
 	}
-	if ordCtx := ctx.Order(); ordCtx != nil {
-		q.OrderBy = ordCtx.GetText()
-	}
-	if lmtCtx := ctx.Limit(); lmtCtx != nil {
-		q.Limit, err = strconv.Atoi(lmtCtx.GetText())
-		if err != nil {
-			err = errors.Wrap(err.(error), "")
-			return
-		}
-	}
-	for _, predCtx := range ctx.AllUintPred() {
+
+	for i, predCtx := range ctx.AllUintPred() {
 		if err = v.VisitUintPred(predCtx.(*parser.UintPredContext)); err != nil {
 			return
 		}
@@ -327,6 +322,29 @@ func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) (err interface{}) {
 			uintPred.High = minU64(uintPred.High, uintPred2.High)
 		}
 		q.UintPreds[uintPred.Name] = uintPred
+		if i == 0 {
+			q.OrderBy = uintPred.Name
+		}
+	}
+	if ordCtx := ctx.OrderLimit(); ordCtx != nil {
+		if err = v.VisitOrderLimit(ordCtx.(*parser.OrderLimitContext)); err != nil {
+			return
+		}
+		ol := *(v.res.(*orderLimit))
+		q.OrderBy = ol.order
+		if _, ok := q.UintPreds[q.OrderBy]; !ok {
+			err = errors.Errorf("invalid ORDERBY property %s, want a UintProp property", q.OrderBy)
+			return
+		}
+		q.Limit = ol.limit
+	} else if q.OrderBy != "" {
+		q.Limit = DEFAULT_LIMIT
+	}
+	if q.OrderBy != "" {
+		if _, ok := q.UintPreds[q.OrderBy]; !ok {
+			err = errors.Errorf("invalid ORDERBY property %s, want a UintProp property", q.OrderBy)
+			return
+		}
 	}
 	for _, predCtx := range ctx.AllEnumPred() {
 		if err = v.VisitEnumPred(predCtx.(*parser.EnumPredContext)); err != nil {
@@ -439,6 +457,28 @@ func (v *myCqlVisitor) VisitStrPred(ctx *parser.StrPredContext) (err interface{}
 	pred.Name = ctx.Property().GetText()
 	pred.ContWord = stripQuote(ctx.STRING().GetText())
 	v.res = pred
+	return
+}
+
+type orderLimit struct {
+	order string
+	limit int
+}
+
+func (v *myCqlVisitor) VisitOrderLimit(ctx *parser.OrderLimitContext) (err interface{}) {
+	var ol orderLimit
+	if ordCtx := ctx.Order(); ordCtx != nil {
+		ol.order = ordCtx.GetText()
+	}
+	ol.limit = DEFAULT_LIMIT
+	if lmtCtx := ctx.Limit(); lmtCtx != nil {
+		ol.limit, err = strconv.Atoi(lmtCtx.GetText())
+		if err != nil {
+			err = errors.Wrap(err.(error), "")
+			return
+		}
+	}
+	v.res = &ol
 	return
 }
 

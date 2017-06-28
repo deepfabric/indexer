@@ -41,6 +41,9 @@ type CQLVisitor interface {
 	// Visit a parse tree produced by CQLParser#strPropDef.
 	VisitStrPropDef(ctx *StrPropDefContext) interface{}
 
+	// Visit a parse tree produced by CQLParser#orderLimit.
+	VisitOrderLimit(ctx *OrderLimitContext) interface{}
+
 	// Visit a parse tree produced by CQLParser#order.
 	VisitOrder(ctx *OrderContext) interface{}
 
