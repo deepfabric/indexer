@@ -2,14 +2,13 @@ package indexer
 
 import (
 	"container/heap"
-	"encoding/json"
 	"fmt"
+	"os"
+	"regexp"
+	"sort"
 	"time"
 
 	"github.com/pkg/errors"
-
-	"os"
-	"path/filepath"
 
 	"github.com/RoaringBitmap/roaring"
 	"github.com/deepfabric/bkdtree"
@@ -29,10 +28,16 @@ type IndexConf struct {
 	CptInterval time.Duration
 }
 
+<<<<<<< Updated upstream
 //IndexDef will be persisted to an index-specific file in order to support reopening an index
 type IndexDef struct {
 	Conf    IndexConf
 	DocProt cql.DocumentWithIdx //document prototype
+=======
+type IndexConf struct {
+	cap int //upper limit of number of documents
+	bkd BkdConf
+>>>>>>> Stashed changes
 }
 
 type Index struct {
@@ -40,111 +45,9 @@ type Index struct {
 	bkds map[string]*bkdtree.BkdTree
 }
 
-// Open open existing index
-func (ind *Index) Open(dir, name string) (err error) {
-	if len(ind.bkds) != 0 {
-		//already open
-		return
-	}
-	var def *IndexDef
-	if def, err = readIndexDef(dir, name); err != nil {
-		return
-	}
-	ind.Def = *def
-
-	ind.bkds = make(map[string]*bkdtree.BkdTree)
-	var bkd *bkdtree.BkdTree
-	for _, uintProp := range ind.Def.DocProt.UintProps {
-		bkd = &bkdtree.BkdTree{}
-		bkdCap := ind.Def.Conf.Cap
-		dir := ind.Def.Conf.Dir
-		prefix := uintProp.Name
-		cptInterval := ind.Def.Conf.CptInterval
-		if err = bkd.Open(dir, prefix, bkdCap, cptInterval); err != nil {
-			return
-		}
-		//TODO: verify T0mCap, LeafCap, IntraCap, NumDims, BytesPerDim?
-		ind.bkds[uintProp.Name] = bkd
-	}
-	return
-}
-
-// Close close index
-func (ind *Index) Close() (err error) {
-	for prop, bkd := range ind.bkds {
-		if err = bkd.Close(); err != nil {
-			return
-		}
-		delete(ind.bkds, prop)
-	}
-	return
-}
-
-func readIndexDef(dir, name string) (def *IndexDef, err error) {
-	var f *os.File
-	var info os.FileInfo
-	var count int
-	fp := filepath.Join(dir, fmt.Sprintf("%s.json", name))
-	if f, err = os.Open(fp); err != nil {
-		return
-	}
-	if info, err = f.Stat(); err != nil {
-		return
-	}
-	size := info.Size()
-	if size >= 4096 {
-		err = errors.Errorf("%s file size %d is too big for an index definion", fp, size)
-		return
-	}
-	data := make([]byte, 4096)
-	if count, err = f.Read(data); err != nil {
-		return
-	}
-	if count >= 4096 {
-		err = errors.Errorf("%s partial read %d, want %d", fp, count, size)
-		return
-	}
-	def = &IndexDef{}
-	if err = json.Unmarshal(data[0:count], &def); err != nil {
-		return
-	}
-	return
-}
-
-func writeIndexDef(dir, name string, def *IndexDef) (err error) {
-	var f *os.File
-	var count int
-	var data []byte
-	if data, err = json.Marshal(*def); err != nil {
-		return
-	}
-
-	fp := filepath.Join(dir, fmt.Sprintf("%s.json", name))
-	if f, err = os.OpenFile(fp, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return
-	}
-	if count, err = f.Write(data); err != nil {
-		return
-	}
-	if count != len(data) {
-		err = errors.Errorf("%s partial wirte %d, want %d", fp, count, len(data))
-		return
-	}
-	return
-}
-
-func removeIndexDef(dir, name string) (err error) {
-	fp := filepath.Join(dir, fmt.Sprintf("%s.json", name))
-	err = os.Remove(fp)
-	return
-}
-
 // Create execute CqlCreate. Assume ind.Def.Conf has been populated.
 func (ind *Index) Create(q *cql.CqlCreate) (err error) {
 	ind.Def.DocProt = q.DocumentWithIdx
-	if err = writeIndexDef(ind.Def.Conf.Dir, q.DocumentWithIdx.Index, &ind.Def); err != nil {
-		return err
-	}
 	ind.bkds = make(map[string]*bkdtree.BkdTree)
 	var bkd *bkdtree.BkdTree
 	for _, uintProp := range q.UintProps {
@@ -167,17 +70,94 @@ func (ind *Index) Create(q *cql.CqlCreate) (err error) {
 }
 
 func (ind *Index) Destroy(q *cql.CqlDestroy) (err error) {
-	if ind.Def.DocProt.Index != q.Index {
-		err = errors.Errorf("index name mismatch, have %s, want %s", q.Index, ind.Def.DocProt.Index)
-		return
-	}
 	for prop, bkd := range ind.bkds {
 		if err = bkd.Destroy(); err != nil {
 			return
 		}
 		delete(ind.bkds, prop)
 	}
-	err = removeIndexDef(ind.Def.Conf.Dir, q.Index)
+	return
+}
+
+func (ind *Index) Open(conf *IndexConf) (err error) {
+	if len(ind.bkds) != 0 {
+		//already open
+		return
+	}
+	ind.Conf = *conf
+	//deduce index definion from existing BKD trees
+	var props []string
+	props, err = getBkdList(ind.Conf.bkd.dir)
+	if err != nil {
+		return
+	}
+	for _, prop := range props {
+		bkd := &bkdtree.BkdTree{}
+		if err = bkd.Open(ind.Conf.bkd.dir, prop, ind.Conf.cap, ind.Conf.bkd.cptInterval); err != nil {
+			return
+		}
+		//TODO: verify t0mCap, leafCap, intraCap
+		//TODO: ind.def.DocumentWithIdx.Index???
+		if bkd.NumDims != 1 {
+			err = errors.New("indexing multi-dimension points is not immplementd yet")
+			return
+		}
+		var uintType int
+		switch bkd.BytesPerDim {
+		case 1:
+			uintType = cql.TypeUint8
+		case 2:
+			uintType = cql.TypeUint16
+		case 4:
+			uintType = cql.TypeUint32
+		case 8:
+			uintType = cql.TypeUint64
+		default:
+			err = errors.Errorf("unsupported uint length %d", bkd.BytesPerDim)
+			return
+		}
+		ind.def.PropTypes[prop] = uintType
+		ind.def.Document.UintProps = append(ind.def.Document.UintProps, cql.UintProp{Name: prop, ValLen: bkd.BytesPerDim})
+		ind.bkds[prop] = bkd
+	}
+
+	return
+}
+
+func getBkdList(dir string) (props []string, err error) {
+	var d *os.File
+	var fns []string
+	var prefix string
+	d, err = os.Open(dir)
+	if err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	fns, err = d.Readdirnames(0)
+	if err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	re := regexp.MustCompile(fmt.Sprintf("(?P<prefix>.*)_t0m)"))
+	for _, fn := range fns {
+		subs := re.FindStringSubmatch(fn)
+		if subs == nil {
+			continue
+		}
+		prefix = subs[1]
+		props = append(props, prefix)
+	}
+	sort.Strings(props)
+	return
+}
+
+func (ind *Index) Close() (err error) {
+	for prop, bkd := range ind.bkds {
+		if err = bkd.Close(); err != nil {
+			return
+		}
+		delete(ind.bkds, prop)
+	}
 	return
 }
 

@@ -15,85 +15,8 @@ const (
 	BkdCapTest = 10000
 )
 
-func newTestIndex1() (ind *Index) {
-	ind = &Index{
-		Def: IndexDef{
-			Conf: IndexConf{
-				Dir:         "/tmp",
-				Cap:         BkdCapTest,
-				T0mCap:      1000,
-				LeafCap:     100,
-				IntraCap:    4,
-				CptInterval: 30 * time.Minute,
-			},
-		},
-	}
-	return
-}
-
-func newTestIndex2() (ind *Index) {
-	ind = &Index{
-		Def: IndexDef{
-			Conf: IndexConf{
-				Dir:         "/tmp",
-				Cap:         BkdCapTest,
-				T0mCap:      1000,
-				LeafCap:     100,
-				IntraCap:    4,
-				CptInterval: 30 * time.Minute,
-			},
-			DocProt: cql.DocumentWithIdx{
-				Document: cql.Document{
-					DocID: 0,
-					UintProps: []cql.UintProp{
-						cql.UintProp{
-							Name:   "object",
-							ValLen: 8,
-							Val:    0,
-						},
-						cql.UintProp{
-							Name:   "price",
-							ValLen: 4,
-							Val:    0,
-						},
-						cql.UintProp{
-							Name:   "number",
-							ValLen: 4,
-							Val:    0,
-						},
-						cql.UintProp{
-							Name:   "date",
-							ValLen: 8,
-							Val:    0,
-						},
-					},
-				},
-				Index: "orders",
-			},
-		},
-	}
-	return
-}
-
-//TESTCASE: normal operation sequence: create, insert, del, destroy
-func TestIndexNormal(t *testing.T) {
-	var err error
-	var isEqual bool
-	var found bool
-
-	ind1 := newTestIndex1()
-	ind2 := newTestIndex2()
-	q := &cql.CqlCreate{
-		DocumentWithIdx: ind2.Def.DocProt,
-	}
-	if err = ind1.Create(q); err != nil {
-		t.Fatalf("%+v", err)
-	}
-	if isEqual, err = checkers.DeepEqual(ind1.Def, ind2.Def); !isEqual {
-		t.Fatalf("incorrect result of (*Index).Create, %+v", err)
-	}
-
-	doc := cql.DocumentWithIdx{
+func newDocProt() *cql.DocumentWithIdx {
+	return &cql.DocumentWithIdx{
 		Document: cql.Document{
 			DocID: 0,
 			UintProps: []cql.UintProp{
@@ -121,7 +44,43 @@ func TestIndexNormal(t *testing.T) {
 		},
 		Index: "orders",
 	}
+}
 
+func newTestIndex() (ind *Index) {
+	ind = &Index{
+		Def: IndexDef{
+			Conf: IndexConf{
+				Dir:         "/tmp",
+				Cap:         BkdCapTest,
+				T0mCap:      1000,
+				LeafCap:     100,
+				IntraCap:    4,
+				CptInterval: 30 * time.Minute,
+			},
+		},
+	}
+	return
+}
+
+//TESTCASE: normal operation sequence: create, insert, del, destroy
+func TestIndexNormal(t *testing.T) {
+	var err error
+	var isEqual bool
+	var found bool
+
+	docProt := newDocProt()
+	ind := newTestIndex()
+	q := &cql.CqlCreate{
+		DocumentWithIdx: *docProt,
+	}
+	if err = ind.Create(q); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	if isEqual, err = checkers.DeepEqual(ind.Def.DocProt, *docProt); !isEqual {
+		t.Fatalf("incorrect result of (*Index).Create, %+v", err)
+	}
+
+	doc := *docProt
 	for i := 0; i < BkdCapTest; i++ {
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -130,7 +89,7 @@ func TestIndexNormal(t *testing.T) {
 		ins := &cql.CqlInsert{
 			DocumentWithIdx: doc,
 		}
-		if err = ind1.Insert(ins); err != nil {
+		if err = ind.Insert(ins); err != nil {
 			t.Fatalf("%+v", err)
 		}
 	}
@@ -148,7 +107,7 @@ func TestIndexNormal(t *testing.T) {
 			},
 		},
 	}
-	if rb, err = ind1.Select(cs); err != nil {
+	if rb, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Println(rb.String())
@@ -160,7 +119,7 @@ func TestIndexNormal(t *testing.T) {
 
 	cs.OrderBy = "price"
 	cs.Limit = 20
-	if rb, err = ind1.Select(cs); err != nil {
+	if rb, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Println(rb.String())
@@ -177,7 +136,7 @@ func TestIndexNormal(t *testing.T) {
 		del := &cql.CqlDel{
 			DocumentWithIdx: doc,
 		}
-		if found, err = ind1.Del(del); err != nil {
+		if found, err = ind.Del(del); err != nil {
 			t.Fatalf("%+v", err)
 		} else if !found {
 			t.Fatalf("document %v not found", doc)
@@ -187,7 +146,78 @@ func TestIndexNormal(t *testing.T) {
 	q2 := &cql.CqlDestroy{
 		Index: "orders",
 	}
-	if err = ind1.Destroy(q2); err != nil {
+	if err = ind.Destroy(q2); err != nil {
+		t.Fatalf("%+v", err)
+	}
+}
+
+func TestIndexOpenClose(t *testing.T) {
+	var err error
+	var isEqual bool
+
+	//create index
+	docProt := newDocProt()
+	ind := newTestIndex()
+	q := &cql.CqlCreate{
+		DocumentWithIdx: *docProt,
+	}
+	if err = ind.Create(q); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//insert documents
+	doc := *docProt
+	for i := 0; i < BkdCapTest; i++ {
+		doc.DocID = uint64(i)
+		for j := 0; j < len(doc.UintProps); j++ {
+			doc.UintProps[j].Val = uint64(i * (j + 1))
+		}
+		ins := &cql.CqlInsert{
+			DocumentWithIdx: doc,
+		}
+		if err = ind.Insert(ins); err != nil {
+			t.Fatalf("%+v", err)
+		}
+	}
+
+	//close index
+	if err = ind.Close(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//open index
+	dir := ind.Def.Conf.Dir
+	name := doc.Index
+	if err = ind.Open(dir, name); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//close index
+	if err = ind.Close(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//open index with another Index object. This occurs when program restart.
+	ind2 := newTestIndex()
+	if err = ind2.Open(dir, name); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//verify index definion keeps unchanged
+	if isEqual, err = checkers.DeepEqual(ind2.Def.Conf, ind.Def.Conf); !isEqual {
+		fmt.Printf("have %v\n", ind2.Def)
+		fmt.Printf("want %v\n", ind.Def)
+		t.Fatalf("index Def.Conf %+v", err)
+	}
+	docProt = newDocProt() //docProt changes after above Insert step. have to restore it
+	if isEqual, err = checkers.DeepEqual(ind2.Def.DocProt, *docProt); !isEqual {
+		fmt.Printf("have %v\n", ind2.Def.DocProt)
+		fmt.Printf("want %v\n", *docProt)
+		t.Fatalf("index Def.DocProt %+v", err)
+	}
+
+	//close index
+	if err = ind2.Close(); err != nil {
 		t.Fatalf("%+v", err)
 	}
 }
