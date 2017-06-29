@@ -11,38 +11,45 @@ import (
 	"github.com/deepfabric/indexer/cql"
 )
 
-type BkdConf struct {
-	t0mCap, leafCap, intraCap int
-	dir                       string
-	cptInterval               time.Duration
+//IndexConf originate from config file. It's comman to all indices.
+type IndexConf struct {
+	//generic items
+	Dir string
+	Cap int //upper limit of number of documents
+
+	//BKD specific items
+	T0mCap      int
+	LeafCap     int
+	IntraCap    int
+	CptInterval time.Duration
 }
 
-type IndexConf struct {
-	bkd BkdConf
-	cap int //upper limit of number of documents
+//IndexDef will be persisted to an index-specific file in order to support reopening an index
+type IndexDef struct {
+	Conf    IndexConf
+	DocProt cql.DocumentWithIdx //document prototype
 }
 
 type Index struct {
-	Conf IndexConf
-	def  cql.IndexDef
+	Def  IndexDef
 	bkds map[string]*bkdtree.BkdTree
 }
 
 func (ind *Index) Create(q *cql.CqlCreate) (err error) {
-	ind.def = q.IndexDef
+	ind.Def.DocProt = q.DocumentWithIdx
 	ind.bkds = make(map[string]*bkdtree.BkdTree)
 	var bkd *bkdtree.BkdTree
 	for _, uintProp := range q.UintProps {
-		t0mCap := ind.Conf.bkd.t0mCap
-		bkdCap := ind.Conf.cap
+		t0mCap := ind.Def.Conf.T0mCap
+		bkdCap := ind.Def.Conf.Cap
 		numDims := 1
 		bytesPerDim := uintProp.ValLen
-		leafCap := ind.Conf.bkd.leafCap
-		intraCap := ind.Conf.bkd.intraCap
-		dir := ind.Conf.bkd.dir
+		LeafCap := ind.Def.Conf.LeafCap
+		IntraCap := ind.Def.Conf.IntraCap
+		dir := ind.Def.Conf.Dir
 		prefix := uintProp.Name
-		cptInterval := ind.Conf.bkd.cptInterval
-		bkd, err = bkdtree.NewBkdTree(t0mCap, bkdCap, numDims, bytesPerDim, leafCap, intraCap, dir, prefix, cptInterval)
+		cptInterval := ind.Def.Conf.CptInterval
+		bkd, err = bkdtree.NewBkdTree(t0mCap, bkdCap, numDims, bytesPerDim, LeafCap, IntraCap, dir, prefix, cptInterval)
 		if err != nil {
 			return
 		}

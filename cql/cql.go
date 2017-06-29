@@ -50,11 +50,6 @@ type DocumentWithIdx struct {
 	Index string
 }
 
-type IndexDef struct {
-	DocumentWithIdx
-	PropTypes map[string]int //property name -> type
-}
-
 type UintPred struct {
 	Name      string
 	Low, High uint64
@@ -71,7 +66,7 @@ type StrPred struct {
 }
 
 type CqlCreate struct {
-	IndexDef
+	DocumentWithIdx
 }
 
 type CqlDestroy struct {
@@ -126,8 +121,8 @@ func (el *VerboseErrorListener) ReportContextSensitivity(recognizer antlr.Parser
 
 type myCqlVisitor struct {
 	parser.BaseCQLVisitor
-	indexDefs map[string]IndexDef
-	res       interface{} //record the intermediate and final result of visitor
+	docProts map[string]Document
+	res      interface{} //record the intermediate and final result of visitor
 }
 
 func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) (err interface{}) {
@@ -152,7 +147,6 @@ func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) (err interface{}) {
 func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) (err interface{}) {
 	q := &CqlCreate{}
 	q.Index = ctx.IndexName().GetText()
-	q.PropTypes = make(map[string]int)
 	for _, popDef := range ctx.AllUintPropDef() {
 		if err = v.VisitUintPropDef(popDef.(*parser.UintPropDefContext)); err != nil {
 			return
@@ -170,27 +164,6 @@ func (v *myCqlVisitor) VisitCreate(ctx *parser.CreateContext) (err interface{}) 
 			return
 		}
 		q.StrProps = append(q.StrProps, v.res.(StrProp))
-	}
-	for _, pop := range q.UintProps {
-		switch pop.ValLen {
-		case 1:
-			q.PropTypes[pop.Name] = TypeUint8
-		case 2:
-			q.PropTypes[pop.Name] = TypeUint16
-		case 4:
-			q.PropTypes[pop.Name] = TypeUint32
-		case 8:
-			q.PropTypes[pop.Name] = TypeUint64
-		default:
-			err = errors.Errorf("invalid pop.ValLen %d", pop.ValLen)
-			return
-		}
-	}
-	for _, pop := range q.EnumProps {
-		q.PropTypes[pop.Name] = TypeEnum
-	}
-	for _, pop := range q.StrProps {
-		q.PropTypes[pop.Name] = TypeStr
 	}
 	v.res = q
 	return
@@ -258,16 +231,16 @@ func (v *myCqlVisitor) VisitDel(ctx *parser.DelContext) (err interface{}) {
 
 func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface{}) {
 	index := ctx.IndexName().GetText()
-	indexDef, ok := v.indexDefs[index]
+	docProt, ok := v.docProts[index]
+	want := len(docProt.UintProps) + len(docProt.EnumProps) + len(docProt.StrProps)
 	if !ok {
 		err = errors.Errorf("failed to find the definion of index %s\n", index)
 		return
-	} else if len(indexDef.PropTypes) != len(ctx.AllValue()) {
-		err = errors.Errorf("invalid number of values, is %d, want %d\n", len(ctx.AllValue()), len(indexDef.PropTypes))
+	} else if len(ctx.AllValue()) != want {
+		err = errors.Errorf("invalid number of values, is %d, want %d\n", len(ctx.AllValue()), want)
 		return
 	}
 	doc := &DocumentWithIdx{}
-	*doc = indexDef.DocumentWithIdx
 	doc.Index = ctx.IndexName().GetText()
 	var tmpU64 uint64
 	var tmpInt int
@@ -279,24 +252,30 @@ func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface
 	doc.DocID = tmpU64
 
 	vals := ctx.AllValue()
-	for i := 0; i < len(doc.UintProps); i++ {
+	for i := 0; i < len(docProt.UintProps); i++ {
 		tmpU64, err = strconv.ParseUint(vals[i].GetText(), 10, 64)
 		if err != nil {
 			err = errors.Wrap(err.(error), "")
 			return
 		}
-		doc.UintProps[i].Val = tmpU64
+		uintProp := docProt.UintProps[i]
+		uintProp.Val = tmpU64
+		doc.UintProps = append(doc.UintProps, uintProp)
 	}
-	for i := 0; i < len(doc.EnumProps); i++ {
-		tmpInt, err = strconv.Atoi(vals[i+len(doc.UintProps)].GetText())
+	for i := 0; i < len(docProt.EnumProps); i++ {
+		tmpInt, err = strconv.Atoi(vals[i+len(docProt.UintProps)].GetText())
 		if err != nil {
 			err = errors.Wrap(err.(error), "")
 			return
 		}
-		doc.EnumProps[i].Val = tmpInt
+		enumProp := docProt.EnumProps[i]
+		enumProp.Val = tmpInt
+		doc.EnumProps = append(doc.EnumProps, enumProp)
 	}
-	for i := 0; i < len(doc.StrProps); i++ {
-		doc.StrProps[i].Val = vals[i+len(doc.UintProps)+len(doc.EnumProps)].GetText()
+	for i := 0; i < len(docProt.StrProps); i++ {
+		strProp := docProt.StrProps[i]
+		strProp.Val = vals[i+len(docProt.UintProps)+len(docProt.EnumProps)].GetText()
+		doc.StrProps = append(doc.StrProps, strProp)
 	}
 	v.res = doc
 	return
@@ -483,7 +462,7 @@ func (v *myCqlVisitor) VisitOrderLimit(ctx *parser.OrderLimitContext) (err inter
 }
 
 //ParseCql parse CQL. res type is one of CqlCreate/CqlDestroy/CqlInsert/CqlDel/CqlQuery.
-func ParseCql(cql string, indexDefs map[string]IndexDef) (res interface{}, err error) {
+func ParseCql(cql string, docProts map[string]Document) (res interface{}, err error) {
 	input := antlr.NewInputStream(cql)
 	lexer := parser.NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -497,7 +476,7 @@ func ParseCql(cql string, indexDefs map[string]IndexDef) (res interface{}, err e
 		return
 	}
 
-	visitor := &myCqlVisitor{indexDefs: indexDefs}
+	visitor := &myCqlVisitor{docProts: docProts}
 	if err1 := tree.Accept(visitor); err1 != nil {
 		err = err1.(error) //panic: interface conversion: interface is nil, not error
 		return

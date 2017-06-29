@@ -17,15 +17,15 @@ const (
 
 func newTestIndex1() (ind *Index) {
 	ind = &Index{
-		Conf: IndexConf{
-			bkd: BkdConf{
-				t0mCap:      1000,
-				leafCap:     100,
-				intraCap:    4,
-				dir:         "/tmp",
-				cptInterval: 30 * time.Minute,
+		Def: IndexDef{
+			Conf: IndexConf{
+				Dir:         "/tmp",
+				Cap:         BkdCapTest,
+				T0mCap:      1000,
+				LeafCap:     100,
+				IntraCap:    4,
+				CptInterval: 30 * time.Minute,
 			},
-			cap: BkdCapTest,
 		},
 	}
 	return
@@ -33,18 +33,16 @@ func newTestIndex1() (ind *Index) {
 
 func newTestIndex2() (ind *Index) {
 	ind = &Index{
-		Conf: IndexConf{
-			bkd: BkdConf{
-				t0mCap:      1000,
-				leafCap:     100,
-				intraCap:    4,
-				dir:         "/tmp",
-				cptInterval: 30 * time.Minute,
+		Def: IndexDef{
+			Conf: IndexConf{
+				Dir:         "/tmp",
+				Cap:         BkdCapTest,
+				T0mCap:      1000,
+				LeafCap:     100,
+				IntraCap:    4,
+				CptInterval: 30 * time.Minute,
 			},
-			cap: 100000,
-		},
-		def: cql.IndexDef{
-			DocumentWithIdx: cql.DocumentWithIdx{
+			DocProt: cql.DocumentWithIdx{
 				Document: cql.Document{
 					DocID: 0,
 					UintProps: []cql.UintProp{
@@ -86,12 +84,12 @@ func TestIndexNormal(t *testing.T) {
 	ind1 := newTestIndex1()
 	ind2 := newTestIndex2()
 	q := &cql.CqlCreate{
-		IndexDef: ind2.def,
+		DocumentWithIdx: ind2.Def.DocProt,
 	}
 	if err = ind1.Create(q); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	if isEqual, err = checkers.DeepEqual(ind1.def, ind2.def); !isEqual {
+	if isEqual, err = checkers.DeepEqual(ind1.Def, ind2.Def); !isEqual {
 		t.Fatalf("incorrect result of (*Index).Create, %+v", err)
 	}
 
