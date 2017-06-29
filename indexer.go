@@ -35,6 +35,7 @@ type Index struct {
 	bkds map[string]*bkdtree.BkdTree
 }
 
+// Create execute CqlCreate. Assume ind.Def.Conf has been populated.
 func (ind *Index) Create(q *cql.CqlCreate) (err error) {
 	ind.Def.DocProt = q.DocumentWithIdx
 	ind.bkds = make(map[string]*bkdtree.BkdTree)
