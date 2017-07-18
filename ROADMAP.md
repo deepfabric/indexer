@@ -7,6 +7,8 @@ This document defines the roadmap for indexer development.
 - [D] index of uint properties: Select
 - [D] index persistence: Open and Close
 - [ ] multi-dimension uint property
+- [ ] index of string properties: create and query term id
+- [ ] index of string properties: matrix bitmap
 - [ ] index of string properties
 - [ ] index of enum properties
 - [ ] index sharding
