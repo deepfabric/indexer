@@ -22,10 +22,12 @@ type TermDict struct {
 //GetTermID get id of the given term, will insert the term implicitly if it is not in the dict.
 func (td *TermDict) GetTermID(term string) (id int64, err error) {
 	if td.terms == nil {
+		//According to https://blog.golang.org/defer-panic-and-recover,
+		//"A defer statement pushes a function call onto a list. The list of saved calls is executed after the surrounding function returns.""
 		td.rwlock.Lock()
-		defer td.rwlock.Unlock()
 		fp := filepath.Join(td.Dir, "terms")
 		if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
+			td.rwlock.Unlock()
 			err = errors.Wrap(err, "")
 			return
 		}
@@ -39,12 +41,14 @@ func (td *TermDict) GetTermID(term string) (id int64, err error) {
 				break
 			} else if err != nil {
 				err = errors.Wrap(err, "")
+				td.rwlock.Unlock()
 				return
 			}
-			term = strings.TrimSpace(line)
-			td.terms[term] = num
+			tmpTerm := strings.TrimSpace(line)
+			td.terms[tmpTerm] = num
 			num++
 		}
+		td.rwlock.Unlock()
 	}
 	var found bool
 	td.rwlock.RLock()
