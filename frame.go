@@ -2,8 +2,11 @@ package indexer
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -32,7 +35,8 @@ func NewFrame(path, index, name string) *Frame {
 		td:        &TermDict{Dir: path},
 		fragments: make(map[uint64]*pilosa.Fragment),
 	}
-	for slice := uint64(0); ; slice++ {
+	sliceList := getSliceList(path)
+	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
 		if _, err := os.Stat(fp); os.IsNotExist(err) {
 			//path does not exist
@@ -42,6 +46,37 @@ func NewFrame(path, index, name string) *Frame {
 		f.fragments[slice] = fragment
 	}
 	return f
+}
+
+func getSliceList(dir string) (numList []uint64, err error) {
+	var d *os.File
+	var fns []string
+	var num int
+	d, err = os.Open(filepath.Join(dir, "fragments"))
+	if err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	fns, err = d.Readdirnames(0)
+	if err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	re := regexp.MustCompile(fmt.Sprintf("(?P<num>[0-9]+)", prefix))
+	for _, fn := range fns {
+		subs := re.FindStringSubmatch(fn)
+		if subs == nil {
+			continue
+		}
+		num, err = strconv.ParseUint(subs[1])
+		if err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+		numList = append(numList, num)
+	}
+	sort.Ints(numList)
+	return
 }
 
 // FragmentPath returns the path to a fragment
