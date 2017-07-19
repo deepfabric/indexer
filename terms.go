@@ -15,12 +15,12 @@ import (
 type TermDict struct {
 	Dir    string
 	f      *os.File
-	terms  map[string]int64
+	terms  map[string]uint64
 	rwlock sync.RWMutex //concurrent access of TermDict
 }
 
 //GetTermID get id of the given term, will insert the term implicitly if it is not in the dict.
-func (td *TermDict) GetTermID(term string) (id int64, err error) {
+func (td *TermDict) GetTermID(term string) (id uint64, err error) {
 	if td.terms == nil {
 		//According to https://blog.golang.org/defer-panic-and-recover,
 		//"A defer statement pushes a function call onto a list. The list of saved calls is executed after the surrounding function returns.""
@@ -31,10 +31,10 @@ func (td *TermDict) GetTermID(term string) (id int64, err error) {
 			err = errors.Wrap(err, "")
 			return
 		}
-		td.terms = make(map[string]int64)
+		td.terms = make(map[string]uint64)
 		reader := bufio.NewReader(td.f)
 		var line string
-		var num int64
+		var num uint64
 		for {
 			line, err = reader.ReadString('\n')
 			if err == io.EOF {
@@ -62,7 +62,7 @@ func (td *TermDict) GetTermID(term string) (id int64, err error) {
 	if id, found = td.terms[term]; found {
 		return id, nil
 	}
-	id = int64(len(td.terms))
+	id = uint64(len(td.terms))
 	td.terms[term] = id
 	line := term + "\n"
 	if _, err = td.f.WriteString(line); err != nil {
@@ -73,8 +73,8 @@ func (td *TermDict) GetTermID(term string) (id int64, err error) {
 }
 
 //GetTermsID get id for an array of terms
-func (td *TermDict) GetTermsID(terms []string) (ids []int64, err error) {
-	ids = make([]int64, len(terms))
+func (td *TermDict) GetTermsID(terms []string) (ids []uint64, err error) {
+	ids = make([]uint64, len(terms))
 	for i, term := range terms {
 		if ids[i], err = td.GetTermID(term); err != nil {
 			return

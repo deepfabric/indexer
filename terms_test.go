@@ -14,7 +14,7 @@ func TestGetTermsID(t *testing.T) {
 
 	//TESTCASE: query and insert term to an empty dict
 	err = os.Remove("/tmp/terms")
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		t.Fatalf("%+v", err)
 	}
 	td := &TermDict{
@@ -29,7 +29,7 @@ func TestGetTermsID(t *testing.T) {
 		"friday",
 		"satur",
 	}
-	expIds := []int64{0, 1, 2, 3, 4, 5, 6}
+	expIds := []uint64{0, 1, 2, 3, 4, 5, 6}
 
 	ids, err := td.GetTermsID(terms)
 	if err != nil {
@@ -48,7 +48,7 @@ func TestGetTermsID(t *testing.T) {
 		"wikepedia",
 		"thurs",
 	}
-	expIds = []int64{5, 7, 4}
+	expIds = []uint64{5, 7, 4}
 
 	ids, err = td2.GetTermsID(terms)
 	if err != nil {
