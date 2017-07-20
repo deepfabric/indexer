@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RoaringBitmap/roaring"
+	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"
 
 	"github.com/deepfabric/indexer/cql"
@@ -94,7 +94,7 @@ func TestIndexNormal(t *testing.T) {
 		}
 	}
 
-	var rb *roaring.Bitmap
+	var rb *pilosa.Bitmap
 	low := 30
 	high := 600
 	cs := &cql.CqlSelect{
@@ -110,11 +110,11 @@ func TestIndexNormal(t *testing.T) {
 	if rb, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.String())
+	fmt.Println(rb.Bits())
 	// low <= 2*i <= high, (low+1)/2 <= i <= high/2
 	want := high/2 - (low+1)/2 + 1
-	if rb.GetCardinality() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", rb.GetCardinality(), want)
+	if rb.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
 	}
 
 	cs.OrderBy = "price"
@@ -122,10 +122,10 @@ func TestIndexNormal(t *testing.T) {
 	if rb, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.String())
+	fmt.Println(rb.Bits())
 	want = cs.Limit
-	if rb.GetCardinality() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", rb.GetCardinality(), want)
+	if rb.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
 	}
 
 	for i := 0; i < BkdCapTest; i++ {

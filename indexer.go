@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
 
 	"os"
 	"path/filepath"
 
-	"github.com/RoaringBitmap/roaring"
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
 )
@@ -229,11 +229,11 @@ func (ind *Index) Del(q *cql.CqlDel) (found bool, err error) {
 	return
 }
 
-func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
+func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	var bkd *bkdtree.BkdTree
 	var ok bool
 	visitor := &bkdVisitor{
-		docs: roaring.NewBitmap(),
+		docs: pilosa.NewBitmap(),
 	}
 
 	for _, uintPred := range q.UintPreds {
@@ -281,9 +281,9 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
 		if err != nil {
 			return
 		}
-		rb = roaring.NewBitmap()
+		rb = pilosa.NewBitmap()
 		for _, point := range *visitor.h {
-			rb.Add(uint32(point.UserData))
+			rb.SetBit(point.UserData)
 		}
 		visitor.prevDocs = rb
 	}
@@ -295,8 +295,8 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *roaring.Bitmap, err error) {
 type bkdVisitor struct {
 	lowPoint  bkdtree.Point
 	highPoint bkdtree.Point
-	prevDocs  *roaring.Bitmap
-	docs      *roaring.Bitmap
+	prevDocs  *pilosa.Bitmap
+	docs      *pilosa.Bitmap
 	limit     int
 	h         *bkdtree.PointMaxHeap
 }
@@ -306,11 +306,11 @@ func (v *bkdVisitor) GetLowPoint() bkdtree.Point { return v.lowPoint }
 func (v *bkdVisitor) GetHighPoint() bkdtree.Point { return v.highPoint }
 
 func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
-	docID := uint32(point.UserData)
+	docID := point.UserData
 	//TODO: add uint64 support for roaring.Bitmap?
 	if v.prevDocs == nil || v.prevDocs.Contains(docID) {
 		if v.limit == 0 {
-			v.docs.Add(docID)
+			v.docs.SetBit(docID)
 		} else {
 			if len(*v.h) < v.limit {
 				v.h.Push(point)
