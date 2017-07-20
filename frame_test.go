@@ -70,7 +70,7 @@ func TestQuery(t *testing.T) {
 		docIDs = bm.Bits()
 		fmt.Printf("found term %s in documents: %v\n", term, docIDs)
 		if isEqual, err = checkers.DeepEqual(docIDs, expDocIDs[i]); !isEqual {
-			t.Fatalf("incorrect result of (*TermDict).GetTermsID, %+v", err)
+			t.Fatalf("incorrect result of (*Frame).Query, %+v", err)
 		}
 	}
 }
