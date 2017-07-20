@@ -9,7 +9,7 @@ import (
 
 	"strings"
 
-	"github.com/pilosa/pilosa"
+	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
 )
 

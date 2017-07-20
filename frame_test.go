@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"
-	"github.com/pilosa/pilosa"
 )
 
 func TestParseAndIndex(t *testing.T) {
@@ -71,6 +71,11 @@ func TestQuery(t *testing.T) {
 		fmt.Printf("found term %s in documents: %v\n", term, docIDs)
 		if isEqual, err = checkers.DeepEqual(docIDs, expDocIDs[i]); !isEqual {
 			t.Fatalf("incorrect result of (*Frame).Query, %+v", err)
+		}
+		for _, docID := range expDocIDs[i] {
+			if !bm.Contains(docID) {
+				t.Fatalf("incorrect result of (*Frame).Query")
+			}
 		}
 	}
 }
