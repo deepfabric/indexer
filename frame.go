@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -48,6 +49,7 @@ func (f *Frame) Open() (err error) {
 	if sliceList, err = getSliceList(f.path); err != nil {
 		return
 	}
+	fmt.Printf("sliceList: %v\n", sliceList)
 	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
 		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
@@ -82,7 +84,7 @@ func getSliceList(dir string) (numList []uint64, err error) {
 		err = errors.Wrap(err, "")
 		return
 	}
-	re := regexp.MustCompile("(?P<num>[0-9]+)")
+	re := regexp.MustCompile("^(?P<num>[0-9]+)$")
 	for _, fn := range fns {
 		subs := re.FindStringSubmatch(fn)
 		if subs == nil {
