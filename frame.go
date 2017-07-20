@@ -116,7 +116,7 @@ func (f *Frame) Path() string { return f.path }
 // MaxSlice returns the max slice in the frame.
 func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
 
-// SetBit sets a bit on a view within the frame.
+// SetBit sets a bit within the frame, and expands fragments if necessary.
 func (f *Frame) SetBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
 	fragment, ok := f.fragments[slice]
@@ -148,7 +148,7 @@ func (f *Frame) ClearBit(rowID, colID uint64) (changed bool, err error) {
 	return
 }
 
-// ParseAndIndex parses and index a field
+// ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	terms := strings.SplitN(text, " ", -1)
 	ids, err := f.td.CreateTermsIfNotExist(terms)
