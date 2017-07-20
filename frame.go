@@ -1,58 +1,72 @@
 package indexer
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"sync"
 
 	"strings"
 
 	"github.com/pilosa/pilosa"
+	"github.com/pkg/errors"
 )
 
 // Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
 type Frame struct {
-	mu    sync.Mutex
-	path  string
-	index string
-	name  string
+	mu       sync.Mutex
+	path     string
+	index    string
+	name     string
+	maxSlice uint64
 
 	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
 	td        *TermDict
 }
 
 // NewFrame returns a new instance of frame, and initializes it.
-func NewFrame(path, index, name string) *Frame {
-	f := &Frame{
+func NewFrame(path, index, name string) (f *Frame, err error) {
+	var td *TermDict
+	if td, err = NewTermDict(path); err != nil {
+		return
+	}
+	f = &Frame{
 		path:      path,
 		index:     index,
 		name:      name,
-		td:        &TermDict{Dir: path},
+		td:        td,
 		fragments: make(map[uint64]*pilosa.Fragment),
 	}
-	sliceList := getSliceList(path)
+	var sliceList []uint64
+	if sliceList, err = getSliceList(path); err != nil {
+		return
+	}
 	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
-		if _, err := os.Stat(fp); os.IsNotExist(err) {
-			//path does not exist
-			break
-		}
 		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		if err = fragment.Open(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
 		f.fragments[slice] = fragment
+		if f.maxSlice < slice {
+			f.maxSlice = slice
+		}
 	}
-	return f
+	return
 }
 
 func getSliceList(dir string) (numList []uint64, err error) {
 	var d *os.File
 	var fns []string
-	var num int
-	d, err = os.Open(filepath.Join(dir, "fragments"))
+	var num uint64
+	fragDir := filepath.Join(dir, "fragments")
+	if err = os.MkdirAll(fragDir, 0700); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	d, err = os.Open(fragDir)
 	if err != nil {
 		err = errors.Wrap(err, "")
 		return
@@ -62,20 +76,19 @@ func getSliceList(dir string) (numList []uint64, err error) {
 		err = errors.Wrap(err, "")
 		return
 	}
-	re := regexp.MustCompile(fmt.Sprintf("(?P<num>[0-9]+)", prefix))
+	re := regexp.MustCompile("(?P<num>[0-9]+)")
 	for _, fn := range fns {
 		subs := re.FindStringSubmatch(fn)
 		if subs == nil {
 			continue
 		}
-		num, err = strconv.ParseUint(subs[1])
+		num, err = strconv.ParseUint(subs[1], 10, 64)
 		if err != nil {
 			err = errors.Wrap(err, "")
 			return
 		}
 		numList = append(numList, num)
 	}
-	sort.Ints(numList)
 	return
 }
 
@@ -101,22 +114,25 @@ func (f *Frame) Index() string { return f.index }
 func (f *Frame) Path() string { return f.path }
 
 // MaxSlice returns the max slice in the frame.
-func (f *Frame) MaxSlice() uint64 {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	return uint64(len(f.fragments))
-}
+func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
 
 // SetBit sets a bit on a view within the frame.
 func (f *Frame) SetBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
 	fragment, ok := f.fragments[slice]
 	if !ok {
-		err = errors.New("column out of bounds")
-		return
+		fp := f.FragmentPath(slice)
+		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		if err = fragment.Open(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+		f.fragments[slice] = fragment
 	}
 	changed, err = fragment.SetBit(rowID, colID)
+	if f.maxSlice < slice {
+		f.maxSlice = slice
+	}
 	return
 }
 
@@ -128,18 +144,34 @@ func (f *Frame) ClearBit(rowID, colID uint64) (changed bool, err error) {
 		err = errors.New("column out of bounds")
 		return
 	}
-	changed, err = fragment.SetBit(rowID, colID)
+	changed, err = fragment.ClearBit(rowID, colID)
 	return
 }
 
 // ParseAndIndex parses and index a field
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	terms := strings.SplitN(text, " ", -1)
-	ids, err := f.td.GetTermsID(terms)
+	ids, err := f.td.CreateTermsIfNotExist(terms)
+	if err != nil {
+		return
+	}
 	for _, termID := range ids {
 		if _, err = f.SetBit(termID, docID); err != nil {
 			return
 		}
+	}
+	return
+}
+
+func (f *Frame) Query(term string) (bm *pilosa.Bitmap, err error) {
+	bm = pilosa.NewBitmap()
+	termID, found := f.td.GetTermID(term)
+	if !found {
+		return
+	}
+	for _, fragment := range f.fragments {
+		bm2 := fragment.Row(termID)
+		bm.Merge(bm2)
 	}
 	return
 }

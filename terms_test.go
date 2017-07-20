@@ -11,14 +11,14 @@ import (
 func TestGetTermsID(t *testing.T) {
 	var err error
 	var isEqual bool
+	var td *TermDict
 
 	//TESTCASE: query and insert term to an empty dict
-	err = os.Remove("/tmp/terms")
-	if err != nil && !os.IsNotExist(err) {
+	if err = os.Remove("/tmp/terms"); err != nil && !os.IsNotExist(err) {
 		t.Fatalf("%+v", err)
 	}
-	td := &TermDict{
-		Dir: "/tmp",
+	if td, err = NewTermDict("/tmp"); err != nil {
+		t.Fatalf("%+v", err)
 	}
 	terms := []string{
 		"sunday",
@@ -31,7 +31,7 @@ func TestGetTermsID(t *testing.T) {
 	}
 	expIds := []uint64{0, 1, 2, 3, 4, 5, 6}
 
-	ids, err := td.GetTermsID(terms)
+	ids, err := td.CreateTermsIfNotExist(terms)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -50,7 +50,7 @@ func TestGetTermsID(t *testing.T) {
 	}
 	expIds = []uint64{5, 7, 4}
 
-	ids, err = td2.GetTermsID(terms)
+	ids, err = td2.CreateTermsIfNotExist(terms)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

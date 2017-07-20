@@ -19,44 +19,42 @@ type TermDict struct {
 	rwlock sync.RWMutex //concurrent access of TermDict
 }
 
-//GetTermID get id of the given term, will insert the term implicitly if it is not in the dict.
-func (td *TermDict) GetTermID(term string) (id uint64, err error) {
-	if td.terms == nil {
-		//According to https://blog.golang.org/defer-panic-and-recover,
-		//"A defer statement pushes a function call onto a list. The list of saved calls is executed after the surrounding function returns.""
-		td.rwlock.Lock()
-		fp := filepath.Join(td.Dir, "terms")
-		if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
-			td.rwlock.Unlock()
+//NewTermDict creates and initializes a term dict
+func NewTermDict(directory string) (td *TermDict, err error) {
+	td = &TermDict{
+		Dir: directory,
+	}
+	fp := filepath.Join(td.Dir, "terms")
+	if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	td.terms = make(map[string]uint64)
+	reader := bufio.NewReader(td.f)
+	var line string
+	var num uint64
+	for {
+		line, err = reader.ReadString('\n')
+		if err == io.EOF {
+			err = nil
+			break
+		} else if err != nil {
 			err = errors.Wrap(err, "")
 			return
 		}
-		td.terms = make(map[string]uint64)
-		reader := bufio.NewReader(td.f)
-		var line string
-		var num uint64
-		for {
-			line, err = reader.ReadString('\n')
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				err = errors.Wrap(err, "")
-				td.rwlock.Unlock()
-				return
-			}
-			tmpTerm := strings.TrimSpace(line)
-			td.terms[tmpTerm] = num
-			num++
-		}
-		td.rwlock.Unlock()
+		tmpTerm := strings.TrimSpace(line)
+		td.terms[tmpTerm] = num
+		num++
 	}
+	return
+}
+
+//CreateTermIfNotExist get id of the given term, will insert the term implicitly if it is not in the dict.
+func (td *TermDict) CreateTermIfNotExist(term string) (id uint64, err error) {
 	var found bool
-	td.rwlock.RLock()
-	if id, found = td.terms[term]; found {
-		td.rwlock.RUnlock()
+	if id, found = td.GetTermID(term); found {
 		return id, nil
 	}
-	td.rwlock.RUnlock()
 	td.rwlock.Lock()
 	defer td.rwlock.Unlock()
 	if id, found = td.terms[term]; found {
@@ -72,13 +70,29 @@ func (td *TermDict) GetTermID(term string) (id uint64, err error) {
 	return
 }
 
-//GetTermsID get id for an array of terms
-func (td *TermDict) GetTermsID(terms []string) (ids []uint64, err error) {
+//GetTermID get id of the given term.
+func (td *TermDict) GetTermID(term string) (id uint64, found bool) {
+	td.rwlock.RLock()
+	id, found = td.terms[term]
+	td.rwlock.RUnlock()
+	return
+}
+
+//CreateTermsIfNotExist is bulk version of CreateTermIfNotExist
+func (td *TermDict) CreateTermsIfNotExist(terms []string) (ids []uint64, err error) {
 	ids = make([]uint64, len(terms))
 	for i, term := range terms {
-		if ids[i], err = td.GetTermID(term); err != nil {
+		if ids[i], err = td.CreateTermIfNotExist(term); err != nil {
 			return
 		}
 	}
+	return
+}
+
+//Count returns the count of terms
+func (td *TermDict) Count() (cnt uint64) {
+	td.rwlock.RLock()
+	cnt = uint64(len(td.terms))
+	td.rwlock.RUnlock()
 	return
 }
