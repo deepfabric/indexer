@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/juju/testing/checkers"
 	"github.com/pilosa/pilosa"
 )
 
@@ -42,6 +43,7 @@ func TestQuery(t *testing.T) {
 	var f *Frame
 	var terms []string
 	var bm *pilosa.Bitmap
+	var isEqual bool
 
 	//TESTCASE: query and insert term to an empty dict
 	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
@@ -60,10 +62,15 @@ func TestQuery(t *testing.T) {
 	fmt.Printf("termdict size: %d\n", f.td.Count())
 
 	terms = []string{"the", "disk"}
-	for _, term := range terms {
+	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}}
+	for i, term := range terms {
 		if bm, err = f.Query(term); err != nil {
 			t.Fatalf("%+v", err)
 		}
-		fmt.Printf("found term %s in following documents: %v\n", term, bm.Bits())
+		docIDs = bm.Bits()
+		fmt.Printf("found term %s in documents: %v\n", term, docIDs)
+		if isEqual, err = checkers.DeepEqual(docIDs, expDocIDs[i]); !isEqual {
+			t.Fatalf("incorrect result of (*TermDict).GetTermsID, %+v", err)
+		}
 	}
 }
