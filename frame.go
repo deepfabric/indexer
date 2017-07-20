@@ -38,8 +38,14 @@ func NewFrame(path, index, name string) (f *Frame, err error) {
 		td:        td,
 		fragments: make(map[uint64]*pilosa.Fragment),
 	}
+	err = f.Open()
+	return
+}
+
+//Open opens an existing frame
+func (f *Frame) Open() (err error) {
 	var sliceList []uint64
-	if sliceList, err = getSliceList(path); err != nil {
+	if sliceList, err = getSliceList(f.path); err != nil {
 		return
 	}
 	for _, slice := range sliceList {
@@ -89,6 +95,34 @@ func getSliceList(dir string) (numList []uint64, err error) {
 		}
 		numList = append(numList, num)
 	}
+	return
+}
+
+// Close closes all fragments without removing files on disk.
+func (f *Frame) Close() (err error) {
+	for _, fragment := range f.fragments {
+		if err = fragment.Close(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+	}
+	err = f.td.Close()
+	return
+}
+
+// Destroy closes all fragments, removes all files on disk.
+func (f *Frame) Destroy() (err error) {
+	for _, fragment := range f.fragments {
+		if err = fragment.Close(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+	}
+	if err = os.RemoveAll(filepath.Join(f.path, "fragments")); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	err = f.td.Destroy()
 	return
 }
 

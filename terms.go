@@ -24,6 +24,20 @@ func NewTermDict(directory string) (td *TermDict, err error) {
 	td = &TermDict{
 		Dir: directory,
 	}
+	err = td.Open()
+	return
+}
+
+//Open opens an existing term dict
+func (td *TermDict) Open() (err error) {
+	td.rwlock.Lock()
+	defer td.rwlock.Unlock()
+	if td.f != nil {
+		if err = td.f.Close(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+	}
 	fp := filepath.Join(td.Dir, "terms")
 	if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
 		err = errors.Wrap(err, "")
@@ -45,6 +59,35 @@ func NewTermDict(directory string) (td *TermDict, err error) {
 		tmpTerm := strings.TrimSpace(line)
 		td.terms[tmpTerm] = num
 		num++
+	}
+	return
+}
+
+//Close clear the dictionary on memory and close file.
+func (td *TermDict) Close() (err error) {
+	td.rwlock.Lock()
+	defer td.rwlock.Unlock()
+	if err = td.f.Close(); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	for term := range td.terms {
+		delete(td.terms, term)
+	}
+	return
+}
+
+//Destroy clear the dictionary on memory and disk.
+func (td *TermDict) Destroy() (err error) {
+	td.rwlock.Lock()
+	defer td.rwlock.Unlock()
+	fp := filepath.Join(td.Dir, "terms")
+	if err = os.Remove(fp); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	for term := range td.terms {
+		delete(td.terms, term)
 	}
 	return
 }

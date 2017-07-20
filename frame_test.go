@@ -2,13 +2,16 @@ package indexer
 
 import (
 	"fmt"
+	"os"
 	"testing"
+
+	"path/filepath"
 
 	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"
 )
 
-func TestParseAndIndex(t *testing.T) {
+func TestFrameParseAndIndex(t *testing.T) {
 	var err error
 	var found bool
 	var f *Frame
@@ -37,8 +40,13 @@ func TestParseAndIndex(t *testing.T) {
 			t.Fatalf("Term %s found, want not-found", term)
 		}
 	}
+
+	if err = f.Close(); err != nil {
+		t.Fatalf("%+v", err)
+	}
 }
-func TestQuery(t *testing.T) {
+
+func TestFrameQuery(t *testing.T) {
 	var err error
 	var f *Frame
 	var terms []string
@@ -76,6 +84,35 @@ func TestQuery(t *testing.T) {
 			if !bm.Contains(docID) {
 				t.Fatalf("incorrect result of (*Frame).Query")
 			}
+		}
+	}
+
+	if err = f.Close(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+}
+
+func TestFrameDestroy(t *testing.T) {
+	var err error
+	var f *Frame
+
+	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+	if err = f.ParseAndIndex(3, text); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Printf("termdict size: %d\n", f.td.Count())
+
+	if err = f.Destroy(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	fps := []string{filepath.Join(f.path, "terms"), filepath.Join(f.path, "fragments")}
+	for _, fp := range fps {
+		if _, err := os.Stat(fp); err == nil || !os.IsNotExist(err) {
+			t.Fatalf("path %s exists, want removed", fp)
 		}
 	}
 }
