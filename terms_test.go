@@ -8,10 +8,11 @@ import (
 	"github.com/juju/testing/checkers"
 )
 
-func TestGetTermsID(t *testing.T) {
+func TestTermDict(t *testing.T) {
 	var err error
 	var isEqual bool
 	var td *TermDict
+	var td2 *TermDict
 
 	//TESTCASE: query and insert term to an empty dict
 	if err = os.Remove("/tmp/terms"); err != nil && !os.IsNotExist(err) {
@@ -40,8 +41,8 @@ func TestGetTermsID(t *testing.T) {
 	}
 
 	//TESTCASE: query and insert term to an existing dict
-	td2 := &TermDict{
-		Dir: "/tmp",
+	if td2, err = NewTermDict("/tmp"); err != nil {
+		t.Fatalf("%+v", err)
 	}
 	terms = []string{
 		"friday",
