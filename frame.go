@@ -3,12 +3,12 @@ package indexer
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"sync"
 
 	"strings"
 
+	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
 )
@@ -72,31 +72,18 @@ func (f *Frame) openFragments() (err error) {
 }
 
 func getSliceList(dir string) (numList []uint64, err error) {
-	var d *os.File
-	var fns []string
 	var num uint64
+	var matches [][]string
 	fragDir := filepath.Join(dir, "fragments")
 	if err = os.MkdirAll(fragDir, 0700); err != nil {
 		err = errors.Wrap(err, "")
 		return
 	}
-	d, err = os.Open(fragDir)
-	if err != nil {
-		err = errors.Wrap(err, "")
+	if matches, err = bkdtree.FilepathGlob(fragDir, "^(?P<num>[0-9]+)$"); err != nil {
 		return
 	}
-	fns, err = d.Readdirnames(0)
-	if err != nil {
-		err = errors.Wrap(err, "")
-		return
-	}
-	re := regexp.MustCompile("^(?P<num>[0-9]+)$")
-	for _, fn := range fns {
-		subs := re.FindStringSubmatch(fn)
-		if subs == nil {
-			continue
-		}
-		num, err = strconv.ParseUint(subs[1], 10, 64)
+	for _, match := range matches {
+		num, err = strconv.ParseUint(match[1], 10, 64)
 		if err != nil {
 			err = errors.Wrap(err, "")
 			return

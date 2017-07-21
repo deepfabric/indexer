@@ -49,7 +49,7 @@ func newDocProt() *cql.DocumentWithIdx {
 func newTestIndex() (ind *Index) {
 	ind = &Index{
 		Def: IndexDef{
-			Conf: IndexConf{
+			Conf: IndexerConf{
 				Dir:         "/tmp",
 				Cap:         BkdCapTest,
 				T0mCap:      1000,
