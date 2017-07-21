@@ -33,10 +33,7 @@ func (td *TermDict) Open() (err error) {
 	td.rwlock.Lock()
 	defer td.rwlock.Unlock()
 	if td.f != nil {
-		if err = td.f.Close(); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
+		panic("td.f shall be nil")
 	}
 	fp := filepath.Join(td.Dir, "terms")
 	if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
@@ -67,10 +64,16 @@ func (td *TermDict) Open() (err error) {
 func (td *TermDict) Close() (err error) {
 	td.rwlock.Lock()
 	defer td.rwlock.Unlock()
+	err = td.close()
+	return
+}
+
+func (td *TermDict) close() (err error) {
 	if err = td.f.Close(); err != nil {
 		err = errors.Wrap(err, "")
 		return
 	}
+	td.f = nil
 	for term := range td.terms {
 		delete(td.terms, term)
 	}
@@ -81,13 +84,13 @@ func (td *TermDict) Close() (err error) {
 func (td *TermDict) Destroy() (err error) {
 	td.rwlock.Lock()
 	defer td.rwlock.Unlock()
+	if err = td.close(); err != nil {
+		return
+	}
 	fp := filepath.Join(td.Dir, "terms")
 	if err = os.Remove(fp); err != nil {
 		err = errors.Wrap(err, "")
 		return
-	}
-	for term := range td.terms {
-		delete(td.terms, term)
 	}
 	return
 }

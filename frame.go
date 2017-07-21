@@ -1,7 +1,6 @@
 package indexer
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -39,17 +38,24 @@ func NewFrame(path, index, name string) (f *Frame, err error) {
 		td:        td,
 		fragments: make(map[uint64]*pilosa.Fragment),
 	}
-	err = f.Open()
+	err = f.openFragments()
 	return
 }
 
 //Open opens an existing frame
 func (f *Frame) Open() (err error) {
+	if err = f.openFragments(); err != nil {
+		return
+	}
+	err = f.td.Open()
+	return
+}
+
+func (f *Frame) openFragments() (err error) {
 	var sliceList []uint64
 	if sliceList, err = getSliceList(f.path); err != nil {
 		return
 	}
-	fmt.Printf("sliceList: %v\n", sliceList)
 	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
 		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
@@ -101,30 +107,37 @@ func getSliceList(dir string) (numList []uint64, err error) {
 }
 
 // Close closes all fragments without removing files on disk.
+// It's allowed to invoke Close multiple times.
 func (f *Frame) Close() (err error) {
-	for _, fragment := range f.fragments {
-		if err = fragment.Close(); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
+	if err = f.closeFragments(); err != nil {
+		return
 	}
 	err = f.td.Close()
 	return
 }
 
 // Destroy closes all fragments, removes all files on disk.
+// It's allowed to invoke Close before or after Destroy.
 func (f *Frame) Destroy() (err error) {
-	for _, fragment := range f.fragments {
-		if err = fragment.Close(); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
+	if err = f.closeFragments(); err != nil {
+		return
 	}
 	if err = os.RemoveAll(filepath.Join(f.path, "fragments")); err != nil {
 		err = errors.Wrap(err, "")
 		return
 	}
 	err = f.td.Destroy()
+	return
+}
+
+func (f *Frame) closeFragments() (err error) {
+	for slice, fragment := range f.fragments {
+		if err = fragment.Close(); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+		delete(f.fragments, slice)
+	}
 	return
 }
 

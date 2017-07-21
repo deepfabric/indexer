@@ -21,6 +21,8 @@ func TestFrameParseAndIndex(t *testing.T) {
 	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
 		t.Fatalf("%+v", err)
 	}
+	defer f.Close()
+
 	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 	if err = f.ParseAndIndex(3, text); err != nil {
 		t.Fatalf("%+v", err)
@@ -40,10 +42,6 @@ func TestFrameParseAndIndex(t *testing.T) {
 			t.Fatalf("Term %s found, want not-found", term)
 		}
 	}
-
-	if err = f.Close(); err != nil {
-		t.Fatalf("%+v", err)
-	}
 }
 
 func TestFrameQuery(t *testing.T) {
@@ -57,6 +55,18 @@ func TestFrameQuery(t *testing.T) {
 	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
 		t.Fatalf("%+v", err)
 	}
+	defer f.Close()
+
+	//To insure the frame be empty, destroy and open it.
+	if err = f.Destroy(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	if err = f.Open(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	fmt.Printf("termdict size before indexing: %d\n", f.td.Count())
+
 	docIDs := []uint64{1, 10}
 	texts := []string{
 		"Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?",
@@ -67,7 +77,7 @@ func TestFrameQuery(t *testing.T) {
 			t.Fatalf("%+v", err)
 		}
 	}
-	fmt.Printf("termdict size: %d\n", f.td.Count())
+	fmt.Printf("termdict size after indexing: %d\n", f.td.Count())
 
 	terms = []string{"the", "disk"}
 	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}}
@@ -86,10 +96,6 @@ func TestFrameQuery(t *testing.T) {
 			}
 		}
 	}
-
-	if err = f.Close(); err != nil {
-		t.Fatalf("%+v", err)
-	}
 }
 
 func TestFrameDestroy(t *testing.T) {
@@ -99,6 +105,8 @@ func TestFrameDestroy(t *testing.T) {
 	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
 		t.Fatalf("%+v", err)
 	}
+	defer f.Close()
+
 	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 	if err = f.ParseAndIndex(3, text); err != nil {
 		t.Fatalf("%+v", err)
@@ -114,5 +122,8 @@ func TestFrameDestroy(t *testing.T) {
 		if _, err := os.Stat(fp); err == nil || !os.IsNotExist(err) {
 			t.Fatalf("path %s exists, want removed", fp)
 		}
+	}
+	if 0 != f.td.Count() {
+		t.Fatalf("f.td.Count() is %d, want 0", f.td.Count())
 	}
 }
