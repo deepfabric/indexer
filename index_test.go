@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"
-
-	"github.com/deepfabric/indexer/cql"
 )
 
 const (

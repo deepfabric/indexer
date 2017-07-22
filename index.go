@@ -3,10 +3,9 @@ package indexer
 import (
 	"container/heap"
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
-
-	"os"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"

@@ -3,9 +3,8 @@ package indexer
 import (
 	"fmt"
 	"os"
-	"testing"
-
 	"path/filepath"
+	"testing"
 
 	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"

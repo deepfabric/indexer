@@ -4,9 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
-
 	"strings"
+	"sync"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/pilosa"

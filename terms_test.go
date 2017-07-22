@@ -1,9 +1,8 @@
 package indexer
 
 import (
-	"testing"
-
 	"os"
+	"testing"
 
 	"github.com/juju/testing/checkers"
 )
