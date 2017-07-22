@@ -59,8 +59,8 @@ func TestIndexNormal(t *testing.T) {
 
 	docProt := newDocProt()
 	ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest)
-	if isEqual, err = checkers.DeepEqual(ind.DocProt, *docProt); !isEqual {
-		t.Fatalf("incorrect result of (*Index).Create, %+v", err)
+	if isEqual, err = checkers.DeepEqual(ind.DocProt, docProt); !isEqual {
+		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 
 	doc := *docProt
@@ -138,13 +138,13 @@ func TestIndexOpenClose(t *testing.T) {
 	}
 
 	//insert documents
-	doc := *docProt
 	for i := 0; i < BkdCapTest; i++ {
+		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if err = ind.Insert(&doc); err != nil {
+		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)
 		}
 	}
@@ -170,8 +170,7 @@ func TestIndexOpenClose(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
-	//verify DocProtkeeps unchanged
-	docProt = newDocProt() //docProt changes after above Insert step. have to restore it
+	//verify DocProt keeps unchanged
 	if isEqual, err = checkers.DeepEqual(ind2.DocProt, ind.DocProt); !isEqual {
 		fmt.Printf("have %v\n", ind2.DocProt)
 		fmt.Printf("want %v\n", ind.DocProt)

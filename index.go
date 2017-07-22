@@ -82,7 +82,7 @@ func (ind *Index) Destroy() (err error) {
 	return
 }
 
-//NewIndexExt create index according to existing files. Assumes ind.DocProt is already populated.
+//NewIndexExt create index according to existing files.
 func NewIndexExt(mainDir, name string, cap int, cptInterval time.Duration) (ind *Index, err error) {
 	docProt := &cql.DocumentWithIdx{}
 	if err = indexReadConf(mainDir, name, docProt); err != nil {
