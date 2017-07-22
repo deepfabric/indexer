@@ -77,7 +77,9 @@ func (ind *Index) Destroy() (err error) {
 		delete(ind.bkds, prop)
 	}
 	fp := filepath.Join(ind.MainDir, fmt.Sprintf("index_%s.json", ind.DocProt.Index))
-	err = os.Remove(fp)
+	if err = os.Remove(fp); err != nil {
+		err = errors.Wrap(err, "")
+	}
 	return
 }
 
@@ -158,8 +160,7 @@ func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 		return
 	}
 	for _, uintProp := range doc.UintProps {
-		bkd, ok = ind.bkds[uintProp.Name]
-		if !ok {
+		if bkd, ok = ind.bkds[uintProp.Name]; !ok {
 			err = errors.Errorf("property %s not found in index spec", uintProp.Name)
 			return
 		}
@@ -186,8 +187,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		if q.OrderBy == uintPred.Name {
 			continue
 		}
-		bkd, ok = ind.bkds[uintPred.Name]
-		if !ok {
+		if bkd, ok = ind.bkds[uintPred.Name]; !ok {
 			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
 			return
 		}
@@ -197,8 +197,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		visitor.highPoint = bkdtree.Point{
 			Vals: []uint64{uintPred.High},
 		}
-		err = bkd.Intersect(visitor)
-		if err != nil {
+		if err = bkd.Intersect(visitor); err != nil {
 			return
 		}
 		visitor.prevDocs = visitor.docs
@@ -223,8 +222,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		}
 		visitor.limit = q.Limit
 		visitor.h = &bkdtree.PointMaxHeap{}
-		err = bkd.Intersect(visitor)
-		if err != nil {
+		if err = bkd.Intersect(visitor); err != nil {
 			return
 		}
 		rb = pilosa.NewBitmap()

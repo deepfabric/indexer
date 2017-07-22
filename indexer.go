@@ -43,7 +43,7 @@ func NewIndexer(mainDir string, conf *Conf, overwirte bool) (ir *Indexer, err er
 		return
 	}
 	if overwirte {
-		err = ir.removeMeta()
+		err = ir.removeIndices()
 	} else {
 		err = ir.Open()
 	}
@@ -52,13 +52,14 @@ func NewIndexer(mainDir string, conf *Conf, overwirte bool) (ir *Indexer, err er
 
 //Open opens all indices. Assumes ir.MainDir is already populated.
 func (ir *Indexer) Open() (err error) {
-	if ir.indices != nil {
+	if ir.indices != nil || ir.DocProts != nil {
 		panic("indexer already open")
 	}
+	ir.DocProts = make(map[string]*cql.DocumentWithIdx)
+	ir.indices = make(map[string]*Index)
 	if err = ir.readMeta(); err != nil {
 		return
 	}
-	ir.indices = make(map[string]*Index)
 	var ind *Index
 	for name, docProt := range ir.DocProts {
 		if ind, err = ir.openIndex(docProt); err != nil {
@@ -76,11 +77,17 @@ func (ir *Indexer) Close() (err error) {
 			return
 		}
 	}
+	ir.indices = nil
+	ir.DocProts = nil
 	return
 }
 
 // CreateIndex creates index
 func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
+	if ir.DocProts == nil {
+		ir.DocProts = make(map[string]*cql.DocumentWithIdx)
+		ir.indices = make(map[string]*Index)
+	}
 	if _, found := ir.DocProts[docProt.Index]; found {
 		panic("CreateIndex conflict with existing index")
 	}
@@ -98,13 +105,9 @@ func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 
 //DestroyIndex destroy given index
 func (ir *Indexer) DestroyIndex(name string) (err error) {
-	var fp string
-	fp = filepath.Join(ir.MainDir, fmt.Sprintf("%s.json", name))
-	if err = os.Remove(fp); err != nil {
-		return
-	}
-	fp = filepath.Join(ir.MainDir, name)
-	err = os.RemoveAll(fp)
+	delete(ir.indices, name)
+	delete(ir.DocProts, name)
+	err = ir.removeIndex(name)
 	return
 }
 
@@ -171,11 +174,30 @@ func (ir *Indexer) readMeta() (err error) {
 	return
 }
 
-//removeMeta removes all meta files.
-func (ir *Indexer) removeMeta() (err error) {
+func (ir *Indexer) removeIndices() (err error) {
+	var matches [][]string
 	patt := `^index_(?P<name>[^.]+)\.json$`
-	if err = bkdtree.FilepathGlobRm(ir.MainDir, patt); err != nil {
+	if matches, err = bkdtree.FilepathGlob(ir.MainDir, patt); err != nil {
 		return
+	}
+	for _, match := range matches {
+		if err = ir.removeIndex(match[1]); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (ir *Indexer) removeIndex(name string) (err error) {
+	var fp string
+	fp = filepath.Join(ir.MainDir, fmt.Sprintf("index_%s.json", name))
+	if err = os.Remove(fp); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	fp = filepath.Join(ir.MainDir, name)
+	if err = os.RemoveAll(fp); err != nil {
+		err = errors.Wrap(err, "")
 	}
 	return
 }
