@@ -20,7 +20,14 @@ type TermDict struct {
 }
 
 //NewTermDict creates and initializes a term dict
-func NewTermDict(directory string) (td *TermDict, err error) {
+func NewTermDict(directory string, overwrite bool) (td *TermDict, err error) {
+	if overwrite {
+		fp := filepath.Join(directory, "terms")
+		if err = os.RemoveAll(fp); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+	}
 	td = &TermDict{
 		Dir: directory,
 	}

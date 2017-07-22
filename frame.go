@@ -26,10 +26,16 @@ type Frame struct {
 }
 
 // NewFrame returns a new instance of frame, and initializes it.
-func NewFrame(path, index, name string) (f *Frame, err error) {
+func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
 	var td *TermDict
-	if td, err = NewTermDict(path); err != nil {
+	if td, err = NewTermDict(path, overwrite); err != nil {
 		return
+	}
+	if overwrite {
+		if err = os.RemoveAll(filepath.Join(path, "fragments")); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
 	}
 	f = &Frame{
 		path:      path,

@@ -18,7 +18,7 @@ func TestTermDict(t *testing.T) {
 	if err = os.Remove("/tmp/terms"); err != nil && !os.IsNotExist(err) {
 		t.Fatalf("%+v", err)
 	}
-	if td, err = NewTermDict("/tmp"); err != nil {
+	if td, err = NewTermDict("/tmp", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	terms := []string{
@@ -41,7 +41,7 @@ func TestTermDict(t *testing.T) {
 	}
 
 	//TESTCASE: query and insert term to an existing dict
-	if td2, err = NewTermDict("/tmp"); err != nil {
+	if td2, err = NewTermDict("/tmp", false); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	terms = []string{

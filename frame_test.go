@@ -18,7 +18,7 @@ func TestFrameParseAndIndex(t *testing.T) {
 	var terms []string
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
+	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -52,20 +52,10 @@ func TestFrameQuery(t *testing.T) {
 	var isEqual bool
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
+	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
-
-	//To insure the frame be empty, destroy and open it.
-	if err = f.Destroy(); err != nil {
-		t.Fatalf("%+v", err)
-	}
-	if err = f.Open(); err != nil {
-		t.Fatalf("%+v", err)
-	}
-
-	fmt.Printf("termdict size before indexing: %d\n", f.td.Count())
 
 	docIDs := []uint64{1, 10}
 	texts := []string{
@@ -102,7 +92,7 @@ func TestFrameDestroy(t *testing.T) {
 	var err error
 	var f *Frame
 
-	if f, err = NewFrame("/tmp", "i", "f"); err != nil {
+	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
