@@ -44,6 +44,16 @@ func newDocProt() *cql.DocumentWithIdx {
 					Val:    0,
 				},
 			},
+			StrProps: []cql.StrProp{
+				cql.StrProp{
+					Name: "description",
+					Val:  "",
+				},
+				cql.StrProp{
+					Name: "note",
+					Val:  "",
+				},
+			},
 		},
 		Index: "orders",
 	}
@@ -57,27 +67,33 @@ func TestIndexNormal(t *testing.T) {
 	var found bool
 
 	docProt := newDocProt()
-	ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest)
+	if ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest); err != nil {
+		t.Fatalf("incorrect result of NewIndex, %+v", err)
+	}
 	if isEqual, err = checkers.DeepEqual(ind.DocProt, docProt); !isEqual {
 		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 
-	doc := *docProt
 	for i := 0; i < BkdCapTest; i++ {
+		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if err = ind.Insert(&doc); err != nil {
+		for j := 0; j < len(doc.StrProps); j++ {
+			doc.StrProps[j].Val = fmt.Sprintf("%d_%d and some ramdom text", i, j)
+		}
+		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)
 		}
 	}
 
+	// query numerical range
 	var rb *pilosa.Bitmap
 	low := 30
 	high := 600
 	cs := &cql.CqlSelect{
-		Index: doc.Index,
+		Index: docProt.Index,
 		UintPreds: map[string]cql.UintPred{
 			"price": cql.UintPred{
 				Name: "price",
@@ -96,6 +112,7 @@ func TestIndexNormal(t *testing.T) {
 		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
 	}
 
+	// query numerical range + order by + text
 	cs.OrderBy = "price"
 	cs.Limit = 20
 	if rb, err = ind.Select(cs); err != nil {
@@ -107,12 +124,30 @@ func TestIndexNormal(t *testing.T) {
 		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
 	}
 
+	// query numerical range + text
+	cs.StrPreds = map[string]cql.StrPred{
+		"note": cql.StrPred{
+			Name:     "note",
+			ContWord: "17_1",
+		},
+	}
+	cs.Limit = 20
+	if rb, err = ind.Select(cs); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Println(rb.Bits())
+	want = 1
+	if rb.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
+	}
+
 	for i := 0; i < BkdCapTest; i++ {
+		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if found, err = ind.Del(&doc); err != nil {
+		if found, err = ind.Del(doc); err != nil {
 			t.Fatalf("%+v", err)
 		} else if !found {
 			t.Fatalf("document %v not found", doc)

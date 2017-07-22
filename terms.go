@@ -42,6 +42,10 @@ func (td *TermDict) Open() (err error) {
 	if td.f != nil {
 		panic("td.f shall be nil")
 	}
+	if err = os.MkdirAll(td.Dir, 0700); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
 	fp := filepath.Join(td.Dir, "terms")
 	if td.f, err = os.OpenFile(fp, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600); err != nil {
 		err = errors.Wrap(err, "")

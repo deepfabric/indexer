@@ -157,8 +157,8 @@ func (f *Frame) Path() string { return f.path }
 // MaxSlice returns the max slice in the frame.
 func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
 
-// SetBit sets a bit within the frame, and expands fragments if necessary.
-func (f *Frame) SetBit(rowID, colID uint64) (changed bool, err error) {
+// setBit sets a bit within the frame, and expands fragments if necessary.
+func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
 	fragment, ok := f.fragments[slice]
 	if !ok {
@@ -177,8 +177,8 @@ func (f *Frame) SetBit(rowID, colID uint64) (changed bool, err error) {
 	return
 }
 
-// ClearBit clears a bit within the frame.
-func (f *Frame) ClearBit(rowID, colID uint64) (changed bool, err error) {
+// clearBit clears a bit within the frame.
+func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
 	fragment, ok := f.fragments[slice]
 	if !ok {
@@ -197,13 +197,26 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 		return
 	}
 	for _, termID := range ids {
-		if _, err = f.SetBit(termID, docID); err != nil {
+		if _, err = f.setBit(termID, docID); err != nil {
 			return
 		}
 	}
 	return
 }
 
+// RemoveDoc clear bits of given document.
+func (f *Frame) RemoveDoc(docID uint64) (err error) {
+	//TODO: using mark-deletion to speed up
+	numTerms := f.td.Count()
+	for termID := uint64(0); termID < numTerms; termID++ {
+		if _, err = f.clearBit(termID, docID); err != nil {
+			return
+		}
+	}
+	return
+}
+
+//Query query which documents contain the given term.
 func (f *Frame) Query(term string) (bm *pilosa.Bitmap, err error) {
 	bm = pilosa.NewBitmap()
 	termID, found := f.td.GetTermID(term)
