@@ -189,6 +189,31 @@ func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 	return
 }
 
+// Bits returns bits set in frame.
+func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
+	var ok bool
+	bits = make(map[uint64][]uint64)
+	var columns []uint64
+	for _, fragment := range f.fragments {
+		err = fragment.ForEachBit(
+			func(rowID, columnID uint64) error {
+				columns, ok = bits[rowID]
+				if ok {
+					columns = append(columns, columnID)
+				} else {
+					columns = []uint64{columnID}
+				}
+				bits[rowID] = columns
+				return nil
+			},
+		)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 // ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	terms := strings.SplitN(text, " ", -1)

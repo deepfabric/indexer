@@ -17,7 +17,7 @@ func TestFrameParseAndIndex(t *testing.T) {
 	var terms []string
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
+	if f, err = NewFrame("/tmp/frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -49,9 +49,10 @@ func TestFrameQuery(t *testing.T) {
 	var terms []string
 	var bm *pilosa.Bitmap
 	var isEqual bool
+	var bits map[uint64][]uint64
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
+	if f, err = NewFrame("/tmp/frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -67,6 +68,10 @@ func TestFrameQuery(t *testing.T) {
 		}
 	}
 	fmt.Printf("termdict size after indexing: %d\n", f.td.Count())
+	if bits, err = f.Bits(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Printf("frame bits: %v\n", bits)
 
 	terms = []string{"the", "disk"}
 	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}}

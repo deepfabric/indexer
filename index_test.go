@@ -45,10 +45,10 @@ func newDocProt() *cql.DocumentWithIdx {
 				},
 			},
 			StrProps: []cql.StrProp{
-				cql.StrProp{
+				/*cql.StrProp{
 					Name: "description",
 					Val:  "",
-				},
+				},*/
 				cql.StrProp{
 					Name: "note",
 					Val:  "",
@@ -65,6 +65,7 @@ func TestIndexNormal(t *testing.T) {
 	var ind *Index
 	var isEqual bool
 	var found bool
+	var bits map[uint64][]uint64
 
 	docProt := newDocProt()
 	if ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest); err != nil {
@@ -81,7 +82,7 @@ func TestIndexNormal(t *testing.T) {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
 		for j := 0; j < len(doc.StrProps); j++ {
-			doc.StrProps[j].Val = fmt.Sprintf("%d_%d and some ramdom text", i, j)
+			doc.StrProps[j].Val = fmt.Sprintf("%d_%d and some random text", i, j)
 		}
 		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)
@@ -124,11 +125,20 @@ func TestIndexNormal(t *testing.T) {
 		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
 	}
 
+	// dump bits
+	for name, frame := range ind.frames {
+		if bits, err = frame.Bits(); err != nil {
+			t.Fatalf("%+v", err)
+		}
+		fmt.Printf("frmae %v bits: %v\n", name, bits)
+	}
+
 	// query numerical range + text
 	cs.StrPreds = map[string]cql.StrPred{
 		"note": cql.StrPred{
-			Name:     "note",
-			ContWord: "17_1",
+			Name: "note",
+			//			ContWord: "17_1",
+			ContWord: "random",
 		},
 	}
 	cs.Limit = 20
