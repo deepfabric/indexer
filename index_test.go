@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	BkdCapTest      = 10000
-	T0mCapTest      = 1000
-	LeafCapTest     = 100
+	BkdCapTest      = 1000
+	T0mCapTest      = 100
+	LeafCapTest     = 10
 	IntraCapTest    = 4
 	CptIntervalTest = 30 * time.Minute
 )
@@ -45,10 +45,10 @@ func newDocProt() *cql.DocumentWithIdx {
 				},
 			},
 			StrProps: []cql.StrProp{
-				/*cql.StrProp{
+				cql.StrProp{
 					Name: "description",
 					Val:  "",
-				},*/
+				},
 				cql.StrProp{
 					Name: "note",
 					Val:  "",
@@ -127,18 +127,23 @@ func TestIndexNormal(t *testing.T) {
 
 	// dump bits
 	for name, frame := range ind.frames {
+		var termID uint64
+		if termID, found = frame.td.GetTermID("17_1"); !found {
+			continue
+		}
 		if bits, err = frame.Bits(); err != nil {
 			t.Fatalf("%+v", err)
 		}
-		fmt.Printf("frmae %v bits: %v\n", name, bits)
+		//fmt.Printf("frmae %v bits: %v\n", name, bits)
+		fmt.Printf("frmae %v bits[%v]: %v\n", name, termID, bits[termID])
 	}
 
 	// query numerical range + text
 	cs.StrPreds = map[string]cql.StrPred{
 		"note": cql.StrPred{
-			Name: "note",
-			//			ContWord: "17_1",
-			ContWord: "random",
+			Name:     "note",
+			ContWord: "17_1",
+			//			ContWord: "random",
 		},
 	}
 	cs.Limit = 20

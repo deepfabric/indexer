@@ -226,7 +226,6 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	var prevDocs, docs *pilosa.Bitmap
 
 	if len(q.StrPreds) != 0 {
-		prevDocs = pilosa.NewBitmap()
 		for _, strPred := range q.StrPreds {
 			if fm, ok = ind.frames[strPred.Name]; !ok {
 				err = errors.Errorf("property %s not found in index spec", strPred.Name)
@@ -235,7 +234,11 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 			if docs, err = fm.Query(strPred.ContWord); err != nil {
 				return
 			}
-			prevDocs = prevDocs.Intersect(docs)
+			if prevDocs == nil {
+				prevDocs = docs
+			} else {
+				prevDocs = prevDocs.Intersect(docs)
+			}
 		}
 		if prevDocs.Count() == 0 {
 			rb = prevDocs
