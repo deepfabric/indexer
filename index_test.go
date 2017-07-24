@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	BkdCapTest      = 1000
+	BkdCapTest      = 10000
 	T0mCapTest      = 100
 	LeafCapTest     = 10
 	IntraCapTest    = 4
@@ -68,7 +68,7 @@ func TestIndexNormal(t *testing.T) {
 	var bits map[uint64][]uint64
 
 	docProt := newDocProt()
-	if ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest); err != nil {
+	if ind, err = NewIndex(docProt, "/tmp/index_test", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest); err != nil {
 		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 	if isEqual, err = checkers.DeepEqual(ind.DocProt, docProt); !isEqual {
@@ -131,7 +131,7 @@ func TestIndexNormal(t *testing.T) {
 		if termID, found = frame.td.GetTermID("17_1"); !found {
 			continue
 		}
-		if bits, err = frame.Bits(); err != nil {
+		if bits, err = frame.Bits(pilosa.ViewInverse); err != nil {
 			t.Fatalf("%+v", err)
 		}
 		//fmt.Printf("frmae %v bits: %v\n", name, bits)
@@ -181,7 +181,7 @@ func TestIndexOpenClose(t *testing.T) {
 
 	//create index
 	docProt := newDocProt()
-	ind, err = NewIndex(docProt, "/tmp", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest)
+	ind, err = NewIndex(docProt, "/tmp/index_test", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -214,7 +214,7 @@ func TestIndexOpenClose(t *testing.T) {
 	}
 
 	//open index with another Index object. This occurs when program restart.
-	ind2, err = NewIndexExt("/tmp", "orders", BkdCapTest, CptIntervalTest)
+	ind2, err = NewIndexExt("/tmp/index_test", "orders", BkdCapTest, CptIntervalTest)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

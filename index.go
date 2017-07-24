@@ -66,6 +66,10 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, cap, t0mCap, leafCap
 
 //indexWriteConf persists conf to given path.
 func indexWriteConf(mainDir string, docProt *cql.DocumentWithIdx) (err error) {
+	if err = os.MkdirAll(mainDir, 0700); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
 	fp := filepath.Join(mainDir, fmt.Sprintf("index_%s.json", docProt.Index))
 	err = bkdtree.FileMarshal(fp, docProt)
 	return
