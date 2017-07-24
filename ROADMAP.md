@@ -10,4 +10,6 @@ This document defines the roadmap for indexer development.
 - [D] index of string properties: matrix bitmap
 - [D] index of string properties
 - [D] index of enum properties
+- [ ] improve Chinese tokenizer
+- [ ] improve concurrency
 - [ ] multi-dimension uint property
