@@ -59,8 +59,8 @@ func TestFrameQuery(t *testing.T) {
 
 	docIDs := []uint64{1, 10}
 	texts := []string{
-		"Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?",
-		"This is a listing of successful results of all the various data storage and processing system benchmarks I've conducted using the dataset produced in the Billion Taxi Rides in Redshift blog post. The dataset itself has 1.1 billion records, 51 columns and takes up about 500 GB of disk space uncompressed.",
+		"Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it? 你好",
+		"This is a listing of successful results of all the various data storage and processing system benchmarks I've conducted using the dataset produced in the Billion Taxi Rides in Redshift blog post. The dataset itself has 1.1 billion records, 51 columns and takes up about 500 GB of 中文世界 disk space uncompressed.",
 	}
 	for i := 0; i < len(docIDs); i++ {
 		if err = f.ParseAndIndex(docIDs[i], texts[i]); err != nil {
@@ -73,8 +73,8 @@ func TestFrameQuery(t *testing.T) {
 	}
 	fmt.Printf("frame bits: %v\n", bits)
 
-	terms = []string{"the", "disk"}
-	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}}
+	terms = []string{"the", "disk", "你好", "中文世界", "你", "世界"}
+	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{}, []uint64{}}
 	for i, term := range terms {
 		if bm, err = f.Query(term); err != nil {
 			t.Fatalf("%+v", err)

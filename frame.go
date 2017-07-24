@@ -216,7 +216,8 @@ func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 
 // ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
-	terms := strings.SplitN(text, " ", -1)
+	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go
+	terms := strings.Fields(text)
 	ids, err := f.td.CreateTermsIfNotExist(terms)
 	if err != nil {
 		return
