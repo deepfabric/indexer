@@ -84,7 +84,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//create empty indexer
-	if ir, err = NewIndexer("/tmp", &conf, true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -118,7 +118,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//create indexer with existing data
-	if ir2, err = NewIndexer("/tmp", &conf, false); err != nil {
+	if ir2, err = NewIndexer("/tmp/indexer_test", &conf, false); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -179,7 +179,7 @@ func TestIndexerOpenClose(t *testing.T) {
 	}
 
 	//create indexer
-	if ir, err = NewIndexer("/tmp", &conf, true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
