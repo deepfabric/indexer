@@ -3,7 +3,6 @@ package indexer
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
@@ -11,11 +10,10 @@ import (
 )
 
 const (
-	BkdCapTest      = 10000
-	T0mCapTest      = 100
-	LeafCapTest     = 10
-	IntraCapTest    = 4
-	CptIntervalTest = 30 * time.Minute
+	BkdCapTest   = 10000
+	T0mCapTest   = 100
+	LeafCapTest  = 10
+	IntraCapTest = 4
 )
 
 func newDocProt() *cql.DocumentWithIdx {
@@ -68,7 +66,7 @@ func TestIndexNormal(t *testing.T) {
 	var bits map[uint64][]uint64
 
 	docProt := newDocProt()
-	if ind, err = NewIndex(docProt, "/tmp/index_test", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest); err != nil {
+	if ind, err = NewIndex(docProt, "/tmp/index_test", T0mCapTest, LeafCapTest, IntraCapTest); err != nil {
 		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 	if isEqual, err = checkers.DeepEqual(ind.DocProt, docProt); !isEqual {
@@ -181,7 +179,7 @@ func TestIndexOpenClose(t *testing.T) {
 
 	//create index
 	docProt := newDocProt()
-	ind, err = NewIndex(docProt, "/tmp/index_test", BkdCapTest, T0mCapTest, LeafCapTest, IntraCapTest, CptIntervalTest)
+	ind, err = NewIndex(docProt, "/tmp/index_test", T0mCapTest, LeafCapTest, IntraCapTest)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -204,7 +202,7 @@ func TestIndexOpenClose(t *testing.T) {
 	}
 
 	//open index
-	if err = ind.Open(BkdCapTest, CptIntervalTest); err != nil {
+	if err = ind.Open(); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -214,7 +212,7 @@ func TestIndexOpenClose(t *testing.T) {
 	}
 
 	//open index with another Index object. This occurs when program restart.
-	ind2, err = NewIndexExt("/tmp/index_test", "orders", BkdCapTest, CptIntervalTest)
+	ind2, err = NewIndexExt("/tmp/index_test", "orders")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

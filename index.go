@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
@@ -22,7 +21,7 @@ type Index struct {
 }
 
 //NewIndex creates index according to given conf, overwrites existing files.
-func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, cap, t0mCap, leafCap, intraCap int, cptInterval time.Duration) (ind *Index, err error) {
+func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, intraCap int) (ind *Index, err error) {
 	if err = indexWriteConf(mainDir, docProt); err != nil {
 		return
 	}
@@ -40,14 +39,13 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, cap, t0mCap, leafCap
 	var bkd *bkdtree.BkdTree
 	for _, uintProp := range docProt.UintProps {
 		t0mCap := t0mCap
-		bkdCap := cap
-		numDims := 1
-		bytesPerDim := uintProp.ValLen
 		LeafCap := leafCap
 		IntraCap := intraCap
+		numDims := 1
+		bytesPerDim := uintProp.ValLen
 		dir := filepath.Join(indDir, uintProp.Name)
 		prefix := uintProp.Name
-		bkd, err = bkdtree.NewBkdTree(t0mCap, bkdCap, numDims, bytesPerDim, LeafCap, IntraCap, dir, prefix, cptInterval)
+		bkd, err = bkdtree.NewBkdTree(t0mCap, LeafCap, IntraCap, numDims, bytesPerDim, dir, prefix)
 		if err != nil {
 			return
 		}
@@ -104,7 +102,7 @@ func (ind *Index) Destroy() (err error) {
 }
 
 //NewIndexExt create index according to existing files.
-func NewIndexExt(mainDir, name string, cap int, cptInterval time.Duration) (ind *Index, err error) {
+func NewIndexExt(mainDir, name string) (ind *Index, err error) {
 	docProt := &cql.DocumentWithIdx{}
 	if err = indexReadConf(mainDir, name, docProt); err != nil {
 		return
@@ -113,12 +111,12 @@ func NewIndexExt(mainDir, name string, cap int, cptInterval time.Duration) (ind 
 		MainDir: mainDir,
 		DocProt: docProt,
 	}
-	err = ind.Open(cap, cptInterval)
+	err = ind.Open()
 	return
 }
 
 //Open opens existing index. Assumes MainDir and DocProt is already populated.
-func (ind *Index) Open(cap int, cptInterval time.Duration) (err error) {
+func (ind *Index) Open() (err error) {
 	if ind.bkds != nil || ind.frames != nil {
 		panic("index is already open")
 	}
@@ -127,7 +125,7 @@ func (ind *Index) Open(cap int, cptInterval time.Duration) (err error) {
 	var bkd *bkdtree.BkdTree
 	for _, uintProp := range ind.DocProt.UintProps {
 		dir := filepath.Join(indDir, uintProp.Name)
-		if bkd, err = bkdtree.NewBkdTreeExt(dir, uintProp.Name, cap, cptInterval); err != nil {
+		if bkd, err = bkdtree.NewBkdTreeExt(dir, uintProp.Name); err != nil {
 			return
 		}
 		ind.bkds[uintProp.Name] = bkd

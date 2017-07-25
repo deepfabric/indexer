@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
@@ -14,14 +13,10 @@ import (
 
 //Conf originate from config file. It's comman to all indices.
 type Conf struct {
-	//generic items
-	Cap int //upper limit of number of documents
-
 	//BKD specific items
-	T0mCap      int
-	LeafCap     int
-	IntraCap    int
-	CptInterval time.Duration
+	T0mCap   int
+	LeafCap  int
+	IntraCap int
 }
 
 //Indexer shall be singleton
@@ -95,7 +90,7 @@ func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 		return
 	}
 	var ind *Index
-	if ind, err = NewIndex(docProt, ir.MainDir, ir.Conf.Cap, ir.Conf.T0mCap, ir.Conf.LeafCap, ir.Conf.IntraCap, ir.Conf.CptInterval); err != nil {
+	if ind, err = NewIndex(docProt, ir.MainDir, ir.Conf.T0mCap, ir.Conf.LeafCap, ir.Conf.IntraCap); err != nil {
 		return
 	}
 	ir.indices[docProt.Index] = ind
@@ -204,7 +199,7 @@ func (ir *Indexer) removeIndex(name string) (err error) {
 
 //openIndex opens the given index from existing index
 func (ir *Indexer) openIndex(docProt *cql.DocumentWithIdx) (ind *Index, err error) {
-	ind, err = NewIndexExt(ir.MainDir, docProt.Index, ir.Conf.Cap, ir.Conf.CptInterval)
+	ind, err = NewIndexExt(ir.MainDir, docProt.Index)
 	return
 }
 

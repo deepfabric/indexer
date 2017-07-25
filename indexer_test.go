@@ -3,7 +3,6 @@ package indexer
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
@@ -76,11 +75,9 @@ func TestIndexerNormal(t *testing.T) {
 	var found bool
 
 	conf := Conf{
-		Cap:         10000,
-		T0mCap:      1000,
-		LeafCap:     100,
-		IntraCap:    4,
-		CptInterval: 30 * time.Second,
+		T0mCap:   1000,
+		LeafCap:  100,
+		IntraCap: 4,
 	}
 
 	//create empty indexer
@@ -101,7 +98,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//insert documents
-	for i := 0; i < conf.Cap; i++ {
+	for i := 0; i < BkdCapTest; i++ {
 		doc := newDocProt1()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -171,11 +168,9 @@ func TestIndexerOpenClose(t *testing.T) {
 	var ir *Indexer
 
 	conf := Conf{
-		Cap:         10000,
-		T0mCap:      1000,
-		LeafCap:     100,
-		IntraCap:    4,
-		CptInterval: 30 * time.Second,
+		T0mCap:   1000,
+		LeafCap:  100,
+		IntraCap: 4,
 	}
 
 	//create indexer
