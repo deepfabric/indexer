@@ -96,7 +96,7 @@ func TestFrameDestroy(t *testing.T) {
 	var err error
 	var f *Frame
 
-	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
+	if f, err = NewFrame("/tmp/frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()

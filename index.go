@@ -193,7 +193,6 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 //Del executes CqlDel.
 func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 	var bkd *bkdtree.BkdTree
-	var fm *Frame
 	var ok bool
 	for _, uintProp := range doc.UintProps {
 		if bkd, ok = ind.bkds[uintProp.Name]; !ok {
@@ -205,15 +204,6 @@ func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 			UserData: doc.DocID,
 		}
 		if found, err = bkd.Erase(p); err != nil {
-			return
-		}
-	}
-	for _, strProp := range doc.StrProps {
-		if fm, ok = ind.frames[strProp.Name]; !ok {
-			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", strProp.Name, doc, ind.DocProt)
-			return
-		}
-		if err = fm.RemoveDoc(doc.DocID); err != nil {
 			return
 		}
 	}

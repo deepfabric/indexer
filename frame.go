@@ -177,18 +177,6 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	return
 }
 
-// clearBit clears a bit within the frame.
-func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
-	slice := colID / pilosa.SliceWidth
-	fragment, ok := f.fragments[slice]
-	if !ok {
-		err = errors.New("column out of bounds")
-		return
-	}
-	changed, err = fragment.ClearBit(rowID, colID)
-	return
-}
-
 // Bits returns bits set in frame.
 func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 	var ok bool
@@ -224,18 +212,6 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	}
 	for _, termID := range ids {
 		if _, err = f.setBit(termID, docID); err != nil {
-			return
-		}
-	}
-	return
-}
-
-// RemoveDoc clear bits of given document.
-func (f *Frame) RemoveDoc(docID uint64) (err error) {
-	//TODO: using mark-deletion to speed up
-	numTerms := f.td.Count()
-	for termID := uint64(0); termID < numTerms; termID++ {
-		if _, err = f.clearBit(termID, docID); err != nil {
 			return
 		}
 	}
