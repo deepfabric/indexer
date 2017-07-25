@@ -177,6 +177,28 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	return
 }
 
+// clearBit clears a bit within the frame.
+func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
+	slice := colID / pilosa.SliceWidth
+	fragment, ok := f.fragments[slice]
+	if !ok {
+		err = errors.New("column out of bounds")
+		return
+	}
+	changed, err = fragment.ClearBit(rowID, colID)
+	return
+}
+
+//row returns the given row as a pilosa.Bitmap.
+func (f *Frame) row(rowID uint64) (bm *pilosa.Bitmap) {
+	bm = pilosa.NewBitmap()
+	for _, fragment := range f.fragments {
+		bm2 := fragment.Row(rowID)
+		bm.Merge(bm2)
+	}
+	return
+}
+
 // Bits returns bits set in frame.
 func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 	var ok bool
@@ -219,15 +241,12 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 }
 
 //Query query which documents contain the given term.
-func (f *Frame) Query(term string) (bm *pilosa.Bitmap, err error) {
+func (f *Frame) Query(term string) (bm *pilosa.Bitmap) {
 	bm = pilosa.NewBitmap()
 	termID, found := f.td.GetTermID(term)
 	if !found {
 		return
 	}
-	for _, fragment := range f.fragments {
-		bm2 := fragment.Row(termID)
-		bm.Merge(bm2)
-	}
+	bm = f.row(termID)
 	return
 }

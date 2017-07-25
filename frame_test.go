@@ -76,9 +76,7 @@ func TestFrameQuery(t *testing.T) {
 	terms = []string{"the", "disk", "你好", "中文世界", "你", "世界"}
 	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{}, []uint64{}}
 	for i, term := range terms {
-		if bm, err = f.Query(term); err != nil {
-			t.Fatalf("%+v", err)
-		}
+		bm = f.Query(term)
 		docIDs = bm.Bits()
 		fmt.Printf("found term %s in documents: %v\n", term, docIDs)
 		if isEqual, err = checkers.DeepEqual(docIDs, expDocIDs[i]); !isEqual {

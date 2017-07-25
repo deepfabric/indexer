@@ -12,12 +12,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	LiveDocs string = "__liveDocs" // the directory where stores Index.liveDocs
+)
+
 //Index is created by CqlCreate
 type Index struct {
-	MainDir string
-	DocProt *cql.DocumentWithIdx //document prototype. persisted to an index-specific file
-	bkds    map[string]*bkdtree.BkdTree
-	frames  map[string]*Frame
+	MainDir  string
+	DocProt  *cql.DocumentWithIdx //document prototype. persisted to an index-specific file
+	bkds     map[string]*bkdtree.BkdTree
+	frames   map[string]*Frame
+	liveDocs *Frame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
 }
 
 //NewIndex creates index according to given conf, overwrites existing files.
@@ -59,6 +64,11 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, int
 		}
 		ind.frames[strProp.Name] = fm
 	}
+	dir := filepath.Join(indDir, LiveDocs)
+	if fm, err = NewFrame(dir, docProt.Index, LiveDocs, true); err != nil {
+		return
+	}
+	ind.liveDocs = fm
 	return
 }
 
@@ -92,12 +102,16 @@ func (ind *Index) Destroy() (err error) {
 			return
 		}
 	}
+	if err = ind.liveDocs.Destroy(); err != nil {
+		return
+	}
 	fp := filepath.Join(ind.MainDir, fmt.Sprintf("index_%s.json", ind.DocProt.Index))
 	if err = os.Remove(fp); err != nil {
 		err = errors.Wrap(err, "")
 	}
 	ind.bkds = nil
 	ind.frames = nil
+	ind.liveDocs = nil
 	return
 }
 
@@ -139,6 +153,11 @@ func (ind *Index) Open() (err error) {
 		}
 		ind.frames[strProp.Name] = fm
 	}
+	dir := filepath.Join(indDir, LiveDocs)
+	if fm, err = NewFrame(dir, ind.DocProt.Index, LiveDocs, false); err != nil {
+		return
+	}
+	ind.liveDocs = fm
 	return
 }
 
@@ -154,8 +173,12 @@ func (ind *Index) Close() (err error) {
 			return
 		}
 	}
+	if err = ind.liveDocs.Close(); err != nil {
+		return
+	}
 	ind.bkds = nil
 	ind.frames = nil
+	ind.liveDocs = nil
 	return
 }
 
@@ -163,8 +186,14 @@ func (ind *Index) Close() (err error) {
 func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var bkd *bkdtree.BkdTree
 	var fm *Frame
-	var ok bool
-	//TODO: check if ind.DocProt and doc match?
+	var changed, ok bool
+	//check if doc.DocID is already there before insertion.
+	if changed, err = ind.liveDocs.setBit(0, doc.DocID); err != nil {
+		return
+	} else if !changed {
+		err = errors.Errorf("document %v is alaredy there before insertion", doc.DocID)
+		return
+	}
 	for _, uintProp := range doc.UintProps {
 		if bkd, ok = ind.bkds[uintProp.Name]; !ok {
 			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", uintProp.Name, doc, ind.DocProt)
@@ -190,23 +219,16 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	return
 }
 
-//Del executes CqlDel.
+//Del executes CqlDel. Do mark-deletion only. The caller shall rebuild index in order to recycle disk space.
 func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
-	var bkd *bkdtree.BkdTree
-	var ok bool
-	for _, uintProp := range doc.UintProps {
-		if bkd, ok = ind.bkds[uintProp.Name]; !ok {
-			err = errors.Errorf("property %s not found in index spec", uintProp.Name)
-			return
-		}
-		p := bkdtree.Point{
-			Vals:     []uint64{uintProp.Val},
-			UserData: doc.DocID,
-		}
-		if found, err = bkd.Erase(p); err != nil {
-			return
-		}
+	var changed bool
+	if changed, err = ind.liveDocs.clearBit(0, doc.DocID); err != nil {
+		return
+	} else if !changed {
+		err = errors.Errorf("document %v does not exist before deletion", doc.DocID)
+		return
 	}
+	found = true
 	return
 }
 
@@ -217,25 +239,29 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	var ok bool
 	var prevDocs, docs *pilosa.Bitmap
 
+	prevDocs = ind.liveDocs.row(0)
+	if prevDocs.Count() == 0 {
+		rb = prevDocs
+		return
+	}
 	if len(q.StrPreds) != 0 {
 		for _, strPred := range q.StrPreds {
 			if fm, ok = ind.frames[strPred.Name]; !ok {
 				err = errors.Errorf("property %s not found in index spec", strPred.Name)
 				return
 			}
-			if docs, err = fm.Query(strPred.ContWord); err != nil {
+			docs = fm.Query(strPred.ContWord)
+			prevDocs = prevDocs.Intersect(docs)
+			if prevDocs.Count() == 0 {
+				rb = prevDocs
 				return
 			}
-			if prevDocs == nil {
-				prevDocs = docs
-			} else {
-				prevDocs = prevDocs.Intersect(docs)
-			}
 		}
-		if prevDocs.Count() == 0 {
-			rb = prevDocs
-			return
-		}
+	}
+
+	if len(q.UintPreds) == 0 {
+		rb = prevDocs
+		return
 	}
 
 	visitor := &bkdVisitor{
@@ -261,6 +287,10 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 			return
 		}
 		visitor.prevDocs = visitor.docs
+		if visitor.prevDocs.Count() == 0 {
+			rb = visitor.prevDocs
+			return
+		}
 	}
 
 	if q.OrderBy != "" {
