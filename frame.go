@@ -14,12 +14,12 @@ import (
 
 // Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
 type Frame struct {
-	mu       sync.Mutex
 	path     string
 	index    string
 	name     string
 	maxSlice uint64
 
+	rwlock    sync.RWMutex                //concurrent access of fragments
 	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
 	td        *TermDict
 }
@@ -68,7 +68,9 @@ func (f *Frame) openFragments() (err error) {
 			err = errors.Wrap(err, "")
 			return
 		}
+		f.rwlock.Lock()
 		f.fragments[slice] = fragment
+		f.rwlock.Unlock()
 		if f.maxSlice < slice {
 			f.maxSlice = slice
 		}
@@ -123,26 +125,21 @@ func (f *Frame) Destroy() (err error) {
 }
 
 func (f *Frame) closeFragments() (err error) {
-	for slice, fragment := range f.fragments {
+	for _, fragment := range f.fragments {
 		if err = fragment.Close(); err != nil {
 			err = errors.Wrap(err, "")
 			return
 		}
-		delete(f.fragments, slice)
 	}
+	f.rwlock.Lock()
+	f.fragments = nil
+	f.rwlock.Unlock()
 	return
 }
 
 // FragmentPath returns the path to a fragment
 func (f *Frame) FragmentPath(slice uint64) string {
 	return filepath.Join(f.path, "fragments", strconv.FormatUint(slice, 10))
-}
-
-// Fragment returns a fragment in the view by slice.
-func (f *Frame) Fragment(slice uint64) *pilosa.Fragment {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	return f.fragments[slice]
 }
 
 // Name returns the name the frame was initialized with.
@@ -160,7 +157,9 @@ func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
 // setBit sets a bit within the frame, and expands fragments if necessary.
 func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
+	f.rwlock.RLock()
 	fragment, ok := f.fragments[slice]
+	f.rwlock.RUnlock()
 	if !ok {
 		fp := f.FragmentPath(slice)
 		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
@@ -168,7 +167,9 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 			err = errors.Wrap(err, "")
 			return
 		}
+		f.rwlock.Lock()
 		f.fragments[slice] = fragment
+		f.rwlock.Unlock()
 	}
 	changed, err = fragment.SetBit(rowID, colID)
 	if f.maxSlice < slice {
@@ -180,7 +181,9 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 // clearBit clears a bit within the frame.
 func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
+	f.rwlock.RLock()
 	fragment, ok := f.fragments[slice]
+	f.rwlock.RUnlock()
 	if !ok {
 		err = errors.New("column out of bounds")
 		return
@@ -192,10 +195,12 @@ func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 //row returns the given row as a pilosa.Bitmap.
 func (f *Frame) row(rowID uint64) (bm *pilosa.Bitmap) {
 	bm = pilosa.NewBitmap()
+	f.rwlock.RLock()
 	for _, fragment := range f.fragments {
 		bm2 := fragment.Row(rowID)
 		bm.Merge(bm2)
 	}
+	f.rwlock.RUnlock()
 	return
 }
 
@@ -204,6 +209,8 @@ func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 	var ok bool
 	bits = make(map[uint64][]uint64)
 	var columns []uint64
+	f.rwlock.RLock()
+	defer f.rwlock.RUnlock()
 	for _, fragment := range f.fragments {
 		err = fragment.ForEachBit(
 			func(rowID, columnID uint64) error {

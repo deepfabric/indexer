@@ -119,3 +119,20 @@ func TestFrameDestroy(t *testing.T) {
 		t.Fatalf("f.td.Count() is %d, want 0", f.td.Count())
 	}
 }
+
+func BenchmarkFrameParseAndIndex(b *testing.B) {
+	var err error
+	var f *Frame
+	if f, err = NewFrame("/tmp/frame_test", "i", "f", true); err != nil {
+		b.Fatalf("%+v", err)
+	}
+	defer f.Close()
+
+	b.ResetTimer()
+	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+	for i := 0; i < b.N; i++ {
+		if err = f.ParseAndIndex(uint64(i), text); err != nil {
+			b.Fatalf("%+v", err)
+		}
+	}
+}
