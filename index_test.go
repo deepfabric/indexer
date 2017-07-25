@@ -129,7 +129,7 @@ func TestIndexNormal(t *testing.T) {
 		if termID, found = frame.td.GetTermID("17_1"); !found {
 			continue
 		}
-		if bits, err = frame.Bits(pilosa.ViewInverse); err != nil {
+		if bits, err = frame.Bits(); err != nil {
 			t.Fatalf("%+v", err)
 		}
 		//fmt.Printf("frmae %v bits: %v\n", name, bits)

@@ -12,21 +12,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-//View maps slice to Fragment.
-type View struct {
-	frags    map[uint64]*pilosa.Fragment //maps slice to Fragment
-	maxSlice uint64
-}
-
 // Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
 type Frame struct {
-	mu    sync.Mutex
-	path  string
-	index string
-	name  string
+	mu       sync.Mutex
+	path     string
+	index    string
+	name     string
+	maxSlice uint64
 
-	views map[string]*View //map view mode to view.
-	td    *TermDict
+	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
+	td        *TermDict
 }
 
 // NewFrame returns a new instance of frame, and initializes it.
@@ -36,19 +31,17 @@ func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
 		return
 	}
 	if overwrite {
-		viewModes := []string{pilosa.ViewStandard, pilosa.ViewInverse}
-		for _, mode := range viewModes {
-			if err = os.RemoveAll(filepath.Join(path, mode)); err != nil {
-				err = errors.Wrap(err, "")
-				return
-			}
+		if err = os.RemoveAll(filepath.Join(path, "fragments")); err != nil {
+			err = errors.Wrap(err, "")
+			return
 		}
 	}
 	f = &Frame{
-		path:  path,
-		index: index,
-		name:  name,
-		td:    td,
+		path:      path,
+		index:     index,
+		name:      name,
+		td:        td,
+		fragments: make(map[uint64]*pilosa.Fragment),
 	}
 	err = f.openFragments()
 	return
@@ -65,41 +58,28 @@ func (f *Frame) Open() (err error) {
 
 func (f *Frame) openFragments() (err error) {
 	var sliceList []uint64
-	var view *View
-	if f.views != nil {
-		panic("frame is already open")
+	if sliceList, err = getSliceList(f.path); err != nil {
+		return
 	}
-	f.views = make(map[string]*View)
-	viewModes := []string{pilosa.ViewStandard, pilosa.ViewInverse}
-	for _, mode := range viewModes {
-		if sliceList, err = getSliceList(f.path, mode); err != nil {
+	for _, slice := range sliceList {
+		fp := f.FragmentPath(slice)
+		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		if err = fragment.Open(); err != nil {
+			err = errors.Wrap(err, "")
 			return
 		}
-		view = &View{
-			frags:    make(map[uint64]*pilosa.Fragment),
-			maxSlice: 0,
-		}
-		f.views[mode] = view
-		for _, slice := range sliceList {
-			fp := f.FragmentPath(mode, slice)
-			fragment := pilosa.NewFragment(fp, f.index, f.name, mode, slice)
-			if err = fragment.Open(); err != nil {
-				err = errors.Wrap(err, "")
-				return
-			}
-			view.frags[slice] = fragment
-			if view.maxSlice < slice {
-				view.maxSlice = slice
-			}
+		f.fragments[slice] = fragment
+		if f.maxSlice < slice {
+			f.maxSlice = slice
 		}
 	}
 	return
 }
 
-func getSliceList(dir, viewMode string) (numList []uint64, err error) {
+func getSliceList(dir string) (numList []uint64, err error) {
 	var num uint64
 	var matches [][]string
-	fragDir := filepath.Join(dir, viewMode)
+	fragDir := filepath.Join(dir, "fragments")
 	if err = os.MkdirAll(fragDir, 0700); err != nil {
 		err = errors.Wrap(err, "")
 		return
@@ -134,33 +114,35 @@ func (f *Frame) Destroy() (err error) {
 	if err = f.closeFragments(); err != nil {
 		return
 	}
-	viewModes := []string{pilosa.ViewStandard, pilosa.ViewInverse}
-	for _, mode := range viewModes {
-		if err = os.RemoveAll(filepath.Join(f.path, mode)); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
+	if err = os.RemoveAll(filepath.Join(f.path, "fragments")); err != nil {
+		err = errors.Wrap(err, "")
+		return
 	}
 	err = f.td.Destroy()
 	return
 }
 
 func (f *Frame) closeFragments() (err error) {
-	for _, view := range f.views {
-		for _, fragment := range view.frags {
-			if err = fragment.Close(); err != nil {
-				err = errors.Wrap(err, "")
-				return
-			}
+	for slice, fragment := range f.fragments {
+		if err = fragment.Close(); err != nil {
+			err = errors.Wrap(err, "")
+			return
 		}
+		delete(f.fragments, slice)
 	}
-	f.views = nil
 	return
 }
 
 // FragmentPath returns the path to a fragment
-func (f *Frame) FragmentPath(viewMode string, slice uint64) string {
-	return filepath.Join(f.path, viewMode, strconv.FormatUint(slice, 10))
+func (f *Frame) FragmentPath(slice uint64) string {
+	return filepath.Join(f.path, "fragments", strconv.FormatUint(slice, 10))
+}
+
+// Fragment returns a fragment in the view by slice.
+func (f *Frame) Fragment(slice uint64) *pilosa.Fragment {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.fragments[slice]
 }
 
 // Name returns the name the frame was initialized with.
@@ -172,86 +154,47 @@ func (f *Frame) Index() string { return f.index }
 // Path returns the path the frame was initialized with.
 func (f *Frame) Path() string { return f.path }
 
-// MaxStandardSlice returns the max slice in the frame.
-func (f *Frame) MaxStandardSlice() uint64 { return f.views[pilosa.ViewStandard].maxSlice }
-
-// MaxInverseSlice returns the max slice in the frame.
-func (f *Frame) MaxInverseSlice() uint64 { return f.views[pilosa.ViewInverse].maxSlice }
+// MaxSlice returns the max slice in the frame.
+func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
 
 // setBit sets a bit within the frame, and expands fragments if necessary.
-func (f *Frame) setBit(docID, termID uint64) (changed bool, err error) {
-	var slice uint64
-	var fragment *pilosa.Fragment
-	var ok bool
-	var rowID, colID uint64
-	//ViewStandard uses docID as row id, termID as column id.
-	//ViewInverse uses termID as row id, docID as column id.
-	for mode, view := range f.views {
-		switch mode {
-		case pilosa.ViewStandard:
-			rowID, colID = docID, termID
-		case pilosa.ViewInverse:
-			rowID, colID = termID, docID
-		default:
-			panic("unknown view mode")
+func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
+	slice := colID / pilosa.SliceWidth
+	fragment, ok := f.fragments[slice]
+	if !ok {
+		fp := f.FragmentPath(slice)
+		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		if err = fragment.Open(); err != nil {
+			err = errors.Wrap(err, "")
+			return
 		}
-		slice = colID / pilosa.SliceWidth
-		fragment, ok = view.frags[slice]
-		if !ok {
-			fp := f.FragmentPath(mode, slice)
-			fragment = pilosa.NewFragment(fp, f.index, f.name, mode, slice)
-			if err = fragment.Open(); err != nil {
-				err = errors.Wrap(err, "")
-				return
-			}
-			view.frags[slice] = fragment
-		}
-		changed, err = fragment.SetBit(rowID, colID)
-		if view.maxSlice < slice {
-			view.maxSlice = slice
-		}
+		f.fragments[slice] = fragment
+	}
+	changed, err = fragment.SetBit(rowID, colID)
+	if f.maxSlice < slice {
+		f.maxSlice = slice
 	}
 	return
 }
 
 // clearBit clears a bit within the frame.
-func (f *Frame) clearBit(docID, termID uint64) (changed bool, err error) {
-	var rowID, colID uint64
-	//ViewStandard uses docID as row id, termID as column id.
-	//ViewInverse uses termID as row id, docID as column id.
-	for mode, view := range f.views {
-		switch mode {
-		case pilosa.ViewStandard:
-			rowID, colID = docID, termID
-		case pilosa.ViewInverse:
-			rowID, colID = termID, docID
-		default:
-			panic("unknown view mode")
-		}
-		slice := colID / pilosa.SliceWidth
-		fragment, ok := view.frags[slice]
-		if !ok {
-			err = errors.New("column out of bounds")
-			return
-		}
-		if changed, err = fragment.ClearBit(rowID, colID); err != nil {
-			return
-		}
+func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
+	slice := colID / pilosa.SliceWidth
+	fragment, ok := f.fragments[slice]
+	if !ok {
+		err = errors.New("column out of bounds")
+		return
 	}
+	changed, err = fragment.ClearBit(rowID, colID)
 	return
 }
 
 // Bits returns bits set in frame.
-func (f *Frame) Bits(viewMode string) (bits map[uint64][]uint64, err error) {
+func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
+	var ok bool
 	bits = make(map[uint64][]uint64)
 	var columns []uint64
-	var view *View
-	var ok bool
-	if view, ok = f.views[viewMode]; !ok {
-		err = errors.Errorf("unknown view mode %s", viewMode)
-		return
-	}
-	for _, fragment := range view.frags {
+	for _, fragment := range f.fragments {
 		err = fragment.ForEachBit(
 			func(rowID, columnID uint64) error {
 				columns, ok = bits[rowID]
@@ -280,7 +223,7 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 		return
 	}
 	for _, termID := range ids {
-		if _, err = f.setBit(docID, termID); err != nil {
+		if _, err = f.setBit(termID, docID); err != nil {
 			return
 		}
 	}
@@ -289,14 +232,10 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 
 // RemoveDoc clear bits of given document.
 func (f *Frame) RemoveDoc(docID uint64) (err error) {
-	//TODO: using mark-deletion to speed up?
-	var bm *pilosa.Bitmap
-	if bm, err = f.getColumns(pilosa.ViewStandard, docID); err != nil {
-		return
-	}
-	termIDs := bm.Bits()
-	for _, termID := range termIDs {
-		if _, err = f.clearBit(docID, termID); err != nil {
+	//TODO: using mark-deletion to speed up
+	numTerms := f.td.Count()
+	for termID := uint64(0); termID < numTerms; termID++ {
+		if _, err = f.clearBit(termID, docID); err != nil {
 			return
 		}
 	}
@@ -305,26 +244,13 @@ func (f *Frame) RemoveDoc(docID uint64) (err error) {
 
 //Query query which documents contain the given term.
 func (f *Frame) Query(term string) (bm *pilosa.Bitmap, err error) {
+	bm = pilosa.NewBitmap()
 	termID, found := f.td.GetTermID(term)
 	if !found {
-		bm = pilosa.NewBitmap()
 		return
 	}
-	bm, err = f.getColumns(pilosa.ViewInverse, termID)
-	return
-}
-
-//Query query which documents contain the given term.
-func (f *Frame) getColumns(viewMode string, rowID uint64) (bm *pilosa.Bitmap, err error) {
-	var view *View
-	var ok bool
-	if view, ok = f.views[viewMode]; !ok {
-		err = errors.Errorf("unknown view mode %s", viewMode)
-		return
-	}
-	bm = pilosa.NewBitmap()
-	for _, fragment := range view.frags {
-		bm2 := fragment.Row(rowID)
+	for _, fragment := range f.fragments {
+		bm2 := fragment.Row(termID)
 		bm.Merge(bm2)
 	}
 	return

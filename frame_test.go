@@ -68,7 +68,7 @@ func TestFrameQuery(t *testing.T) {
 		}
 	}
 	fmt.Printf("termdict size after indexing: %d\n", f.td.Count())
-	if bits, err = f.Bits(pilosa.ViewInverse); err != nil {
+	if bits, err = f.Bits(); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Printf("frame bits: %v\n", bits)
@@ -96,7 +96,7 @@ func TestFrameDestroy(t *testing.T) {
 	var err error
 	var f *Frame
 
-	if f, err = NewFrame("/tmp/frame_test", "i", "f", true); err != nil {
+	if f, err = NewFrame("/tmp", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -111,7 +111,7 @@ func TestFrameDestroy(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
-	fps := []string{filepath.Join(f.path, "terms"), filepath.Join(f.path, pilosa.ViewStandard), filepath.Join(f.path, pilosa.ViewInverse)}
+	fps := []string{filepath.Join(f.path, "terms"), filepath.Join(f.path, "fragments")}
 	for _, fp := range fps {
 		if _, err := os.Stat(fp); err == nil || !os.IsNotExist(err) {
 			t.Fatalf("path %s exists, want removed", fp)
