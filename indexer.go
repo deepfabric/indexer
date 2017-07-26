@@ -23,7 +23,7 @@ type Conf struct {
 type Indexer struct {
 	MainDir  string                          //the main directory where stores all indices
 	Conf     Conf                            //indexer conf
-	DocProts map[string]*cql.DocumentWithIdx //index meta, need to persist
+	docProts map[string]*cql.DocumentWithIdx //index meta, need to persist
 	indices  map[string]*Index               //index data, need to persist
 }
 
@@ -58,16 +58,16 @@ func (ir *Indexer) Destroy() (err error) {
 
 //Open opens all indices. Assumes ir.MainDir is already populated.
 func (ir *Indexer) Open() (err error) {
-	if ir.indices != nil || ir.DocProts != nil {
+	if ir.indices != nil || ir.docProts != nil {
 		panic("indexer already open")
 	}
-	ir.DocProts = make(map[string]*cql.DocumentWithIdx)
+	ir.docProts = make(map[string]*cql.DocumentWithIdx)
 	ir.indices = make(map[string]*Index)
 	if err = ir.readMeta(); err != nil {
 		return
 	}
 	var ind *Index
-	for name, docProt := range ir.DocProts {
+	for name, docProt := range ir.docProts {
 		if ind, err = NewIndexExt(ir.MainDir, docProt.Index); err != nil {
 			return
 		}
@@ -84,17 +84,17 @@ func (ir *Indexer) Close() (err error) {
 		}
 	}
 	ir.indices = nil
-	ir.DocProts = nil
+	ir.docProts = nil
 	return
 }
 
 // CreateIndex creates index
 func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
-	if ir.DocProts == nil {
-		ir.DocProts = make(map[string]*cql.DocumentWithIdx)
+	if ir.docProts == nil {
+		ir.docProts = make(map[string]*cql.DocumentWithIdx)
 		ir.indices = make(map[string]*Index)
 	}
-	if _, found := ir.DocProts[docProt.Index]; found {
+	if _, found := ir.docProts[docProt.Index]; found {
 		panic("CreateIndex conflict with existing index")
 	}
 	if err = indexWriteConf(ir.MainDir, docProt); err != nil {
@@ -105,14 +105,14 @@ func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 		return
 	}
 	ir.indices[docProt.Index] = ind
-	ir.DocProts[docProt.Index] = docProt
+	ir.docProts[docProt.Index] = docProt
 	return
 }
 
 //DestroyIndex destroy given index
 func (ir *Indexer) DestroyIndex(name string) (err error) {
 	delete(ir.indices, name)
-	delete(ir.DocProts, name)
+	delete(ir.docProts, name)
 	err = ir.removeIndex(name)
 	return
 }
@@ -155,7 +155,7 @@ func (ir *Indexer) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 
 //writeMeta persists Conf and DocProts to files.
 func (ir *Indexer) writeMeta() (err error) {
-	for _, docProt := range ir.DocProts {
+	for _, docProt := range ir.docProts {
 		if err = indexWriteConf(ir.MainDir, docProt); err != nil {
 			return
 		}
@@ -175,7 +175,7 @@ func (ir *Indexer) readMeta() (err error) {
 		if err = indexReadConf(ir.MainDir, match[1], &doc); err != nil {
 			return
 		}
-		ir.DocProts[match[1]] = &doc
+		ir.docProts[match[1]] = &doc
 	}
 	return
 }
