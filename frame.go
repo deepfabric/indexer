@@ -14,10 +14,9 @@ import (
 
 // Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
 type Frame struct {
-	path     string
-	index    string
-	name     string
-	maxSlice uint64
+	path  string
+	index string
+	name  string
 
 	rwlock    sync.RWMutex                //concurrent access of fragments
 	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
@@ -71,9 +70,6 @@ func (f *Frame) openFragments() (err error) {
 		f.rwlock.Lock()
 		f.fragments[slice] = fragment
 		f.rwlock.Unlock()
-		if f.maxSlice < slice {
-			f.maxSlice = slice
-		}
 	}
 	return
 }
@@ -151,9 +147,6 @@ func (f *Frame) Index() string { return f.index }
 // Path returns the path the frame was initialized with.
 func (f *Frame) Path() string { return f.path }
 
-// MaxSlice returns the max slice in the frame.
-func (f *Frame) MaxSlice() uint64 { return f.maxSlice }
-
 // setBit sets a bit within the frame, and expands fragments if necessary.
 func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
@@ -168,13 +161,14 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 			return
 		}
 		f.rwlock.Lock()
-		f.fragments[slice] = fragment
+		if fragment2, ok2 := f.fragments[slice]; ok2 {
+			fragment = fragment2
+		} else {
+			f.fragments[slice] = fragment
+		}
 		f.rwlock.Unlock()
 	}
 	changed, err = fragment.SetBit(rowID, colID)
-	if f.maxSlice < slice {
-		f.maxSlice = slice
-	}
 	return
 }
 
