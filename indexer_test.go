@@ -2,13 +2,12 @@ package indexer
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
 )
-
-const ()
 
 func newDocProt1() *cql.DocumentWithIdx {
 	return &cql.DocumentWithIdx{
@@ -198,4 +197,68 @@ func TestIndexerOpenClose(t *testing.T) {
 	if err = ir.Close(); err != nil {
 		t.Fatalf("%+v", err)
 	}
+}
+
+func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, err error) {
+	conf := Conf{
+		T0mCap:   1000,
+		LeafCap:  100,
+		IntraCap: 4,
+	}
+
+	//create indexer
+	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
+		return
+	}
+
+	//insert documents
+	for _, docProt := range docProts {
+		if err = ir.CreateIndex(docProt); err != nil {
+			return
+		}
+		for i := 0; i < numDocs; i++ {
+			docProt.DocID = uint64(i)
+			for j := 0; j < len(docProt.UintProps); j++ {
+				docProt.UintProps[j].Val = uint64(i * (j + 1))
+			}
+			if err = ir.Insert(docProt); err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+func BenchmarkIndexerInsert(b *testing.B) {
+	var err error
+	var ir *Indexer
+	numDocs := 100000 //insert some documents before benchmark
+
+	ir, err = prepareIndexer(numDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
+	if err != nil {
+		b.Fatalf("%+v", err)
+	}
+	b.ResetTimer()
+
+	//insert documents
+	seq := uint64(numDocs)
+	b.RunParallel(func(pb *testing.PB) {
+		// Each goroutine has its own i
+		var i uint64
+		for pb.Next() {
+			i = atomic.AddUint64(&seq, uint64(1))
+			doc := newDocProt1()
+			doc.DocID = uint64(i)
+			for j := 0; j < len(doc.UintProps); j++ {
+				doc.UintProps[j].Val = i * uint64(j+1)
+			}
+			for j := 0; j < len(doc.StrProps); j++ {
+				doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+			}
+			if err = ir.Insert(doc); err != nil {
+				b.Fatalf("%+v", err)
+			}
+		}
+	})
+	return
 }

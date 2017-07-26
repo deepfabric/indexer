@@ -153,21 +153,23 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 	f.rwlock.RLock()
 	fragment, ok := f.fragments[slice]
 	f.rwlock.RUnlock()
+	f.rwlock.Lock()
+	fragment, ok = f.fragments[slice]
 	if !ok {
 		fp := f.FragmentPath(slice)
 		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
 		if err = fragment.Open(); err != nil {
 			err = errors.Wrap(err, "")
+			f.rwlock.Unlock()
 			return
 		}
-		f.rwlock.Lock()
 		if fragment2, ok2 := f.fragments[slice]; ok2 {
 			fragment = fragment2
 		} else {
 			f.fragments[slice] = fragment
 		}
-		f.rwlock.Unlock()
 	}
+	f.rwlock.Unlock()
 	changed, err = fragment.SetBit(rowID, colID)
 	return
 }
