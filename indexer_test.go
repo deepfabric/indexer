@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	InitialNumDocs int = 1000 //insert some documents before benchmark
+	InitialNumDocs int = 100000 //insert some documents before benchmark
 )
 
 func newDocProt1() *cql.DocumentWithIdx {
