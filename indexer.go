@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
@@ -21,8 +22,10 @@ type Conf struct {
 
 //Indexer shall be singleton
 type Indexer struct {
-	MainDir  string                          //the main directory where stores all indices
-	Conf     Conf                            //indexer conf
+	MainDir string //the main directory where stores all indices
+	Conf    Conf   //indexer conf
+
+	rwlock   sync.RWMutex                    //concurrent access of docProts, indices
 	docProts map[string]*cql.DocumentWithIdx //index meta, need to persist
 	indices  map[string]*Index               //index data, need to persist
 }
@@ -38,6 +41,8 @@ func NewIndexer(mainDir string, conf *Conf, overwirte bool) (ir *Indexer, err er
 		return
 	}
 	if overwirte {
+		ir.docProts = make(map[string]*cql.DocumentWithIdx)
+		ir.indices = make(map[string]*Index)
 		err = ir.removeIndices()
 	} else {
 		err = ir.Open()
@@ -58,6 +63,8 @@ func (ir *Indexer) Destroy() (err error) {
 
 //Open opens all indices. Assumes ir.MainDir is already populated.
 func (ir *Indexer) Open() (err error) {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
 	if ir.indices != nil || ir.docProts != nil {
 		panic("indexer already open")
 	}
@@ -78,6 +85,8 @@ func (ir *Indexer) Open() (err error) {
 
 // Close close indexer
 func (ir *Indexer) Close() (err error) {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
 	for _, ind := range ir.indices {
 		if err = ind.Close(); err != nil {
 			return
@@ -90,10 +99,8 @@ func (ir *Indexer) Close() (err error) {
 
 // CreateIndex creates index
 func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
-	if ir.docProts == nil {
-		ir.docProts = make(map[string]*cql.DocumentWithIdx)
-		ir.indices = make(map[string]*Index)
-	}
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
 	if _, found := ir.docProts[docProt.Index]; found {
 		panic("CreateIndex conflict with existing index")
 	}
@@ -111,6 +118,8 @@ func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 
 //DestroyIndex destroy given index
 func (ir *Indexer) DestroyIndex(name string) (err error) {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
 	delete(ir.indices, name)
 	delete(ir.docProts, name)
 	err = ir.removeIndex(name)
@@ -121,10 +130,13 @@ func (ir *Indexer) DestroyIndex(name string) (err error) {
 func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var ind *Index
 	var found bool
+	ir.rwlock.RLock()
 	if ind, found = ir.indices[doc.Index]; !found {
 		err = errors.Errorf("failed to insert %v to non-existing index %v", doc, doc.Index)
+		ir.rwlock.RUnlock()
 		return
 	}
+	ir.rwlock.RUnlock()
 	err = ind.Insert(doc)
 	return
 }
@@ -133,10 +145,13 @@ func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 func (ir *Indexer) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 	var ind *Index
 	var fnd bool
+	ir.rwlock.RLock()
 	if ind, fnd = ir.indices[doc.Index]; !fnd {
 		err = errors.Errorf("failed to delete %v from non-existing index %v", doc, doc.Index)
+		ir.rwlock.RUnlock()
 		return
 	}
+	ir.rwlock.RUnlock()
 	found, err = ind.Del(doc)
 	return
 }
@@ -145,10 +160,13 @@ func (ir *Indexer) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 func (ir *Indexer) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	var ind *Index
 	var found bool
+	ir.rwlock.RLock()
 	if ind, found = ir.indices[q.Index]; !found {
 		err = errors.Errorf("failed to select %v from non-existing index %v", q, q.Index)
+		ir.rwlock.RUnlock()
 		return
 	}
+	ir.rwlock.RUnlock()
 	rb, err = ind.Select(q)
 	return
 }

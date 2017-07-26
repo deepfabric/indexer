@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
@@ -18,8 +19,10 @@ const (
 
 //Index is created by CqlCreate
 type Index struct {
-	MainDir  string
-	DocProt  *cql.DocumentWithIdx //document prototype. persisted to an index-specific file
+	MainDir string
+	DocProt *cql.DocumentWithIdx //document prototype. persisted to an index-specific file
+
+	rwlock   sync.RWMutex //concurrent access of bkds, frames, liveDocs
 	bkds     map[string]*bkdtree.BkdTree
 	frames   map[string]*Frame
 	liveDocs *Frame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
@@ -92,6 +95,8 @@ func indexReadConf(mainDir string, name string, docProt *cql.DocumentWithIdx) (e
 
 //Destroy removes data and conf files on disk.
 func (ind *Index) Destroy() (err error) {
+	ind.rwlock.Lock()
+	defer ind.rwlock.Unlock()
 	if ind.liveDocs != nil {
 		for _, bkd := range ind.bkds {
 			if err = bkd.Destroy(); err != nil {
@@ -144,8 +149,11 @@ func NewIndexExt(mainDir, name string) (ind *Index, err error) {
 
 //Open opens existing index. Assumes MainDir and DocProt is already populated.
 func (ind *Index) Open() (err error) {
-	if ind.bkds != nil || ind.frames != nil {
-		panic("index is already open")
+	ind.rwlock.Lock()
+	defer ind.rwlock.Unlock()
+	if ind.liveDocs != nil {
+		//index is already open
+		return
 	}
 	indDir := filepath.Join(ind.MainDir, ind.DocProt.Index)
 	ind.bkds = make(map[string]*bkdtree.BkdTree)
@@ -176,6 +184,12 @@ func (ind *Index) Open() (err error) {
 
 //Close closes index
 func (ind *Index) Close() (err error) {
+	ind.rwlock.Lock()
+	defer ind.rwlock.Unlock()
+	if ind.liveDocs == nil {
+		//index is already closed
+		return
+	}
 	for _, bkd := range ind.bkds {
 		if err = bkd.Close(); err != nil {
 			return
@@ -200,6 +214,8 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var bkd *bkdtree.BkdTree
 	var fm *Frame
 	var changed, ok bool
+	ind.rwlock.RLock()
+	defer ind.rwlock.RUnlock()
 	//check if doc.DocID is already there before insertion.
 	if changed, err = ind.liveDocs.setBit(0, doc.DocID); err != nil {
 		return
@@ -235,6 +251,8 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 //Del executes CqlDel. Do mark-deletion only. The caller shall rebuild index in order to recycle disk space.
 func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
 	var changed bool
+	ind.rwlock.RLock()
+	defer ind.rwlock.RUnlock()
 	if changed, err = ind.liveDocs.clearBit(0, doc.DocID); err != nil {
 		return
 	} else if !changed {
@@ -252,6 +270,8 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	var ok bool
 	var prevDocs, docs *pilosa.Bitmap
 
+	ind.rwlock.RLock()
+	defer ind.rwlock.RUnlock()
 	prevDocs = ind.liveDocs.row(0)
 	if prevDocs.Count() == 0 {
 		rb = prevDocs
