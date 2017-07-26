@@ -166,10 +166,6 @@ func TestIndexNormal(t *testing.T) {
 			t.Fatalf("document %v not found", doc)
 		}
 	}
-
-	if err = ind.Destroy(); err != nil {
-		t.Fatalf("%+v", err)
-	}
 }
 
 func TestIndexOpenClose(t *testing.T) {
@@ -226,6 +222,11 @@ func TestIndexOpenClose(t *testing.T) {
 
 	//close index
 	if err = ind2.Close(); err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	//destroy index
+	if err = ind.Destroy(); err != nil {
 		t.Fatalf("%+v", err)
 	}
 }

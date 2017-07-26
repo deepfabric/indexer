@@ -45,6 +45,17 @@ func NewIndexer(mainDir string, conf *Conf, overwirte bool) (ir *Indexer, err er
 	return
 }
 
+//Destroy close and remove index files
+func (ir *Indexer) Destroy() (err error) {
+	if err = ir.Close(); err != nil {
+		return
+	}
+	if err = ir.removeIndices(); err != nil {
+		return
+	}
+	return
+}
+
 //Open opens all indices. Assumes ir.MainDir is already populated.
 func (ir *Indexer) Open() (err error) {
 	if ir.indices != nil || ir.DocProts != nil {
@@ -57,7 +68,7 @@ func (ir *Indexer) Open() (err error) {
 	}
 	var ind *Index
 	for name, docProt := range ir.DocProts {
-		if ind, err = ir.openIndex(docProt); err != nil {
+		if ind, err = NewIndexExt(ir.MainDir, docProt.Index); err != nil {
 			return
 		}
 		ir.indices[name] = ind
@@ -193,23 +204,6 @@ func (ir *Indexer) removeIndex(name string) (err error) {
 	fp = filepath.Join(ir.MainDir, name)
 	if err = os.RemoveAll(fp); err != nil {
 		err = errors.Wrap(err, "")
-	}
-	return
-}
-
-//openIndex opens the given index from existing index
-func (ir *Indexer) openIndex(docProt *cql.DocumentWithIdx) (ind *Index, err error) {
-	ind, err = NewIndexExt(ir.MainDir, docProt.Index)
-	return
-}
-
-//closeIndices close all indices
-func (ir *Indexer) closeIndices() (err error) {
-	for name, ind := range ir.indices {
-		if err = ind.Close(); err != nil {
-			return
-		}
-		delete(ir.indices, name)
 	}
 	return
 }

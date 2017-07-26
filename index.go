@@ -92,26 +92,39 @@ func indexReadConf(mainDir string, name string, docProt *cql.DocumentWithIdx) (e
 
 //Destroy removes data and conf files on disk.
 func (ind *Index) Destroy() (err error) {
-	for _, bkd := range ind.bkds {
-		if err = bkd.Destroy(); err != nil {
+	if ind.liveDocs != nil {
+		for _, bkd := range ind.bkds {
+			if err = bkd.Destroy(); err != nil {
+				return
+			}
+		}
+		for _, fm := range ind.frames {
+			if err = fm.Destroy(); err != nil {
+				return
+			}
+		}
+		if err = ind.liveDocs.Destroy(); err != nil {
 			return
 		}
+		ind.bkds = nil
+		ind.frames = nil
+		ind.liveDocs = nil
 	}
-	for _, fm := range ind.frames {
-		if err = fm.Destroy(); err != nil {
-			return
+
+	paths := make([]string, 0)
+	for _, uintProp := range ind.DocProt.UintProps {
+		paths = append(paths, filepath.Join(ind.MainDir, uintProp.Name))
+	}
+	for _, strProp := range ind.DocProt.StrProps {
+		paths = append(paths, filepath.Join(ind.MainDir, strProp.Name))
+	}
+	paths = append(paths, filepath.Join(ind.MainDir, LiveDocs))
+	paths = append(paths, filepath.Join(ind.MainDir, fmt.Sprintf("index_%s.json", ind.DocProt.Index)))
+	for _, fp := range paths {
+		if err = os.RemoveAll(fp); err != nil {
+			err = errors.Wrap(err, "")
 		}
 	}
-	if err = ind.liveDocs.Destroy(); err != nil {
-		return
-	}
-	fp := filepath.Join(ind.MainDir, fmt.Sprintf("index_%s.json", ind.DocProt.Index))
-	if err = os.Remove(fp); err != nil {
-		err = errors.Wrap(err, "")
-	}
-	ind.bkds = nil
-	ind.frames = nil
-	ind.liveDocs = nil
 	return
 }
 
