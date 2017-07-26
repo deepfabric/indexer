@@ -2,11 +2,14 @@ package indexer
 
 import (
 	"fmt"
-	"sync/atomic"
 	"testing"
 
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
+)
+
+const (
+	InitialNumDocs int = 1000 //insert some documents before benchmark
 )
 
 func newDocProt1() *cql.DocumentWithIdx {
@@ -35,6 +38,16 @@ func newDocProt1() *cql.DocumentWithIdx {
 					Val:    0,
 				},
 			},
+			StrProps: []cql.StrProp{
+				cql.StrProp{
+					Name: "description",
+					Val:  "",
+				},
+				cql.StrProp{
+					Name: "note",
+					Val:  "",
+				},
+			},
 		},
 		Index: "orders",
 	}
@@ -59,6 +72,16 @@ func newDocProt2() *cql.DocumentWithIdx {
 					Name:   "updated",
 					ValLen: 8,
 					Val:    0,
+				},
+			},
+			StrProps: []cql.StrProp{
+				cql.StrProp{
+					Name: "description",
+					Val:  "",
+				},
+				cql.StrProp{
+					Name: "note",
+					Val:  "",
 				},
 			},
 		},
@@ -221,6 +244,9 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, 
 			for j := 0; j < len(docProt.UintProps); j++ {
 				docProt.UintProps[j].Val = uint64(i * (j + 1))
 			}
+			for j := 0; j < len(docProt.StrProps); j++ {
+				docProt.StrProps[j].Val = fmt.Sprintf("%d_%d ", i, j) + "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+			}
 			if err = ir.Insert(docProt); err != nil {
 				return
 			}
@@ -229,34 +255,66 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, 
 	return
 }
 
-func BenchmarkIndexerInsert(b *testing.B) {
+func BenchmarkIndexer(b *testing.B) {
 	var err error
 	var ir *Indexer
-	numDocs := 100000 //insert some documents before benchmark
 
-	ir, err = prepareIndexer(numDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
+	//https://golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks
+	//"The Run methods of T and B allow defining subtests and sub-benchmarks, ...provides a way to share common setup and tear-down code"
+	//"A subbenchmark is like any other benchmark. A benchmark that calls Run at least once will not be measured itself and will be called once with N=1."
+	//prepareIndexer is expensive setup, so it's better to share among sub-benchmarks.
+	ir, err = prepareIndexer(InitialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
 	if err != nil {
 		b.Fatalf("%+v", err)
 	}
-	b.ResetTimer()
 
-	//insert documents
-	seq := uint64(numDocs)
-	b.RunParallel(func(pb *testing.PB) {
-		// Each goroutine has its own i
-		var i uint64
-		for pb.Next() {
-			i = atomic.AddUint64(&seq, uint64(1))
-			doc := newDocProt1()
-			doc.DocID = uint64(i)
+	b.Run("Insert", func(b *testing.B) {
+		//insert documents
+		doc := newDocProt1()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			doc.DocID = uint64(InitialNumDocs + i)
 			for j := 0; j < len(doc.UintProps); j++ {
-				doc.UintProps[j].Val = i * uint64(j+1)
+				doc.UintProps[j].Val = doc.DocID * uint64(j+1)
 			}
 			for j := 0; j < len(doc.StrProps); j++ {
 				doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 			}
 			if err = ir.Insert(doc); err != nil {
+				//document could already be there since the benchmark function is called "at least once".
+				//b.Fatalf("%+v", err)
+			}
+		}
+	})
+
+	b.Run("Query", func(b *testing.B) {
+		//query documents
+		var rb *pilosa.Bitmap
+		low := 30
+		high := 600
+		cs := &cql.CqlSelect{
+			Index: "orders",
+			UintPreds: map[string]cql.UintPred{
+				"price": cql.UintPred{
+					Name: "price",
+					Low:  uint64(low),
+					High: uint64(high),
+				},
+			},
+			StrPreds: map[string]cql.StrPred{
+				"note": cql.StrPred{
+					Name:     "note",
+					ContWord: "17_1",
+				},
+			},
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			if rb, err = ir.Select(cs); err != nil {
 				b.Fatalf("%+v", err)
+			}
+			if rb.Count() == 0 {
+				b.Fatalf("rb.Count() is zero")
 			}
 		}
 	})
