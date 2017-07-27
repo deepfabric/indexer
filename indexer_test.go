@@ -282,6 +282,7 @@ func TestIndexerParallel(t *testing.T) {
 	//Concurrently insert to index 1 and 2
 	for i := 0; i < parallelism; i++ {
 		go func() {
+			var err2 error
 			docs := []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()}
 			for {
 				if now := time.Now(); now.After(endIns) {
@@ -296,9 +297,8 @@ func TestIndexerParallel(t *testing.T) {
 					for j := 0; j < len(doc.StrProps); j++ {
 						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 					}
-					if err = ir.Insert(doc); err != nil {
-						errIns = err
-						//t.Fatalf("%+v", err)
+					if err2 = ir.Insert(doc); err2 != nil {
+						errIns = err2
 					}
 				}
 			}
@@ -307,6 +307,7 @@ func TestIndexerParallel(t *testing.T) {
 	//Concurrently delete to index 1 and 2
 	for i := 0; i < parallelism; i++ {
 		go func() {
+			var err2 error
 			docs := []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()}
 			for {
 				if now := time.Now(); now.After(end) {
@@ -321,10 +322,9 @@ func TestIndexerParallel(t *testing.T) {
 					for j := 0; j < len(doc.StrProps); j++ {
 						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 					}
-					if _, err = ir.Del(doc); err != nil {
+					if _, err2 = ir.Del(doc); err2 != nil {
 						//deletion could be scheduled more often than insertion.
-						errDel = err
-						//t.Fatalf("%+v", err)
+						errDel = err2
 					}
 				}
 			}
@@ -333,6 +333,7 @@ func TestIndexerParallel(t *testing.T) {
 	//Concurrently query to index 1 and 2
 	for i := 0; i < parallelism; i++ {
 		go func() {
+			var err2 error
 			low := 30
 			high := 600
 			queries := []*cql.CqlSelect{
@@ -367,9 +368,8 @@ func TestIndexerParallel(t *testing.T) {
 					return
 				}
 				for _, query := range queries {
-					if _, err = ir.Select(query); err != nil {
-						errSel = err
-						//t.Fatalf("%+v", err)
+					if _, err2 = ir.Select(query); err2 != nil {
+						errSel = err2
 					}
 				}
 			}
