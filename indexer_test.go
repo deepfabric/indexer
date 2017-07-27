@@ -2,7 +2,9 @@ package indexer
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
@@ -252,6 +254,130 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, 
 			}
 		}
 	}
+	return
+}
+
+func TestIndexerParallel(t *testing.T) {
+	var err error
+	var ir *Indexer
+	initialNumDocs := 10000
+	parallelism := 5
+	duration := 120 * time.Second
+	durationIns := duration + 3*time.Second //insertion runs longger than deletion to ensure deletion succeed
+
+	//https://golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks
+	//"The Run methods of T and B allow defining subtests and sub-benchmarks, ...provides a way to share common setup and tear-down code"
+	//"A subbenchmark is like any other benchmark. A benchmark that calls Run at least once will not be measured itself and will be called once with N=1."
+	//prepareIndexer is expensive setup, so it's better to share among sub-benchmarks.
+	ir, err = prepareIndexer(initialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	end := time.Now().Add(duration)
+	endIns := end.Add(3 * time.Second)
+	seqIns := []uint64{uint64(initialNumDocs - 1), uint64(initialNumDocs - 1)}
+	seqDel := []uint64{0, 0}
+	var errIns, errDel, errSel error
+	//Concurrently insert to index 1 and 2
+	for i := 0; i < parallelism; i++ {
+		go func() {
+			docs := []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()}
+			for {
+				if now := time.Now(); now.After(endIns) {
+					return
+				}
+				for d, doc := range docs {
+					seq := atomic.AddUint64(&seqIns[d], 1)
+					doc.DocID = seq
+					for j := 0; j < len(doc.UintProps); j++ {
+						doc.UintProps[j].Val = doc.DocID * uint64(j+1)
+					}
+					for j := 0; j < len(doc.StrProps); j++ {
+						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+					}
+					if err = ir.Insert(doc); err != nil {
+						errIns = err
+						//t.Fatalf("%+v", err)
+					}
+				}
+			}
+		}()
+	}
+	//Concurrently delete to index 1 and 2
+	for i := 0; i < parallelism; i++ {
+		go func() {
+			docs := []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()}
+			for {
+				if now := time.Now(); now.After(end) {
+					return
+				}
+				for d, doc := range docs {
+					seq := atomic.AddUint64(&seqDel[d], 1)
+					doc.DocID = seq
+					for j := 0; j < len(doc.UintProps); j++ {
+						doc.UintProps[j].Val = doc.DocID * uint64(j+1)
+					}
+					for j := 0; j < len(doc.StrProps); j++ {
+						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+					}
+					if _, err = ir.Del(doc); err != nil {
+						//deletion could be scheduled more often than insertion.
+						errDel = err
+						//t.Fatalf("%+v", err)
+					}
+				}
+			}
+		}()
+	}
+	//Concurrently query to index 1 and 2
+	for i := 0; i < parallelism; i++ {
+		go func() {
+			low := 30
+			high := 600
+			queries := []*cql.CqlSelect{
+				&cql.CqlSelect{
+					Index: "orders",
+					UintPreds: map[string]cql.UintPred{
+						"price": cql.UintPred{
+							Name: "price",
+							Low:  uint64(low),
+							High: uint64(high),
+						},
+					},
+					StrPreds: map[string]cql.StrPred{
+						"note": cql.StrPred{
+							Name:     "note",
+							ContWord: "17_1",
+						},
+					},
+				},
+				&cql.CqlSelect{
+					Index: "addrs",
+					StrPreds: map[string]cql.StrPred{
+						"description": cql.StrPred{
+							Name:     "description",
+							ContWord: "17_0",
+						},
+					},
+				},
+			}
+			for {
+				if now := time.Now(); now.After(end) {
+					return
+				}
+				for _, query := range queries {
+					if _, err = ir.Select(query); err != nil {
+						errSel = err
+						//t.Fatalf("%+v", err)
+					}
+				}
+			}
+		}()
+	}
+	//wait goroutines to quit
+	time.Sleep(durationIns)
+	fmt.Printf("errIns %v, errDel %v, errSel %v\n", errIns, errDel, errSel)
 	return
 }
 
