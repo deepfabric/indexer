@@ -40,6 +40,7 @@ func (td *TermDict) Open() (err error) {
 	td.rwlock.Lock()
 	defer td.rwlock.Unlock()
 	if td.f != nil {
+		//TODO: replace panic with log.Fatalf
 		panic("td.f shall be nil")
 	}
 	if err = os.MkdirAll(td.Dir, 0700); err != nil {
