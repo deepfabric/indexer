@@ -97,6 +97,14 @@ func (ir *Indexer) Close() (err error) {
 	return
 }
 
+// GetDocProt returns docProt of given index
+func (ir *Indexer) GetDocProt(name string) (docProt *cql.DocumentWithIdx) {
+	ir.rwlock.RLock()
+	docProt, _ = ir.docProts[name]
+	ir.rwlock.RUnlock()
+	return
+}
+
 // CreateIndex creates index
 func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 	ir.rwlock.Lock()
