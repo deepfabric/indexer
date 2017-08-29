@@ -169,7 +169,7 @@ func TestIndexerNormal(t *testing.T) {
 		for j := 0; j < len(doc.UintProps); j++ {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if found, err = ir2.Del(doc); err != nil {
+		if found, err = ir2.Del(doc.Index, doc.DocID); err != nil {
 			t.Fatalf("%+v", err)
 		} else if !found {
 			t.Fatalf("document %v not found", doc)
@@ -322,7 +322,7 @@ func TestIndexerParallel(t *testing.T) {
 					for j := 0; j < len(doc.StrProps); j++ {
 						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 					}
-					if _, err2 = ir.Del(doc); err2 != nil {
+					if _, err2 = ir.Del(doc.Index, doc.DocID); err2 != nil {
 						//deletion could be scheduled more often than insertion.
 						errDel = err2
 					}

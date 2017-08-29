@@ -249,14 +249,14 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 }
 
 //Del executes CqlDel. Do mark-deletion only. The caller shall rebuild index in order to recycle disk space.
-func (ind *Index) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
+func (ind *Index) Del(docID uint64) (found bool, err error) {
 	var changed bool
 	ind.rwlock.RLock()
 	defer ind.rwlock.RUnlock()
-	if changed, err = ind.liveDocs.clearBit(0, doc.DocID); err != nil {
+	if changed, err = ind.liveDocs.clearBit(0, docID); err != nil {
 		return
 	} else if !changed {
-		err = errors.Errorf("document %v does not exist before deletion", doc.DocID)
+		err = errors.Errorf("document %v does not exist before deletion", docID)
 		return
 	}
 	found = true

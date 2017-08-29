@@ -150,17 +150,17 @@ func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 }
 
 //Del executes CqlDel.
-func (ir *Indexer) Del(doc *cql.DocumentWithIdx) (found bool, err error) {
+func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 	var ind *Index
 	var fnd bool
 	ir.rwlock.RLock()
-	if ind, fnd = ir.indices[doc.Index]; !fnd {
-		err = errors.Errorf("failed to delete %v from non-existing index %v", doc, doc.Index)
+	if ind, fnd = ir.indices[idxName]; !fnd {
+		err = errors.Errorf("failed to delete %v from non-existing index %v", docID, idxName)
 		ir.rwlock.RUnlock()
 		return
 	}
 	ir.rwlock.RUnlock()
-	found, err = ind.Del(doc)
+	found, err = ind.Del(docID)
 	return
 }
 
