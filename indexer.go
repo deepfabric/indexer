@@ -108,19 +108,8 @@ func (ir *Indexer) GetDocProt(name string) (docProt *cql.DocumentWithIdx) {
 // CreateIndex creates index
 func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 	ir.rwlock.Lock()
-	defer ir.rwlock.Unlock()
-	if _, found := ir.docProts[docProt.Index]; found {
-		panic("CreateIndex conflict with existing index")
-	}
-	if err = indexWriteConf(ir.MainDir, docProt); err != nil {
-		return
-	}
-	var ind *Index
-	if ind, err = NewIndex(docProt, ir.MainDir, ir.Conf.T0mCap, ir.Conf.LeafCap, ir.Conf.IntraCap); err != nil {
-		return
-	}
-	ir.indices[docProt.Index] = ind
-	ir.docProts[docProt.Index] = docProt
+	err = ir.createIndex(docProt)
+	ir.rwlock.Unlock()
 	return
 }
 
@@ -134,28 +123,29 @@ func (ir *Indexer) DestroyIndex(name string) (err error) {
 	return
 }
 
-//Insert executes CqlInsert
+//Insert executes CqlInsert. If the given index doesn't exist, create it before insertion.
 func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var ind *Index
 	var found bool
 	ir.rwlock.RLock()
 	if ind, found = ir.indices[doc.Index]; !found {
-		err = errors.Errorf("failed to insert %v to non-existing index %v", doc, doc.Index)
-		ir.rwlock.RUnlock()
-		return
+		if err = ir.createIndex(doc); err != nil {
+			ir.rwlock.RUnlock()
+			return
+		}
+		ind, found = ir.indices[doc.Index]
 	}
 	ir.rwlock.RUnlock()
 	err = ind.Insert(doc)
 	return
 }
 
-//Del executes CqlDel.
+//Del executes CqlDel. It's allowed that the given index doesn't exist.
 func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 	var ind *Index
 	var fnd bool
 	ir.rwlock.RLock()
 	if ind, fnd = ir.indices[idxName]; !fnd {
-		err = errors.Errorf("failed to delete %v from non-existing index %v", docID, idxName)
 		ir.rwlock.RUnlock()
 		return
 	}
@@ -176,6 +166,24 @@ func (ir *Indexer) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	}
 	ir.rwlock.RUnlock()
 	rb, err = ind.Select(q)
+	return
+}
+
+// createIndex creates index without holding the lock
+func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
+	if _, found := ir.docProts[docProt.Index]; found {
+		err = errors.New("CreateIndex conflict with existing index")
+		return
+	}
+	if err = indexWriteConf(ir.MainDir, docProt); err != nil {
+		return
+	}
+	var ind *Index
+	if ind, err = NewIndex(docProt, ir.MainDir, ir.Conf.T0mCap, ir.Conf.LeafCap, ir.Conf.IntraCap); err != nil {
+		return
+	}
+	ir.indices[docProt.Index] = ind
+	ir.docProts[docProt.Index] = docProt
 	return
 }
 
