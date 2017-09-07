@@ -2,6 +2,10 @@
 /** Derived from github.com/RedisLabsModules/secondary/docs/Commands.md
 
 https://stackoverflow.com/questions/44796556/how-to-tell-if-antlr4-parser-consumed-all-tokens-of-the-tokenstream
+
+Note that Antlr 4 doesn't support case-insensitive token:
+https://github.com/antlr/antlr4/issues/1002
+
  */
 
 grammar CQL;
