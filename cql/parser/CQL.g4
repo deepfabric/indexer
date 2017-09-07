@@ -22,7 +22,7 @@ insert: 'IDX.INSERT' document;
 
 del: 'IDX.DEL' document;
 
-query: 'IDX.SELECT' indexName 'WHERE' (uintPred)* (enumPred)* (strPred)* orderLimit?;
+query: ('IDX.SELECT' | 'QUERY') indexName 'WHERE' (uintPred)* (enumPred)* (strPred)* orderLimit?;
 
 indexName: IDENTIFIER;
 

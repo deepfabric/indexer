@@ -19,20 +19,22 @@ func TestParseCql(t *testing.T) {
 		"IDX.SELECT orders WHERE price>=30 price<40 date<2017 type IN [1,3] desc CONTAINS \"pen\" ORDERBY date",
 		"IDX.SELECT orders WHERE price>=30 price<=40 date<2017 type IN [1,3] ORDERBY date LIMIT 30",
 		"IDX.SELECT orders WHERE price>=30 price<=40 type IN [1,3]",
+		"QUERY orders WHERE price>=30 price<=40 type IN [1,3]",
 	}
-	indexDefs := make(map[string]IndexDef)
+	docProts := make(map[string]Document)
 	for i, tc := range tcs {
-		res, err := ParseCql(tc, indexDefs)
+		//IDX.CREATE and IDX.DEL need docProts, others don't.
+		res, err := ParseCql(tc, docProts)
 		if err != nil {
 			t.Fatalf("case %d, error %+v", i, err)
 		}
 		switch r := res.(type) {
 		case *CqlCreate:
-			fmt.Printf("Create index %s, schema %v\n", r.Index, r.IndexDef)
-			indexDefs[r.Index] = r.IndexDef
+			fmt.Printf("Create index %v\n", r)
+			docProts[r.DocumentWithIdx.Index] = r.Document
 		case *CqlDestroy:
 			fmt.Printf("Destroy index %s\n", r.Index)
-			delete(indexDefs, r.Index)
+			delete(docProts, r.Index)
 		case *CqlInsert:
 			fmt.Printf("Insert %v\n", r)
 		case *CqlDel:
