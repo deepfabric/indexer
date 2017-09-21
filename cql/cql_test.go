@@ -23,7 +23,7 @@ func TestParseCql(t *testing.T) {
 	}
 	docProts := make(map[string]Document)
 	for i, tc := range tcs {
-		//IDX.CREATE and IDX.DEL need docProts, others don't.
+		//IDX.CREATE, IDX.INSERT, IDX.DEL need docProts, others don't.
 		res, err := ParseCql(tc, docProts)
 		if err != nil {
 			t.Fatalf("case %d, error %+v", i, err)

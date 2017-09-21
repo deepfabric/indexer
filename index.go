@@ -379,7 +379,7 @@ func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
 			v.docs.SetBit(docID)
 		} else {
 			if len(*v.h) < v.limit {
-				v.h.Push(point)
+				heap.Push(v.h, point)
 			} else if point.LessThan((*v.h)[0]) {
 				(*v.h)[0] = point
 				heap.Fix(v.h, 0)
