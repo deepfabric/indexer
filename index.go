@@ -40,6 +40,22 @@ func (qr *QueryResult) Merge(other *QueryResult) {
 	qr.oa.Merge(other.oa)
 }
 
+// NewQueryResult creates an empty QueryResult
+func NewQueryResult(limit int) (qr *QueryResult) {
+	var oa *datastructures.OrderedArray
+	var err error
+	if limit > 0 {
+		if oa, err = datastructures.NewOrderedArray(limit); err != nil {
+			panic(fmt.Sprintf("NewOrderedArray failed with error %+v", err))
+		}
+	}
+	qr = &QueryResult{
+		rb: pilosa.NewBitmap(),
+		oa: oa,
+	}
+	return
+}
+
 //NewIndex creates index according to given conf, overwrites existing files.
 func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, intraCap int) (ind *Index, err error) {
 	if err = indexWriteConf(mainDir, docProt); err != nil {
