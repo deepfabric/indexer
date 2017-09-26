@@ -8,7 +8,6 @@ import (
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
-	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
 )
 
@@ -155,7 +154,7 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 }
 
 //Select executes CqlSelect.
-func (ir *Indexer) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
+func (ir *Indexer) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	var ind *Index
 	var found bool
 	ir.rwlock.RLock()
@@ -165,7 +164,7 @@ func (ir *Indexer) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		return
 	}
 	ir.rwlock.RUnlock()
-	rb, err = ind.Select(q)
+	qr, err = ind.Select(q)
 	return
 }
 

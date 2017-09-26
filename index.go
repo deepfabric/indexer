@@ -1,13 +1,13 @@
 package indexer
 
 import (
-	"container/heap"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/deepfabric/bkdtree"
+	"github.com/deepfabric/go-datastructures"
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
@@ -26,6 +26,12 @@ type Index struct {
 	bkds     map[string]*bkdtree.BkdTree
 	frames   map[string]*Frame
 	liveDocs *Frame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
+}
+
+// QueryResult is query result
+type QueryResult struct {
+	rb *pilosa.Bitmap               // used when no OrderBy given
+	oa *datastructures.OrderedArray // used when OrderBy given
 }
 
 //NewIndex creates index according to given conf, overwrites existing files.
@@ -264,7 +270,17 @@ func (ind *Index) Del(docID uint64) (found bool, err error) {
 }
 
 //Select executes CqlSelect.
-func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
+func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
+	var oa *datastructures.OrderedArray
+	if q.OrderBy != "" {
+		if oa, err = datastructures.NewOrderedArray(q.Limit); err != nil {
+			return
+		}
+	}
+	qr = &QueryResult{
+		rb: pilosa.NewBitmap(),
+		oa: oa,
+	}
 	var fm *Frame
 	var bkd *bkdtree.BkdTree
 	var ok bool
@@ -274,7 +290,6 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 	defer ind.rwlock.RUnlock()
 	prevDocs = ind.liveDocs.row(0)
 	if prevDocs.Count() == 0 {
-		rb = prevDocs
 		return
 	}
 	if len(q.StrPreds) != 0 {
@@ -286,20 +301,20 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 			docs = fm.Query(strPred.ContWord)
 			prevDocs = prevDocs.Intersect(docs)
 			if prevDocs.Count() == 0 {
-				rb = prevDocs
 				return
 			}
 		}
 	}
 
 	if len(q.UintPreds) == 0 {
-		rb = prevDocs
+		qr.rb = prevDocs
 		return
 	}
 
 	visitor := &bkdVisitor{
 		prevDocs: prevDocs,
 		docs:     pilosa.NewBitmap(),
+		oa:       qr.oa,
 	}
 
 	for _, uintPred := range q.UintPreds {
@@ -321,12 +336,13 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		}
 		visitor.prevDocs = visitor.docs
 		if visitor.prevDocs.Count() == 0 {
-			rb = visitor.prevDocs
 			return
 		}
 	}
 
-	if q.OrderBy != "" {
+	if q.OrderBy == "" {
+		qr.rb = visitor.prevDocs
+	} else {
 		var uintPred cql.UintPred
 		if uintPred, ok = q.UintPreds[q.OrderBy]; !ok {
 			err = errors.Errorf("invalid ORDERBY %s", q.OrderBy)
@@ -343,19 +359,13 @@ func (ind *Index) Select(q *cql.CqlSelect) (rb *pilosa.Bitmap, err error) {
 		visitor.highPoint = bkdtree.Point{
 			Vals: []uint64{uintPred.High},
 		}
-		visitor.limit = q.Limit
-		visitor.h = &bkdtree.PointMaxHeap{}
+		visitor.orderBy = true
 		if err = bkd.Intersect(visitor); err != nil {
 			return
 		}
-		rb = pilosa.NewBitmap()
-		for _, point := range *visitor.h {
-			rb.SetBit(point.UserData)
-		}
-		visitor.prevDocs = rb
+		qr.oa = visitor.oa
 	}
 
-	rb = visitor.prevDocs
 	return
 }
 
@@ -364,8 +374,8 @@ type bkdVisitor struct {
 	highPoint bkdtree.Point
 	prevDocs  *pilosa.Bitmap
 	docs      *pilosa.Bitmap
-	limit     int
-	h         *bkdtree.PointMaxHeap
+	orderBy   bool
+	oa        *datastructures.OrderedArray
 }
 
 func (v *bkdVisitor) GetLowPoint() bkdtree.Point { return v.lowPoint }
@@ -375,15 +385,10 @@ func (v *bkdVisitor) GetHighPoint() bkdtree.Point { return v.highPoint }
 func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
 	docID := point.UserData
 	if v.prevDocs == nil || v.prevDocs.Contains(docID) {
-		if v.limit == 0 {
+		if !v.orderBy {
 			v.docs.SetBit(docID)
 		} else {
-			if len(*v.h) < v.limit {
-				heap.Push(v.h, point)
-			} else if point.LessThan((*v.h)[0]) {
-				(*v.h)[0] = point
-				heap.Fix(v.h, 0)
-			}
+			v.oa.Put(point)
 		}
 	}
 }

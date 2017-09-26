@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	datastructures "github.com/deepfabric/go-datastructures"
 	"github.com/deepfabric/indexer/cql"
-	"github.com/deepfabric/pilosa"
 	"github.com/juju/testing/checkers"
 )
 
@@ -88,7 +88,8 @@ func TestIndexNormal(t *testing.T) {
 	}
 
 	// query numerical range
-	var rb *pilosa.Bitmap
+	var qr *QueryResult
+	var items []datastructures.Comparable
 	low := 30
 	high := 600
 	cs := &cql.CqlSelect{
@@ -101,26 +102,27 @@ func TestIndexNormal(t *testing.T) {
 			},
 		},
 	}
-	if rb, err = ind.Select(cs); err != nil {
+	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.Bits())
+	fmt.Printf("query result: %v\n", qr.rb.Bits())
 	// low <= 2*i <= high, (low+1)/2 <= i <= high/2
 	want := high/2 - (low+1)/2 + 1
-	if rb.Count() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
+	if qr.rb.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", qr.rb.Count(), want)
 	}
 
 	// query numerical range + order by + text
 	cs.OrderBy = "price"
 	cs.Limit = 20
-	if rb, err = ind.Select(cs); err != nil {
+	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.Bits())
+	items = qr.oa.Finalize()
+	fmt.Printf("query result: %v\n", items)
 	want = cs.Limit
-	if rb.Count() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
+	if len(items) != want {
+		t.Fatalf("incorrect number of matches, have %d, want %d", len(items), want)
 	}
 
 	// dump bits
@@ -145,13 +147,14 @@ func TestIndexNormal(t *testing.T) {
 		},
 	}
 	cs.Limit = 20
-	if rb, err = ind.Select(cs); err != nil {
+	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.Bits())
+	items = qr.oa.Finalize()
+	fmt.Printf("query result: %v\n", items)
 	want = 1
-	if rb.Count() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", rb.Count(), want)
+	if len(items) != want {
+		t.Fatalf("incorrect number of matches, have %d, want %d", len(items), want)
 	}
 
 	for i := 0; i < BkdCapTest; i++ {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/deepfabric/indexer/cql"
-	"github.com/deepfabric/pilosa"
 )
 
 const (
@@ -144,7 +143,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//query
-	var rb *pilosa.Bitmap
+	var qr *QueryResult
 	low := 30
 	high := 600
 	cs := &cql.CqlSelect{
@@ -157,10 +156,10 @@ func TestIndexerNormal(t *testing.T) {
 			},
 		},
 	}
-	if rb, err = ir2.Select(cs); err != nil {
+	if qr, err = ir2.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(rb.Bits())
+	fmt.Println(qr.rb.Bits())
 
 	//delete documents
 	for i := 0; i < BkdCapTest; i++ {
@@ -415,7 +414,7 @@ func BenchmarkIndexer(b *testing.B) {
 
 	b.Run("Query", func(b *testing.B) {
 		//query documents
-		var rb *pilosa.Bitmap
+		var qr *QueryResult
 		low := 30
 		high := 600
 		cs := &cql.CqlSelect{
@@ -436,10 +435,10 @@ func BenchmarkIndexer(b *testing.B) {
 		}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			if rb, err = ir.Select(cs); err != nil {
+			if qr, err = ir.Select(cs); err != nil {
 				b.Fatalf("%+v", err)
 			}
-			if rb.Count() == 0 {
+			if qr.rb.Count() == 0 {
 				b.Fatalf("rb.Count() is zero")
 			}
 		}
