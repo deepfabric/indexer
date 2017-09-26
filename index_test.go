@@ -105,11 +105,11 @@ func TestIndexNormal(t *testing.T) {
 	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Printf("query result: %v\n", qr.rb.Bits())
+	fmt.Printf("query result: %v\n", qr.Bm.Bits())
 	// low <= 2*i <= high, (low+1)/2 <= i <= high/2
 	want := high/2 - (low+1)/2 + 1
-	if qr.rb.Count() != uint64(want) {
-		t.Fatalf("incorrect number of matches, have %d, want %d", qr.rb.Count(), want)
+	if qr.Bm.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", qr.Bm.Count(), want)
 	}
 
 	// query numerical range + order by + text
@@ -118,7 +118,7 @@ func TestIndexNormal(t *testing.T) {
 	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	items = qr.oa.Finalize()
+	items = qr.Oa.Finalize()
 	fmt.Printf("query result: %v\n", items)
 	want = cs.Limit
 	if len(items) != want {
@@ -150,7 +150,7 @@ func TestIndexNormal(t *testing.T) {
 	if qr, err = ind.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	items = qr.oa.Finalize()
+	items = qr.Oa.Finalize()
 	fmt.Printf("query result: %v\n", items)
 	want = 1
 	if len(items) != want {

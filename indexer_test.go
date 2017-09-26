@@ -159,7 +159,7 @@ func TestIndexerNormal(t *testing.T) {
 	if qr, err = ir2.Select(cs); err != nil {
 		t.Fatalf("%+v", err)
 	}
-	fmt.Println(qr.rb.Bits())
+	fmt.Println(qr.Bm.Bits())
 
 	//delete documents
 	for i := 0; i < BkdCapTest; i++ {
@@ -438,7 +438,7 @@ func BenchmarkIndexer(b *testing.B) {
 			if qr, err = ir.Select(cs); err != nil {
 				b.Fatalf("%+v", err)
 			}
-			if qr.rb.Count() == 0 {
+			if qr.Bm.Count() == 0 {
 				b.Fatalf("rb.Count() is zero")
 			}
 		}

@@ -30,14 +30,14 @@ type Index struct {
 
 // QueryResult is query result
 type QueryResult struct {
-	rb *pilosa.Bitmap               // used when no OrderBy given
-	oa *datastructures.OrderedArray // used when OrderBy given
+	Bm *pilosa.Bitmap               // used when no OrderBy given
+	Oa *datastructures.OrderedArray // used when OrderBy given
 }
 
 // Merge merges other (keep unchagned) into qr
 func (qr *QueryResult) Merge(other *QueryResult) {
-	qr.rb.Merge(other.rb)
-	qr.oa.Merge(other.oa)
+	qr.Bm.Merge(other.Bm)
+	qr.Oa.Merge(other.Oa)
 }
 
 // NewQueryResult creates an empty QueryResult
@@ -50,8 +50,8 @@ func NewQueryResult(limit int) (qr *QueryResult) {
 		}
 	}
 	qr = &QueryResult{
-		rb: pilosa.NewBitmap(),
-		oa: oa,
+		Bm: pilosa.NewBitmap(),
+		Oa: oa,
 	}
 	return
 }
@@ -300,8 +300,8 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 		}
 	}
 	qr = &QueryResult{
-		rb: pilosa.NewBitmap(),
-		oa: oa,
+		Bm: pilosa.NewBitmap(),
+		Oa: oa,
 	}
 	var fm *Frame
 	var bkd *bkdtree.BkdTree
@@ -329,14 +329,14 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	}
 
 	if len(q.UintPreds) == 0 {
-		qr.rb = prevDocs
+		qr.Bm = prevDocs
 		return
 	}
 
 	visitor := &bkdVisitor{
 		prevDocs: prevDocs,
 		docs:     pilosa.NewBitmap(),
-		oa:       qr.oa,
+		oa:       qr.Oa,
 	}
 
 	for _, uintPred := range q.UintPreds {
@@ -363,7 +363,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	}
 
 	if q.OrderBy == "" {
-		qr.rb = visitor.prevDocs
+		qr.Bm = visitor.prevDocs
 	} else {
 		var uintPred cql.UintPred
 		if uintPred, ok = q.UintPreds[q.OrderBy]; !ok {
@@ -385,7 +385,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 		if err = bkd.Intersect(visitor); err != nil {
 			return
 		}
-		qr.oa = visitor.oa
+		qr.Oa = visitor.oa
 	}
 
 	return
