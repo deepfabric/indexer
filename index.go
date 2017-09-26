@@ -34,6 +34,12 @@ type QueryResult struct {
 	oa *datastructures.OrderedArray // used when OrderBy given
 }
 
+// Merge merges other (keep unchagned) into qr
+func (qr *QueryResult) Merge(other *QueryResult) {
+	qr.rb.Merge(other.rb)
+	qr.oa.Merge(other.oa)
+}
+
 //NewIndex creates index according to given conf, overwrites existing files.
 func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, intraCap int) (ind *Index, err error) {
 	if err = indexWriteConf(mainDir, docProt); err != nil {
