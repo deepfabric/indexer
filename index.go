@@ -42,16 +42,9 @@ func (qr *QueryResult) Merge(other *QueryResult) {
 
 // NewQueryResult creates an empty QueryResult
 func NewQueryResult(limit int) (qr *QueryResult) {
-	var oa *datastructures.OrderedArray
-	var err error
-	if limit > 0 {
-		if oa, err = datastructures.NewOrderedArray(limit); err != nil {
-			panic(fmt.Sprintf("NewOrderedArray failed with error %+v", err))
-		}
-	}
 	qr = &QueryResult{
 		Bm: pilosa.NewBitmap(),
-		Oa: oa,
+		Oa: datastructures.NewOrderedArray(limit),
 	}
 	return
 }
@@ -293,15 +286,9 @@ func (ind *Index) Del(docID uint64) (found bool, err error) {
 
 //Select executes CqlSelect.
 func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
-	var oa *datastructures.OrderedArray
-	if q.OrderBy != "" {
-		if oa, err = datastructures.NewOrderedArray(q.Limit); err != nil {
-			return
-		}
-	}
 	qr = &QueryResult{
 		Bm: pilosa.NewBitmap(),
-		Oa: oa,
+		Oa: datastructures.NewOrderedArray(q.Limit),
 	}
 	var fm *Frame
 	var bkd *bkdtree.BkdTree
