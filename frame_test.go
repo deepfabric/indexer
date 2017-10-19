@@ -22,13 +22,13 @@ func TestFrameParseAndIndex(t *testing.T) {
 	}
 	defer f.Close()
 
-	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it? 小明硕士毕业于中国科学院计算所，后在日本京都大学深造。"
 	if err = f.ParseAndIndex(3, text); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Printf("termdict size: %d\n", f.td.Count())
 
-	terms = []string{"Go's", "it?"}
+	terms = []string{"go", "it", "科学院", "中国科学院"}
 	for _, term := range terms {
 		if _, found = f.td.GetTermID(term); !found {
 			t.Fatalf("Term %s not found, want found", term)
@@ -73,8 +73,8 @@ func TestFrameQuery(t *testing.T) {
 	}
 	fmt.Printf("frame bits: %v\n", bits)
 
-	terms = []string{"the", "disk", "你好", "中文世界", "你", "世界"}
-	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{}, []uint64{}}
+	terms = []string{"the", "disk", "你好", "中文", "世界", "你"}
+	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{10}, []uint64{}}
 	for i, term := range terms {
 		bm = f.Query(term)
 		docIDs = bm.Bits()

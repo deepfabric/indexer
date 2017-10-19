@@ -246,7 +246,7 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, 
 				docProt.UintProps[j].Val = uint64(i * (j + 1))
 			}
 			for j := 0; j < len(docProt.StrProps); j++ {
-				docProt.StrProps[j].Val = fmt.Sprintf("%d_%d ", i, j) + "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+				docProt.StrProps[j].Val = fmt.Sprintf("%03d%03d ", i, j) + "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 			}
 			if err = ir.Insert(docProt); err != nil {
 				return
@@ -348,7 +348,7 @@ func TestIndexerParallel(t *testing.T) {
 					StrPreds: map[string]cql.StrPred{
 						"note": cql.StrPred{
 							Name:     "note",
-							ContWord: "17_1",
+							ContWord: "017001",
 						},
 					},
 				},
@@ -357,7 +357,7 @@ func TestIndexerParallel(t *testing.T) {
 					StrPreds: map[string]cql.StrPred{
 						"description": cql.StrPred{
 							Name:     "description",
-							ContWord: "17_0",
+							ContWord: "017000",
 						},
 					},
 				},
@@ -429,7 +429,7 @@ func BenchmarkIndexer(b *testing.B) {
 			StrPreds: map[string]cql.StrPred{
 				"note": cql.StrPred{
 					Name:     "note",
-					ContWord: "17_1",
+					ContWord: "017001",
 				},
 			},
 		}

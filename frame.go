@@ -10,6 +10,7 @@ import (
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/pilosa"
 	"github.com/pkg/errors"
+	"github.com/yanyiwu/gojieba"
 )
 
 // Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
@@ -17,6 +18,7 @@ type Frame struct {
 	path  string
 	index string
 	name  string
+	jieba *gojieba.Jieba
 
 	rwlock    sync.RWMutex                //concurrent access of fragments
 	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
@@ -39,6 +41,7 @@ func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
 		path:      path,
 		index:     index,
 		name:      name,
+		jieba:     gojieba.NewJieba(),
 		td:        td,
 		fragments: make(map[uint64]*pilosa.Fragment),
 	}
@@ -117,6 +120,7 @@ func (f *Frame) Destroy() (err error) {
 		return
 	}
 	err = f.td.Destroy()
+	f.jieba.Free()
 	return
 }
 
@@ -230,7 +234,11 @@ func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 // ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go
-	terms := strings.Fields(text)
+	//terms := strings.Fields(text)
+	terms := f.jieba.CutForSearch(text, true)
+	for i, term := range terms {
+		terms[i] = strings.ToLower(term)
+	}
 	ids, err := f.td.CreateTermsIfNotExist(terms)
 	if err != nil {
 		return

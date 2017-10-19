@@ -80,7 +80,7 @@ func TestIndexNormal(t *testing.T) {
 			doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
 		for j := 0; j < len(doc.StrProps); j++ {
-			doc.StrProps[j].Val = fmt.Sprintf("%d_%d and some random text", i, j)
+			doc.StrProps[j].Val = fmt.Sprintf("%03d%03d and some random text", i, j)
 		}
 		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)
@@ -128,7 +128,7 @@ func TestIndexNormal(t *testing.T) {
 	// dump bits
 	for name, frame := range ind.frames {
 		var termID uint64
-		if termID, found = frame.td.GetTermID("17_1"); !found {
+		if termID, found = frame.td.GetTermID("017001"); !found {
 			continue
 		}
 		if bits, err = frame.Bits(); err != nil {
@@ -142,7 +142,7 @@ func TestIndexNormal(t *testing.T) {
 	cs.StrPreds = map[string]cql.StrPred{
 		"note": cql.StrPred{
 			Name:     "note",
-			ContWord: "17_1",
+			ContWord: "017001",
 			//			ContWord: "random",
 		},
 	}
