@@ -254,7 +254,7 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 //Query query which documents contain the given term.
 func (f *Frame) Query(term string) (bm *pilosa.Bitmap) {
 	bm = pilosa.NewBitmap()
-	termID, found := f.td.GetTermID(term)
+	termID, found := f.td.GetTermID(strings.ToLower(term))
 	if !found {
 		return
 	}

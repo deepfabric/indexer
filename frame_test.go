@@ -73,7 +73,7 @@ func TestFrameQuery(t *testing.T) {
 	}
 	fmt.Printf("frame bits: %v\n", bits)
 
-	terms = []string{"the", "disk", "你好", "中文", "世界", "你"}
+	terms = []string{"The", "disk", "你好", "中文", "世界", "你"}
 	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{10}, []uint64{}}
 	for i, term := range terms {
 		bm = f.Query(term)
