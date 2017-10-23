@@ -32,6 +32,12 @@ func newDocProt() *cql.DocumentWithIdx {
 					Val:    0,
 				},
 				cql.UintProp{
+					Name:    "priceF64",
+					IsFloat: true,
+					ValLen:  8,
+					Val:     0,
+				},
+				cql.UintProp{
 					Name:   "number",
 					ValLen: 4,
 					Val:    0,
@@ -77,7 +83,11 @@ func TestIndexNormal(t *testing.T) {
 		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * (j + 1))
+			val := uint64(i * (j + 1))
+			if val, err = cql.ParseUintProp(doc.UintProps[j], fmt.Sprintf("%v", val)); err != nil {
+				t.Fatalf("%+v", err)
+			}
+			doc.UintProps[j].Val = val
 		}
 		for j := 0; j < len(doc.StrProps); j++ {
 			doc.StrProps[j].Val = fmt.Sprintf("%03d%03d and some random text", i, j)
@@ -87,18 +97,18 @@ func TestIndexNormal(t *testing.T) {
 		}
 	}
 
-	// query numerical range
+	// query numerical(integer) range
 	var qr *QueryResult
 	var items []datastructures.Comparable
-	low := 30
-	high := 600
+	low := uint64(30)
+	high := uint64(600)
 	cs := &cql.CqlSelect{
 		Index: docProt.Index,
 		UintPreds: map[string]cql.UintPred{
 			"price": cql.UintPred{
 				Name: "price",
-				Low:  uint64(low),
-				High: uint64(high),
+				Low:  low,
+				High: high,
 			},
 		},
 	}
@@ -107,7 +117,7 @@ func TestIndexNormal(t *testing.T) {
 	}
 	fmt.Printf("query result: %v\n", qr.Bm.Bits())
 	// low <= 2*i <= high, (low+1)/2 <= i <= high/2
-	want := high/2 - (low+1)/2 + 1
+	want := int(high/2 - (low+1)/2 + 1)
 	if qr.Bm.Count() != uint64(want) {
 		t.Fatalf("incorrect number of matches, have %d, want %d", qr.Bm.Count(), want)
 	}
@@ -157,6 +167,39 @@ func TestIndexNormal(t *testing.T) {
 		t.Fatalf("incorrect number of matches, have %d, want %d", len(items), want)
 	}
 
+	// query numerical(float) range
+	valSs := []string{"30", "600"}
+	vals := make([]uint64, len(valSs))
+	for i, valS := range valSs {
+		var val uint64
+		if val, err = cql.Float64ToSortableUint64(valS); err != nil {
+			t.Fatalf("%+v", err)
+		}
+		vals[i] = val
+		fmt.Printf("FLOAT64 %v\t%v\n", valS, val)
+	}
+	low, high = vals[0], vals[1]
+	cs = &cql.CqlSelect{
+		Index: docProt.Index,
+		UintPreds: map[string]cql.UintPred{
+			"priceF64": cql.UintPred{
+				Name: "priceF64",
+				Low:  low,
+				High: high,
+			},
+		},
+	}
+	if qr, err = ind.Select(cs); err != nil {
+		t.Fatalf("%+v", err)
+	}
+	fmt.Printf("query result: %v\n", qr.Bm.Bits())
+	// low <= 3*i <= high, (low+2)/3 <= i <= high/3
+	want = int(600/3 - (30+2)/3 + 1)
+	if qr.Bm.Count() != uint64(want) {
+		t.Fatalf("incorrect number of matches, have %d, want %d", qr.Bm.Count(), want)
+	}
+
+	//delete docs
 	for i := 0; i < BkdCapTest; i++ {
 		doc := newDocProt()
 		doc.DocID = uint64(i)

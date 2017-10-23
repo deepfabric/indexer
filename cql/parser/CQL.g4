@@ -49,16 +49,19 @@ uintType
     | K_UINT16
     | K_UINT32
     | K_UINT64
+    | K_FLOAT32
+    | K_FLOAT64
     ;
 
 docId: INT;
 
 value
     : INT
+    | FLOAT_LIT
     | STRING
     ;
 
-uintPred: property compare INT;
+uintPred: property compare value;
 
 enumPred: property K_IN intList;
 
@@ -80,6 +83,8 @@ K_UINT8: 'UINT8';
 K_UINT16: 'UINT16';
 K_UINT32: 'UINT32';
 K_UINT64: 'UINT64';
+K_FLOAT32: 'FLOAT32';
+K_FLOAT64: 'FLOAT64';
 K_ENUM: 'ENUM';
 K_STRING: 'STRING';
 K_IN: 'IN';
@@ -89,6 +94,32 @@ K_BT: '>';
 K_EQ: '=';
 K_LE: '<=';
 K_BE: '>=';
+
+// Floating-point literals. Copied from github.com/antlr/grammars-v4/golang/Golang.g4.
+
+//float_lit = decimals "." [ decimals ] [ exponent ] |
+//            decimals exponent |
+//            "." decimals [ exponent ] .
+FLOAT_LIT
+    : DECIMALS '.' DECIMALS? EXPONENT?
+    | DECIMALS EXPONENT
+    | '.' DECIMALS EXPONENT?
+    ;
+
+//decimals  = decimal_digit { decimal_digit } .
+fragment DECIMALS
+    : DECIMAL_DIGIT+
+    ;
+
+//exponent  = ( "e" | "E" ) [ "+" | "-" ] decimals .
+fragment EXPONENT
+    : ( 'e' | 'E' ) ( '+' | '-' )? DECIMALS
+    ;
+
+//decimal_digit = "0" … "9" .
+fragment DECIMAL_DIGIT
+    : [0-9]
+    ;
 
 STRING
     : '"' (ESC | ~ ["\\])* '"'

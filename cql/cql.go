@@ -2,6 +2,7 @@ package cql
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -23,9 +24,10 @@ const (
 )
 
 type UintProp struct {
-	Name   string
-	ValLen int //one of 1, 2, 4, 8
-	Val    uint64
+	Name    string
+	IsFloat bool
+	ValLen  int //one of 1, 2, 4, 8
+	Val     uint64
 }
 
 type EnumProp struct {
@@ -121,8 +123,9 @@ func (el *VerboseErrorListener) ReportContextSensitivity(recognizer antlr.Parser
 
 type myCqlVisitor struct {
 	parser.BaseCQLVisitor
-	docProts map[string]Document
+	docProts map[string]*Document
 	res      interface{} //record the intermediate and final result of visitor
+	index    string      //index name
 }
 
 func (v *myCqlVisitor) VisitCql(ctx *parser.CqlContext) (err interface{}) {
@@ -180,6 +183,12 @@ func (v *myCqlVisitor) VisitUintPropDef(ctx *parser.UintPropDefContext) (err int
 	} else if u32 := uintType.K_UINT32(); u32 != nil {
 		pop.ValLen = 4
 	} else if u64 := uintType.K_UINT64(); u64 != nil {
+		pop.ValLen = 8
+	} else if u32 := uintType.K_FLOAT32(); u32 != nil {
+		pop.IsFloat = true
+		pop.ValLen = 4
+	} else if u64 := uintType.K_FLOAT64(); u64 != nil {
+		pop.IsFloat = true
 		pop.ValLen = 8
 	} else {
 		panic(fmt.Sprintf("invalid uintType: %v\n", ctx.UintType().GetText()))
@@ -253,9 +262,7 @@ func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface
 
 	vals := ctx.AllValue()
 	for i := 0; i < len(docProt.UintProps); i++ {
-		tmpU64, err = strconv.ParseUint(vals[i].GetText(), 10, 64)
-		if err != nil {
-			err = errors.Wrap(err.(error), "")
+		if tmpU64, err = ParseUintProp(docProt.UintProps[i], vals[i].GetText()); err != nil {
 			return
 		}
 		uintProp := docProt.UintProps[i]
@@ -282,6 +289,7 @@ func (v *myCqlVisitor) VisitDocument(ctx *parser.DocumentContext) (err interface
 }
 
 func (v *myCqlVisitor) VisitQuery(ctx *parser.QueryContext) (err interface{}) {
+	v.index = ctx.IndexName().GetText()
 	q := &CqlSelect{
 		Index:     ctx.IndexName().GetText(),
 		UintPreds: make(map[string]UintPred),
@@ -379,11 +387,28 @@ func stripQuote(s string) string {
 
 func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (err interface{}) {
 	var val uint64
+	var docProt *Document
+	var uintProp UintProp
+	var ok bool
 	pred := &UintPred{Low: 0, High: ^uint64(0)}
 	pred.Name = ctx.Property().GetText()
-	val, err = strconv.ParseUint(ctx.INT().GetText(), 10, 64)
-	if err != nil {
-		err = errors.Wrap(err.(error), "")
+	if docProt, ok = v.docProts[v.index]; !ok {
+		err = errors.Errorf("cannot find docProt for index %s", v.index)
+		return
+	}
+	ok = false
+	for _, uintProp = range docProt.UintProps {
+		if uintProp.Name == pred.Name {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		err = errors.Errorf("cannot find UintPred %s in index %s", pred.Name, v.index)
+		return
+
+	}
+	if val, err = ParseUintProp(uintProp, ctx.Value().GetText()); err != nil {
 		return
 	}
 	cmp := ctx.Compare().(*parser.CompareContext)
@@ -408,6 +433,25 @@ func (v *myCqlVisitor) VisitUintPred(ctx *parser.UintPredContext) (err interface
 func (v *myCqlVisitor) VisitEnumPred(ctx *parser.EnumPredContext) (err interface{}) {
 	pred := &EnumPred{}
 	pred.Name = ctx.Property().GetText()
+	var docProt *Document
+	var enumProp EnumProp
+	var ok bool
+	if docProt, ok = v.docProts[v.index]; !ok {
+		err = errors.Errorf("cannot find docProt for index %s", v.index)
+		return
+	}
+	ok = false
+	for _, enumProp = range docProt.EnumProps {
+		if enumProp.Name == pred.Name {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		err = errors.Errorf("cannot find EnumPred %s in index %s", pred.Name, v.index)
+		return
+
+	}
 	if err = v.VisitIntList(ctx.IntList().(*parser.IntListContext)); err != nil {
 		return
 	}
@@ -434,6 +478,25 @@ func (v *myCqlVisitor) VisitIntList(ctx *parser.IntListContext) (err interface{}
 func (v *myCqlVisitor) VisitStrPred(ctx *parser.StrPredContext) (err interface{}) {
 	pred := &StrPred{}
 	pred.Name = ctx.Property().GetText()
+	var docProt *Document
+	var strProp StrProp
+	var ok bool
+	if docProt, ok = v.docProts[v.index]; !ok {
+		err = errors.Errorf("cannot find docProt for index %s", v.index)
+		return
+	}
+	ok = false
+	for _, strProp = range docProt.StrProps {
+		if strProp.Name == pred.Name {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		err = errors.Errorf("cannot find StrPred %s in index %s", pred.Name, v.index)
+		return
+
+	}
 	pred.ContWord = stripQuote(ctx.STRING().GetText())
 	v.res = pred
 	return
@@ -461,8 +524,66 @@ func (v *myCqlVisitor) VisitOrderLimit(ctx *parser.OrderLimitContext) (err inter
 	return
 }
 
+/*
+Float32ToSortableUint64 converts a float32 string to sortable uint64.
+
+Refers to:
+github.com/apache/lucene-solr/lucene/core/src/java/org/apache/lucene/util/NumericUtils.java,
+  public static int floatToSortableInt(float value);
+  public static long doubleToSortableLong(double value);
+
+https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+*/
+func Float32ToSortableUint64(valS string) (val uint64, err error) {
+	var valF float64
+	if valF, err = strconv.ParseFloat(valS, 32); err != nil {
+		return
+	}
+	bits := math.Float32bits(float32(valF))
+	int0 := int32(bits)
+	val = uint64(uint32(int0^((int0>>31)&0x7fffffff)) ^ 0x80000000)
+	return
+}
+
+//Float64ToSortableUint64 converts a float64 string to sortable uint64.
+func Float64ToSortableUint64(valS string) (val uint64, err error) {
+	var valF float64
+	if valF, err = strconv.ParseFloat(valS, 64); err != nil {
+		return
+	}
+	bits := math.Float64bits(valF)
+	int0 := int64(bits)
+	val = uint64(int0^((int0>>63)&0x7fffffffffffffff)) ^ 0x8000000000000000
+	return
+}
+
+//ParseUintProp parses valS
+func ParseUintProp(uintProp UintProp, valS string) (val uint64, err error) {
+	if uintProp.IsFloat {
+		if uintProp.ValLen == 4 {
+			if val, err = Float32ToSortableUint64(valS); err != nil {
+				err = errors.Wrap(err.(error), "")
+				return
+			}
+		} else {
+			if val, err = Float64ToSortableUint64(valS); err != nil {
+				err = errors.Wrap(err.(error), "")
+				return
+			}
+		}
+	} else {
+		val, err = strconv.ParseUint(valS, 10, 64)
+		if err != nil {
+			err = errors.Wrap(err.(error), "")
+			return
+		}
+	}
+	return
+}
+
 //ParseCql parse CQL. res type is one of CqlCreate/CqlDestroy/CqlInsert/CqlDel/CqlQuery.
-func ParseCql(cql string, docProts map[string]Document) (res interface{}, err error) {
+func ParseCql(cql string, docProts map[string]*Document) (res interface{}, err error) {
 	input := antlr.NewInputStream(cql)
 	lexer := parser.NewCQLLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)

@@ -16,7 +16,7 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 32, 181,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 35, 181,
 	4, 2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7,
 	4, 8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13,
 	9, 13, 4, 14, 9, 14, 4, 15, 9, 15, 4, 16, 9, 16, 4, 17, 9, 17, 4, 18, 9,
@@ -36,7 +36,7 @@ var parserATN = []uint16{
 	22, 3, 22, 3, 23, 3, 23, 3, 23, 3, 23, 7, 23, 172, 10, 23, 12, 23, 14,
 	23, 175, 11, 23, 3, 23, 3, 23, 3, 24, 3, 24, 3, 24, 2, 2, 25, 2, 4, 6,
 	8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42,
-	44, 46, 2, 6, 3, 2, 8, 9, 3, 2, 16, 19, 3, 2, 29, 30, 3, 2, 24, 28, 2,
+	44, 46, 2, 6, 3, 2, 8, 9, 3, 2, 16, 21, 3, 2, 31, 33, 3, 2, 26, 30, 2,
 	171, 2, 63, 3, 2, 2, 2, 4, 65, 3, 2, 2, 2, 6, 86, 3, 2, 2, 2, 8, 89, 3,
 	2, 2, 2, 10, 92, 3, 2, 2, 2, 12, 95, 3, 2, 2, 2, 14, 119, 3, 2, 2, 2, 16,
 	121, 3, 2, 2, 2, 18, 128, 3, 2, 2, 2, 20, 131, 3, 2, 2, 2, 22, 134, 3,
@@ -67,26 +67,26 @@ var parserATN = []uint16{
 	21, 2, 111, 110, 3, 2, 2, 2, 112, 115, 3, 2, 2, 2, 113, 111, 3, 2, 2, 2,
 	113, 114, 3, 2, 2, 2, 114, 117, 3, 2, 2, 2, 115, 113, 3, 2, 2, 2, 116,
 	118, 5, 24, 13, 2, 117, 116, 3, 2, 2, 2, 117, 118, 3, 2, 2, 2, 118, 13,
-	3, 2, 2, 2, 119, 120, 7, 31, 2, 2, 120, 15, 3, 2, 2, 2, 121, 122, 5, 14,
+	3, 2, 2, 2, 119, 120, 7, 34, 2, 2, 120, 15, 3, 2, 2, 2, 121, 122, 5, 14,
 	8, 2, 122, 124, 5, 32, 17, 2, 123, 125, 5, 34, 18, 2, 124, 123, 3, 2, 2,
 	2, 125, 126, 3, 2, 2, 2, 126, 124, 3, 2, 2, 2, 126, 127, 3, 2, 2, 2, 127,
 	17, 3, 2, 2, 2, 128, 129, 5, 28, 15, 2, 129, 130, 5, 30, 16, 2, 130, 19,
-	3, 2, 2, 2, 131, 132, 5, 28, 15, 2, 132, 133, 7, 20, 2, 2, 133, 21, 3,
-	2, 2, 2, 134, 135, 5, 28, 15, 2, 135, 136, 7, 21, 2, 2, 136, 23, 3, 2,
+	3, 2, 2, 2, 131, 132, 5, 28, 15, 2, 132, 133, 7, 22, 2, 2, 133, 21, 3,
+	2, 2, 2, 134, 135, 5, 28, 15, 2, 135, 136, 7, 23, 2, 2, 136, 23, 3, 2,
 	2, 2, 137, 138, 7, 11, 2, 2, 138, 141, 5, 26, 14, 2, 139, 140, 7, 12, 2,
 	2, 140, 142, 5, 46, 24, 2, 141, 139, 3, 2, 2, 2, 141, 142, 3, 2, 2, 2,
 	142, 25, 3, 2, 2, 2, 143, 144, 5, 28, 15, 2, 144, 27, 3, 2, 2, 2, 145,
-	146, 7, 31, 2, 2, 146, 29, 3, 2, 2, 2, 147, 148, 9, 3, 2, 2, 148, 31, 3,
-	2, 2, 2, 149, 150, 7, 30, 2, 2, 150, 33, 3, 2, 2, 2, 151, 152, 9, 4, 2,
+	146, 7, 34, 2, 2, 146, 29, 3, 2, 2, 2, 147, 148, 9, 3, 2, 2, 148, 31, 3,
+	2, 2, 2, 149, 150, 7, 33, 2, 2, 150, 33, 3, 2, 2, 2, 151, 152, 9, 4, 2,
 	2, 152, 35, 3, 2, 2, 2, 153, 154, 5, 28, 15, 2, 154, 155, 5, 42, 22, 2,
-	155, 156, 7, 30, 2, 2, 156, 37, 3, 2, 2, 2, 157, 158, 5, 28, 15, 2, 158,
-	159, 7, 22, 2, 2, 159, 160, 5, 44, 23, 2, 160, 39, 3, 2, 2, 2, 161, 162,
-	5, 28, 15, 2, 162, 163, 7, 23, 2, 2, 163, 164, 7, 29, 2, 2, 164, 41, 3,
+	155, 156, 5, 34, 18, 2, 156, 37, 3, 2, 2, 2, 157, 158, 5, 28, 15, 2, 158,
+	159, 7, 24, 2, 2, 159, 160, 5, 44, 23, 2, 160, 39, 3, 2, 2, 2, 161, 162,
+	5, 28, 15, 2, 162, 163, 7, 25, 2, 2, 163, 164, 7, 32, 2, 2, 164, 41, 3,
 	2, 2, 2, 165, 166, 9, 5, 2, 2, 166, 43, 3, 2, 2, 2, 167, 168, 7, 13, 2,
-	2, 168, 173, 7, 30, 2, 2, 169, 170, 7, 14, 2, 2, 170, 172, 7, 30, 2, 2,
+	2, 168, 173, 7, 33, 2, 2, 169, 170, 7, 14, 2, 2, 170, 172, 7, 33, 2, 2,
 	171, 169, 3, 2, 2, 2, 172, 175, 3, 2, 2, 2, 173, 171, 3, 2, 2, 2, 173,
 	174, 3, 2, 2, 2, 174, 176, 3, 2, 2, 2, 175, 173, 3, 2, 2, 2, 176, 177,
-	7, 15, 2, 2, 177, 45, 3, 2, 2, 2, 178, 179, 7, 30, 2, 2, 179, 47, 3, 2,
+	7, 15, 2, 2, 177, 45, 3, 2, 2, 2, 178, 179, 7, 33, 2, 2, 179, 47, 3, 2,
 	2, 2, 13, 63, 71, 77, 83, 101, 107, 113, 117, 126, 141, 173,
 }
 var deserializer = antlr.NewATNDeserializer(nil)
@@ -95,13 +95,15 @@ var deserializedATN = deserializer.DeserializeFromUInt16(parserATN)
 var literalNames = []string{
 	"", "'IDX.CREATE'", "'SCHEMA'", "'IDX.DESTROY'", "'IDX.INSERT'", "'IDX.DEL'",
 	"'IDX.SELECT'", "'QUERY'", "'WHERE'", "'ORDERBY'", "'LIMIT'", "'['", "','",
-	"']'", "'UINT8'", "'UINT16'", "'UINT32'", "'UINT64'", "'ENUM'", "'STRING'",
-	"'IN'", "'CONTAINS'", "'<'", "'>'", "'='", "'<='", "'>='",
+	"']'", "'UINT8'", "'UINT16'", "'UINT32'", "'UINT64'", "'FLOAT32'", "'FLOAT64'",
+	"'ENUM'", "'STRING'", "'IN'", "'CONTAINS'", "'<'", "'>'", "'='", "'<='",
+	"'>='",
 }
 var symbolicNames = []string{
 	"", "", "", "", "", "", "", "", "", "", "", "", "", "", "K_UINT8", "K_UINT16",
-	"K_UINT32", "K_UINT64", "K_ENUM", "K_STRING", "K_IN", "K_CONTAINS", "K_LT",
-	"K_BT", "K_EQ", "K_LE", "K_BE", "STRING", "INT", "IDENTIFIER", "WS",
+	"K_UINT32", "K_UINT64", "K_FLOAT32", "K_FLOAT64", "K_ENUM", "K_STRING",
+	"K_IN", "K_CONTAINS", "K_LT", "K_BT", "K_EQ", "K_LE", "K_BE", "FLOAT_LIT",
+	"STRING", "INT", "IDENTIFIER", "WS",
 }
 
 var ruleNames = []string{
@@ -156,19 +158,22 @@ const (
 	CQLParserK_UINT16   = 15
 	CQLParserK_UINT32   = 16
 	CQLParserK_UINT64   = 17
-	CQLParserK_ENUM     = 18
-	CQLParserK_STRING   = 19
-	CQLParserK_IN       = 20
-	CQLParserK_CONTAINS = 21
-	CQLParserK_LT       = 22
-	CQLParserK_BT       = 23
-	CQLParserK_EQ       = 24
-	CQLParserK_LE       = 25
-	CQLParserK_BE       = 26
-	CQLParserSTRING     = 27
-	CQLParserINT        = 28
-	CQLParserIDENTIFIER = 29
-	CQLParserWS         = 30
+	CQLParserK_FLOAT32  = 18
+	CQLParserK_FLOAT64  = 19
+	CQLParserK_ENUM     = 20
+	CQLParserK_STRING   = 21
+	CQLParserK_IN       = 22
+	CQLParserK_CONTAINS = 23
+	CQLParserK_LT       = 24
+	CQLParserK_BT       = 25
+	CQLParserK_EQ       = 26
+	CQLParserK_LE       = 27
+	CQLParserK_BE       = 28
+	CQLParserFLOAT_LIT  = 29
+	CQLParserSTRING     = 30
+	CQLParserINT        = 31
+	CQLParserIDENTIFIER = 32
+	CQLParserWS         = 33
 )
 
 // CQLParser rules.
@@ -1477,7 +1482,7 @@ func (p *CQLParser) Document() (localctx IDocumentContext) {
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = _la == CQLParserSTRING || _la == CQLParserINT {
+	for ok := true; ok; ok = (((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserFLOAT_LIT)|(1<<CQLParserSTRING)|(1<<CQLParserINT))) != 0) {
 		{
 			p.SetState(121)
 			p.Value()
@@ -2241,6 +2246,14 @@ func (s *UintTypeContext) K_UINT64() antlr.TerminalNode {
 	return s.GetToken(CQLParserK_UINT64, 0)
 }
 
+func (s *UintTypeContext) K_FLOAT32() antlr.TerminalNode {
+	return s.GetToken(CQLParserK_FLOAT32, 0)
+}
+
+func (s *UintTypeContext) K_FLOAT64() antlr.TerminalNode {
+	return s.GetToken(CQLParserK_FLOAT64, 0)
+}
+
 func (s *UintTypeContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
@@ -2296,7 +2309,7 @@ func (p *CQLParser) UintType() (localctx IUintTypeContext) {
 	p.SetState(145)
 	_la = p.GetTokenStream().LA(1)
 
-	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserK_UINT8)|(1<<CQLParserK_UINT16)|(1<<CQLParserK_UINT32)|(1<<CQLParserK_UINT64))) != 0) {
+	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserK_UINT8)|(1<<CQLParserK_UINT16)|(1<<CQLParserK_UINT32)|(1<<CQLParserK_UINT64)|(1<<CQLParserK_FLOAT32)|(1<<CQLParserK_FLOAT64))) != 0) {
 		p.GetErrorHandler().RecoverInline(p)
 	} else {
 		p.GetErrorHandler().ReportMatch(p)
@@ -2449,6 +2462,10 @@ func (s *ValueContext) INT() antlr.TerminalNode {
 	return s.GetToken(CQLParserINT, 0)
 }
 
+func (s *ValueContext) FLOAT_LIT() antlr.TerminalNode {
+	return s.GetToken(CQLParserFLOAT_LIT, 0)
+}
+
 func (s *ValueContext) STRING() antlr.TerminalNode {
 	return s.GetToken(CQLParserSTRING, 0)
 }
@@ -2508,7 +2525,7 @@ func (p *CQLParser) Value() (localctx IValueContext) {
 	p.SetState(149)
 	_la = p.GetTokenStream().LA(1)
 
-	if !(_la == CQLParserSTRING || _la == CQLParserINT) {
+	if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CQLParserFLOAT_LIT)|(1<<CQLParserSTRING)|(1<<CQLParserINT))) != 0) {
 		p.GetErrorHandler().RecoverInline(p)
 	} else {
 		p.GetErrorHandler().ReportMatch(p)
@@ -2576,8 +2593,14 @@ func (s *UintPredContext) Compare() ICompareContext {
 	return t.(ICompareContext)
 }
 
-func (s *UintPredContext) INT() antlr.TerminalNode {
-	return s.GetToken(CQLParserINT, 0)
+func (s *UintPredContext) Value() IValueContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IValueContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IValueContext)
 }
 
 func (s *UintPredContext) GetRuleContext() antlr.RuleContext {
@@ -2641,7 +2664,7 @@ func (p *CQLParser) UintPred() (localctx IUintPredContext) {
 	}
 	{
 		p.SetState(153)
-		p.Match(CQLParserINT)
+		p.Value()
 	}
 
 	return localctx
