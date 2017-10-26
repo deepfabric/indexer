@@ -231,6 +231,24 @@ func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 	return
 }
 
+// Count returns number of bits set in frame.
+func (f *Frame) Count() (cnt uint64, err error) {
+	f.rwlock.RLock()
+	defer f.rwlock.RUnlock()
+	for _, fragment := range f.fragments {
+		err = fragment.ForEachBit(
+			func(rowID, columnID uint64) error {
+				cnt++
+				return nil
+			},
+		)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 // ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go

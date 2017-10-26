@@ -168,6 +168,22 @@ func (ir *Indexer) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	return
 }
 
+//Summary returns a summary of all indices.
+func (ir *Indexer) Summary() (sum string, err error) {
+	var ind *Index
+	var name string
+	var cnt uint64
+	ir.rwlock.RLock()
+	defer ir.rwlock.RUnlock()
+	for name, ind = range ir.indices {
+		if cnt, err = ind.liveDocs.Count(); err != nil {
+			return
+		}
+		sum += fmt.Sprintf("index %s contains %d documents\n", name, cnt)
+	}
+	return
+}
+
 // createIndex creates index without holding the lock
 func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
 	if _, found := ir.docProts[docProt.Index]; found {
