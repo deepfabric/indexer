@@ -277,7 +277,6 @@ func (ind *Index) Del(docID uint64) (found bool, err error) {
 	if changed, err = ind.liveDocs.clearBit(0, docID); err != nil {
 		return
 	} else if !changed {
-		err = errors.Errorf("document %v does not exist before deletion", docID)
 		return
 	}
 	found = true
