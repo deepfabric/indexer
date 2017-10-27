@@ -181,7 +181,6 @@ func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 	fragment, ok := f.fragments[slice]
 	f.rwlock.RUnlock()
 	if !ok {
-		err = errors.New("column out of bounds")
 		return
 	}
 	changed, err = fragment.ClearBit(rowID, colID)
