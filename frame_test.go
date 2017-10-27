@@ -22,13 +22,13 @@ func TestFrameParseAndIndex(t *testing.T) {
 	}
 	defer f.Close()
 
-	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it? 小明硕士毕业于中国科学院计算所，后在日本京都大学深造。"
+	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 	if err = f.ParseAndIndex(3, text); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	fmt.Printf("termdict size: %d\n", f.td.Count())
 
-	terms = []string{"go", "it", "科学院", "中国科学院"}
+	terms = []string{"go's", "it?"}
 	for _, term := range terms {
 		if _, found = f.td.GetTermID(term); !found {
 			t.Fatalf("Term %s not found, want found", term)
@@ -60,7 +60,7 @@ func TestFrameQuery(t *testing.T) {
 	docIDs := []uint64{1, 10}
 	texts := []string{
 		"Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it? 你好",
-		"This is a listing of successful results of all the various data storage and processing system benchmarks I've conducted using the dataset produced in the Billion Taxi Rides in Redshift blog post. The dataset itself has 1.1 billion records, 51 columns and takes up about 500 GB of 中文世界 disk space uncompressed.",
+		"This is a listing of successful results of all the various data storage and processing system benchmarks I've conducted using the dataset produced in the Billion Taxi Rides in Redshift blog post. The dataset itself has 1.1 billion records, 51 columns and takes up about 500 GB of disk space uncompressed.",
 	}
 	for i := 0; i < len(docIDs); i++ {
 		if err = f.ParseAndIndex(docIDs[i], texts[i]); err != nil {
@@ -73,7 +73,7 @@ func TestFrameQuery(t *testing.T) {
 	}
 	fmt.Printf("frame bits: %v\n", bits)
 
-	terms = []string{"The", "disk", "你好", "中文", "世界", "你"}
+	terms = []string{"The", "disk"}
 	expDocIDs := [][]uint64{[]uint64{1, 10}, []uint64{10}, []uint64{1}, []uint64{10}, []uint64{10}, []uint64{}}
 	for i, term := range terms {
 		bm = f.Query(term)
