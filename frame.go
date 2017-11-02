@@ -267,26 +267,26 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 }
 
 //Query query which documents contain the given term.
-func (f *Frame) Query(term string) (bm *pilosa.Bitmap) {
-	bm = pilosa.NewBitmap()
-	termID, found := f.td.GetTermID(strings.ToLower(term))
-	if !found {
-		return
+func (f *Frame) Query(text string) (bm *pilosa.Bitmap) {
+	words := ParseWords(text)
+	var bm2 *pilosa.Bitmap
+	for _, word := range words {
+		termID, found := f.td.GetTermID(word)
+		if !found {
+			bm = pilosa.NewBitmap()
+			return
+		}
+		bm2 = f.row(termID)
+		if bm != nil {
+			bm = bm.Intersect(bm2)
+		} else {
+			bm = bm2
+		}
 	}
-	bm = f.row(termID)
 	return
 }
 
 var asciiSpace = [128]uint8{'\t': 1, '\n': 1, '\v': 1, '\f': 1, '\r': 1, ' ': 1}
-
-//IsChinesePunctuate detect if r is a chinese punctuate.
-func IsChinesePunctuate(r rune) bool {
-	switch r {
-	case '，', '。', '、', '：', '；', '”', '？', '《', '》':
-		return true
-	}
-	return false
-}
 
 //ParseWords parses text(encoded in UTF-8) for words.
 //A word is a non-ascii-space lowered ASCII character sequence, or a non-ASCII non-unicode-space non-chinese-punctuate character.
@@ -299,23 +299,23 @@ func ParseWords(text string) (words []string) {
 		j := i
 		var c byte
 		for j < lenText {
-			if c = text[j]; c < 0x80 && asciiSpace[c] == 0 {
+			if c = text[j]; c < 0x80 && asciiSpace[c] == 0 && unicode.IsPrint(rune(c)) && !unicode.IsPunct(rune(c)) {
 				j++
 			} else {
 				break
 			}
 		}
 		if i < j {
-			// text[i:j] is a non-ascii-space ASCII character sequence
+			// text[i:j] is a printable non-space ASCII character sequence.
 			words = append(words, strings.ToLower(text[i:j]))
 			i = j
 		} else if c < 0x80 {
-			// i==j, text[i] is an ascii space
+			// i==j, text[i] is an ascii space, non-printable or punctuation character.
 			i++
 		} else {
 			// i==j, text[i] is the begin of an non-ascii character
 			r, w := utf8.DecodeRuneInString(text[i:])
-			if !unicode.IsSpace(r) && !IsChinesePunctuate(r) {
+			if unicode.IsPrint(rune(c)) && !unicode.IsSpace(r) && !unicode.IsPunct(r) {
 				words = append(words, text[i:i+w])
 			}
 			i += w
