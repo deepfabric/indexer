@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/pilosa"
@@ -247,10 +249,11 @@ func (f *Frame) Count() (cnt uint64, err error) {
 // ParseAndIndex parses and index a field.
 func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go
-	terms := strings.Fields(text)
+	/*terms := strings.Fields(text)
 	for i, term := range terms {
 		terms[i] = strings.ToLower(term)
-	}
+	}*/
+	terms := ParseWords(text)
 	ids, err := f.td.CreateTermsIfNotExist(terms)
 	if err != nil {
 		return
@@ -271,5 +274,52 @@ func (f *Frame) Query(term string) (bm *pilosa.Bitmap) {
 		return
 	}
 	bm = f.row(termID)
+	return
+}
+
+var asciiSpace = [128]uint8{'\t': 1, '\n': 1, '\v': 1, '\f': 1, '\r': 1, ' ': 1}
+
+//IsChinesePunctuate detect if r is a chinese punctuate.
+func IsChinesePunctuate(r rune) bool {
+	switch r {
+	case '，', '。', '、', '：', '；', '”', '？', '《', '》':
+		return true
+	}
+	return false
+}
+
+//ParseWords parses text(encoded in UTF-8) for words.
+//A word is a non-ascii-space lowered ASCII character sequence, or a non-ASCII non-unicode-space non-chinese-punctuate character.
+//Note: words are not de-duplicated.
+func ParseWords(text string) (words []string) {
+	lenText := len(text)
+	words = make([]string, 0, lenText/3)
+	i := 0
+	for i < lenText {
+		j := i
+		var c byte
+		for j < lenText {
+			if c = text[j]; c < 0x80 && asciiSpace[c] == 0 {
+				j++
+			} else {
+				break
+			}
+		}
+		if i < j {
+			// text[i:j] is a non-ascii-space ASCII character sequence
+			words = append(words, strings.ToLower(text[i:j]))
+			i = j
+		} else if c < 0x80 {
+			// i==j, text[i] is an ascii space
+			i++
+		} else {
+			// i==j, text[i] is the begin of an non-ascii character
+			r, w := utf8.DecodeRuneInString(text[i:])
+			if !unicode.IsSpace(r) && !IsChinesePunctuate(r) {
+				words = append(words, text[i:i+w])
+			}
+			i += w
+		}
+	}
 	return
 }
