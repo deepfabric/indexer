@@ -97,14 +97,8 @@ func TestIndexerNormal(t *testing.T) {
 	var ir, ir2 *Indexer
 	var found bool
 
-	conf := Conf{
-		T0mCap:   1000,
-		LeafCap:  100,
-		IntraCap: 4,
-	}
-
 	//create empty indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -121,7 +115,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//insert documents
-	for i := 0; i < BkdCapTest; i++ {
+	for i := 0; i < InitialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -138,7 +132,7 @@ func TestIndexerNormal(t *testing.T) {
 	}
 
 	//create indexer with existing data
-	if ir2, err = NewIndexer("/tmp/indexer_test", &conf, false); err != nil {
+	if ir2, err = NewIndexer("/tmp/indexer_test", false); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -162,7 +156,7 @@ func TestIndexerNormal(t *testing.T) {
 	fmt.Println(qr.Bm.Bits())
 
 	//delete documents
-	for i := 0; i < BkdCapTest; i++ {
+	for i := 0; i < InitialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -190,14 +184,8 @@ func TestIndexerOpenClose(t *testing.T) {
 	var err error
 	var ir *Indexer
 
-	conf := Conf{
-		T0mCap:   1000,
-		LeafCap:  100,
-		IntraCap: 4,
-	}
-
 	//create indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
@@ -224,14 +212,8 @@ func TestIndexerOpenClose(t *testing.T) {
 }
 
 func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, err error) {
-	conf := Conf{
-		T0mCap:   1000,
-		LeafCap:  100,
-		IntraCap: 4,
-	}
-
 	//create indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", &conf, true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
 		return
 	}
 

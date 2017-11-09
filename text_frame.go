@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Frame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
-type Frame struct {
+// TextFrame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
+type TextFrame struct {
 	path  string
 	index string
 	name  string
@@ -25,8 +25,8 @@ type Frame struct {
 	td        *TermDict
 }
 
-// NewFrame returns a new instance of frame, and initializes it.
-func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
+// NewTextFrame returns a new instance of frame, and initializes it.
+func NewTextFrame(path, index, name string, overwrite bool) (f *TextFrame, err error) {
 	var td *TermDict
 	if td, err = NewTermDict(path, overwrite); err != nil {
 		return
@@ -37,7 +37,7 @@ func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
 			return
 		}
 	}
-	f = &Frame{
+	f = &TextFrame{
 		path:      path,
 		index:     index,
 		name:      name,
@@ -49,7 +49,7 @@ func NewFrame(path, index, name string, overwrite bool) (f *Frame, err error) {
 }
 
 //Open opens an existing frame
-func (f *Frame) Open() (err error) {
+func (f *TextFrame) Open() (err error) {
 	if err = f.openFragments(); err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func (f *Frame) Open() (err error) {
 	return
 }
 
-func (f *Frame) openFragments() (err error) {
+func (f *TextFrame) openFragments() (err error) {
 	var sliceList []uint64
 	if sliceList, err = getSliceList(f.path); err != nil {
 		return
@@ -100,7 +100,7 @@ func getSliceList(dir string) (numList []uint64, err error) {
 
 // Close closes all fragments without removing files on disk.
 // It's allowed to invoke Close multiple times.
-func (f *Frame) Close() (err error) {
+func (f *TextFrame) Close() (err error) {
 	if err = f.closeFragments(); err != nil {
 		return
 	}
@@ -110,7 +110,7 @@ func (f *Frame) Close() (err error) {
 
 // Destroy closes all fragments, removes all files on disk.
 // It's allowed to invoke Close before or after Destroy.
-func (f *Frame) Destroy() (err error) {
+func (f *TextFrame) Destroy() (err error) {
 	if err = f.closeFragments(); err != nil {
 		return
 	}
@@ -122,7 +122,7 @@ func (f *Frame) Destroy() (err error) {
 	return
 }
 
-func (f *Frame) closeFragments() (err error) {
+func (f *TextFrame) closeFragments() (err error) {
 	for _, fragment := range f.fragments {
 		if err = fragment.Close(); err != nil {
 			err = errors.Wrap(err, "")
@@ -136,27 +136,24 @@ func (f *Frame) closeFragments() (err error) {
 }
 
 // FragmentPath returns the path to a fragment
-func (f *Frame) FragmentPath(slice uint64) string {
+func (f *TextFrame) FragmentPath(slice uint64) string {
 	return filepath.Join(f.path, "fragments", strconv.FormatUint(slice, 10))
 }
 
 // Name returns the name the frame was initialized with.
-func (f *Frame) Name() string { return f.name }
+func (f *TextFrame) Name() string { return f.name }
 
 // Index returns the index name the frame was initialized with.
-func (f *Frame) Index() string { return f.index }
+func (f *TextFrame) Index() string { return f.index }
 
 // Path returns the path the frame was initialized with.
-func (f *Frame) Path() string { return f.path }
+func (f *TextFrame) Path() string { return f.path }
 
 // setBit sets a bit within the frame, and expands fragments if necessary.
-func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
+func (f *TextFrame) setBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
-	f.rwlock.RLock()
-	fragment, ok := f.fragments[slice]
-	f.rwlock.RUnlock()
 	f.rwlock.Lock()
-	fragment, ok = f.fragments[slice]
+	fragment, ok := f.fragments[slice]
 	if !ok {
 		fp := f.FragmentPath(slice)
 		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
@@ -165,11 +162,7 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 			f.rwlock.Unlock()
 			return
 		}
-		if fragment2, ok2 := f.fragments[slice]; ok2 {
-			fragment = fragment2
-		} else {
-			f.fragments[slice] = fragment
-		}
+		f.fragments[slice] = fragment
 	}
 	f.rwlock.Unlock()
 	changed, err = fragment.SetBit(rowID, colID)
@@ -177,7 +170,7 @@ func (f *Frame) setBit(rowID, colID uint64) (changed bool, err error) {
 }
 
 // clearBit clears a bit within the frame.
-func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
+func (f *TextFrame) clearBit(rowID, colID uint64) (changed bool, err error) {
 	slice := colID / pilosa.SliceWidth
 	f.rwlock.RLock()
 	fragment, ok := f.fragments[slice]
@@ -190,7 +183,7 @@ func (f *Frame) clearBit(rowID, colID uint64) (changed bool, err error) {
 }
 
 //row returns the given row as a pilosa.Bitmap.
-func (f *Frame) row(rowID uint64) (bm *pilosa.Bitmap) {
+func (f *TextFrame) row(rowID uint64) (bm *pilosa.Bitmap) {
 	bm = pilosa.NewBitmap()
 	f.rwlock.RLock()
 	for _, fragment := range f.fragments {
@@ -202,7 +195,7 @@ func (f *Frame) row(rowID uint64) (bm *pilosa.Bitmap) {
 }
 
 // Bits returns bits set in frame.
-func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
+func (f *TextFrame) Bits() (bits map[uint64][]uint64, err error) {
 	var ok bool
 	bits = make(map[uint64][]uint64)
 	var columns []uint64
@@ -229,7 +222,7 @@ func (f *Frame) Bits() (bits map[uint64][]uint64, err error) {
 }
 
 // Count returns number of bits set in frame.
-func (f *Frame) Count() (cnt uint64, err error) {
+func (f *TextFrame) Count() (cnt uint64, err error) {
 	f.rwlock.RLock()
 	defer f.rwlock.RUnlock()
 	for _, fragment := range f.fragments {
@@ -246,8 +239,8 @@ func (f *Frame) Count() (cnt uint64, err error) {
 	return
 }
 
-// ParseAndIndex parses and index a field.
-func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
+// DoIndex parses and index a field.
+func (f *TextFrame) DoIndex(docID uint64, text string) (err error) {
 	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go
 	/*terms := strings.Fields(text)
 	for i, term := range terms {
@@ -267,7 +260,7 @@ func (f *Frame) ParseAndIndex(docID uint64, text string) (err error) {
 }
 
 //Query query which documents contain the given term.
-func (f *Frame) Query(text string) (bm *pilosa.Bitmap) {
+func (f *TextFrame) Query(text string) (bm *pilosa.Bitmap) {
 	words := ParseWords(text)
 	var bm2 *pilosa.Bitmap
 	for _, word := range words {

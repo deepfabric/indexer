@@ -11,18 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-//Conf originate from config file. It's comman to all indices.
-type Conf struct {
-	//BKD specific items
-	T0mCap   int
-	LeafCap  int
-	IntraCap int
-}
-
 //Indexer shall be singleton
 type Indexer struct {
 	MainDir string //the main directory where stores all indices
-	Conf    Conf   //indexer conf
 
 	rwlock   sync.RWMutex                    //concurrent access of docProts, indices
 	docProts map[string]*cql.DocumentWithIdx //index meta, need to persist
@@ -30,10 +21,9 @@ type Indexer struct {
 }
 
 //NewIndexer creates an Indexer.
-func NewIndexer(mainDir string, conf *Conf, overwirte bool) (ir *Indexer, err error) {
+func NewIndexer(mainDir string, overwirte bool) (ir *Indexer, err error) {
 	ir = &Indexer{
 		MainDir: mainDir,
-		Conf:    *conf,
 	}
 	if err = os.MkdirAll(mainDir, 0700); err != nil {
 		err = errors.Wrap(err, "")
@@ -194,7 +184,7 @@ func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
 		return
 	}
 	var ind *Index
-	if ind, err = NewIndex(docProt, ir.MainDir, ir.Conf.T0mCap, ir.Conf.LeafCap, ir.Conf.IntraCap); err != nil {
+	if ind, err = NewIndex(docProt, ir.MainDir); err != nil {
 		return
 	}
 	ir.indices[docProt.Index] = ind

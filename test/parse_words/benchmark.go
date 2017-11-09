@@ -13,13 +13,13 @@ go run benchmark.go -output=output.txt
 
 go build benchmark.go
 ./benchmark -cpuprofile=cpu.prof
-go tool pprof benchmark cpu.prof
+go tool pprof -png --output=cpu.png benchmark cpu.prof
 
 分析内存占用：
 
 go build benchmark.go
 ./benchmark -memprofile=mem.prof
-go tool pprof benchmark mem.prof
+go tool pprof -png --output=mem.png benchmark mem.prof
 
 */
 
@@ -60,16 +60,6 @@ func main() {
 	t1 := time.Now()
 	log.Printf("载入词典花费时间 %v", t1.Sub(t0))
 
-	// 写入内存profile文件
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.WriteHeapProfile(f)
-		defer f.Close()
-	}
-
 	// 打开将要分词的文件
 	file, err := os.Open("../testdata/bailuyuan.txt")
 	if err != nil {
@@ -99,11 +89,9 @@ func main() {
 		defer of.Close()
 	}
 
-	// 记录时间
-	t2 := time.Now()
-
-	// 打开处理器profile文件
+	// cpu profile
 	if *cpuprofile != "" {
+		log.Printf("cpuprofile %v\n", *cpuprofile)
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
 			log.Fatal(err)
@@ -111,6 +99,9 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
+
+	// 记录时间
+	t2 := time.Now()
 
 	// 分词
 	for i := 0; i < numRuns; i++ {
@@ -123,13 +114,21 @@ func main() {
 		}
 	}
 
-	// 停止处理器profile
-	if *cpuprofile != "" {
-		defer pprof.StopCPUProfile()
-	}
-
 	// 记录时间并计算分词速度
 	t3 := time.Now()
 	log.Printf("分词花费时间 %v", t3.Sub(t2))
 	log.Printf("分词速度 %f MB/s", float64(size*numRuns)/t3.Sub(t2).Seconds()/(1024*1024))
+
+	// mem profile
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
 }

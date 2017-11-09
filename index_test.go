@@ -10,10 +10,7 @@ import (
 )
 
 const (
-	BkdCapTest   = 10000
-	T0mCapTest   = 100
-	LeafCapTest  = 10
-	IntraCapTest = 4
+	NumDocs = 10000
 )
 
 func newDocProt() *cql.DocumentWithIdx {
@@ -72,14 +69,14 @@ func TestIndexNormal(t *testing.T) {
 	var bits map[uint64][]uint64
 
 	docProt := newDocProt()
-	if ind, err = NewIndex(docProt, "/tmp/index_test", T0mCapTest, LeafCapTest, IntraCapTest); err != nil {
+	if ind, err = NewIndex(docProt, "/tmp/index_test"); err != nil {
 		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 	if isEqual, err = checkers.DeepEqual(ind.DocProt, docProt); !isEqual {
 		t.Fatalf("incorrect result of NewIndex, %+v", err)
 	}
 
-	for i := 0; i < BkdCapTest; i++ {
+	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -136,7 +133,7 @@ func TestIndexNormal(t *testing.T) {
 	}
 
 	// dump bits
-	for name, frame := range ind.frames {
+	for name, frame := range ind.txtFrames {
 		var termID uint64
 		if termID, found = frame.td.GetTermID("017001"); !found {
 			continue
@@ -145,7 +142,7 @@ func TestIndexNormal(t *testing.T) {
 			t.Fatalf("%+v", err)
 		}
 		//fmt.Printf("frmae %v bits: %v\n", name, bits)
-		fmt.Printf("frmae %v bits[%v]: %v\n", name, termID, bits[termID])
+		fmt.Printf("frame %v bits[%v]: %v\n", name, termID, bits[termID])
 	}
 
 	// query numerical range + text
@@ -200,7 +197,7 @@ func TestIndexNormal(t *testing.T) {
 	}
 
 	//delete docs
-	for i := 0; i < BkdCapTest; i++ {
+	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {
@@ -221,13 +218,13 @@ func TestIndexOpenClose(t *testing.T) {
 
 	//create index
 	docProt := newDocProt()
-	ind, err = NewIndex(docProt, "/tmp/index_test", T0mCapTest, LeafCapTest, IntraCapTest)
+	ind, err = NewIndex(docProt, "/tmp/index_test")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
 	//insert documents
-	for i := 0; i < BkdCapTest; i++ {
+	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
 		doc.DocID = uint64(i)
 		for j := 0; j < len(doc.UintProps); j++ {

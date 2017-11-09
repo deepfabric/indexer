@@ -22,10 +22,10 @@ type Index struct {
 	MainDir string
 	DocProt *cql.DocumentWithIdx //document prototype. persisted to an index-specific file
 
-	rwlock   sync.RWMutex //concurrent access of bkds, frames, liveDocs
-	bkds     map[string]*bkdtree.BkdTree
-	frames   map[string]*Frame
-	liveDocs *Frame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
+	rwlock    sync.RWMutex //concurrent access of frames, liveDocs
+	intFrames map[string]*IntFrame
+	txtFrames map[string]*TextFrame
+	liveDocs  *TextFrame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
 }
 
 // QueryResult is query result
@@ -50,7 +50,7 @@ func NewQueryResult(limit int) (qr *QueryResult) {
 }
 
 //NewIndex creates index according to given conf, overwrites existing files.
-func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, intraCap int) (ind *Index, err error) {
+func NewIndex(docProt *cql.DocumentWithIdx, mainDir string) (ind *Index, err error) {
 	if err = indexWriteConf(mainDir, docProt); err != nil {
 		return
 	}
@@ -60,39 +60,32 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string, t0mCap, leafCap, int
 		return
 	}
 	ind = &Index{
-		MainDir: mainDir,
-		DocProt: docProt,
-		bkds:    make(map[string]*bkdtree.BkdTree),
-		frames:  make(map[string]*Frame),
+		MainDir:   mainDir,
+		DocProt:   docProt,
+		intFrames: make(map[string]*IntFrame),
+		txtFrames: make(map[string]*TextFrame),
 	}
-	var bkd *bkdtree.BkdTree
+	var ifm *IntFrame
 	for _, uintProp := range docProt.UintProps {
-		t0mCap := t0mCap
-		LeafCap := leafCap
-		IntraCap := intraCap
-		numDims := 1
-		bytesPerDim := uintProp.ValLen
 		dir := filepath.Join(indDir, uintProp.Name)
-		prefix := uintProp.Name
-		bkd, err = bkdtree.NewBkdTree(t0mCap, LeafCap, IntraCap, numDims, bytesPerDim, dir, prefix)
-		if err != nil {
+		if ifm, err = NewIntFrame(dir, docProt.Index, uintProp.Name, uint(uintProp.ValLen*8), true); err != nil {
 			return
 		}
-		ind.bkds[uintProp.Name] = bkd
+		ind.intFrames[uintProp.Name] = ifm
 	}
-	var fm *Frame
+	var tfm *TextFrame
 	for _, strProp := range docProt.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
-		if fm, err = NewFrame(dir, docProt.Index, strProp.Name, true); err != nil {
+		if tfm, err = NewTextFrame(dir, docProt.Index, strProp.Name, true); err != nil {
 			return
 		}
-		ind.frames[strProp.Name] = fm
+		ind.txtFrames[strProp.Name] = tfm
 	}
 	dir := filepath.Join(indDir, LiveDocs)
-	if fm, err = NewFrame(dir, docProt.Index, LiveDocs, true); err != nil {
+	if tfm, err = NewTextFrame(dir, docProt.Index, LiveDocs, true); err != nil {
 		return
 	}
-	ind.liveDocs = fm
+	ind.liveDocs = tfm
 	return
 }
 
@@ -119,21 +112,21 @@ func (ind *Index) Destroy() (err error) {
 	ind.rwlock.Lock()
 	defer ind.rwlock.Unlock()
 	if ind.liveDocs != nil {
-		for _, bkd := range ind.bkds {
-			if err = bkd.Destroy(); err != nil {
+		for _, ifm := range ind.intFrames {
+			if err = ifm.Destroy(); err != nil {
 				return
 			}
 		}
-		for _, fm := range ind.frames {
-			if err = fm.Destroy(); err != nil {
+		for _, tfm := range ind.txtFrames {
+			if err = tfm.Destroy(); err != nil {
 				return
 			}
 		}
 		if err = ind.liveDocs.Destroy(); err != nil {
 			return
 		}
-		ind.bkds = nil
-		ind.frames = nil
+		ind.intFrames = nil
+		ind.txtFrames = nil
 		ind.liveDocs = nil
 	}
 
@@ -177,29 +170,29 @@ func (ind *Index) Open() (err error) {
 		return
 	}
 	indDir := filepath.Join(ind.MainDir, ind.DocProt.Index)
-	ind.bkds = make(map[string]*bkdtree.BkdTree)
-	var bkd *bkdtree.BkdTree
+	ind.intFrames = make(map[string]*IntFrame)
+	var ifm *IntFrame
 	for _, uintProp := range ind.DocProt.UintProps {
 		dir := filepath.Join(indDir, uintProp.Name)
-		if bkd, err = bkdtree.NewBkdTreeExt(dir, uintProp.Name); err != nil {
+		if ifm, err = NewIntFrame(dir, ind.DocProt.Index, uintProp.Name, uint(uintProp.ValLen*8), false); err != nil {
 			return
 		}
-		ind.bkds[uintProp.Name] = bkd
+		ind.intFrames[uintProp.Name] = ifm
 	}
-	ind.frames = make(map[string]*Frame)
-	var fm *Frame
+	ind.txtFrames = make(map[string]*TextFrame)
+	var tfm *TextFrame
 	for _, strProp := range ind.DocProt.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
-		if fm, err = NewFrame(dir, ind.DocProt.Index, strProp.Name, false); err != nil {
+		if tfm, err = NewTextFrame(dir, ind.DocProt.Index, strProp.Name, false); err != nil {
 			return
 		}
-		ind.frames[strProp.Name] = fm
+		ind.txtFrames[strProp.Name] = tfm
 	}
 	dir := filepath.Join(indDir, LiveDocs)
-	if fm, err = NewFrame(dir, ind.DocProt.Index, LiveDocs, false); err != nil {
+	if tfm, err = NewTextFrame(dir, ind.DocProt.Index, LiveDocs, false); err != nil {
 		return
 	}
-	ind.liveDocs = fm
+	ind.liveDocs = tfm
 	return
 }
 
@@ -211,29 +204,29 @@ func (ind *Index) Close() (err error) {
 		//index is already closed
 		return
 	}
-	for _, bkd := range ind.bkds {
-		if err = bkd.Close(); err != nil {
+	for _, ifm := range ind.intFrames {
+		if err = ifm.Close(); err != nil {
 			return
 		}
 	}
-	for _, fm := range ind.frames {
-		if err = fm.Close(); err != nil {
+	for _, tfm := range ind.txtFrames {
+		if err = tfm.Close(); err != nil {
 			return
 		}
 	}
 	if err = ind.liveDocs.Close(); err != nil {
 		return
 	}
-	ind.bkds = nil
-	ind.frames = nil
+	ind.intFrames = nil
+	ind.txtFrames = nil
 	ind.liveDocs = nil
 	return
 }
 
 //Insert executes CqlInsert
 func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
-	var bkd *bkdtree.BkdTree
-	var fm *Frame
+	var ifm *IntFrame
+	var tfm *TextFrame
 	var changed, ok bool
 	ind.rwlock.RLock()
 	defer ind.rwlock.RUnlock()
@@ -245,24 +238,20 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 		return
 	}
 	for _, uintProp := range doc.UintProps {
-		if bkd, ok = ind.bkds[uintProp.Name]; !ok {
+		if ifm, ok = ind.intFrames[uintProp.Name]; !ok {
 			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", uintProp.Name, doc, ind.DocProt)
 			return
 		}
-		p := bkdtree.Point{
-			Vals:     []uint64{uintProp.Val},
-			UserData: doc.DocID,
-		}
-		if err = bkd.Insert(p); err != nil {
+		if err = ifm.DoIndex(doc.DocID, uintProp.Val); err != nil {
 			return
 		}
 	}
 	for _, strProp := range doc.StrProps {
-		if fm, ok = ind.frames[strProp.Name]; !ok {
+		if tfm, ok = ind.txtFrames[strProp.Name]; !ok {
 			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", strProp.Name, doc, ind.DocProt)
 			return
 		}
-		if err = fm.ParseAndIndex(doc.DocID, strProp.Val); err != nil {
+		if err = tfm.DoIndex(doc.DocID, strProp.Val); err != nil {
 			return
 		}
 	}
@@ -289,8 +278,8 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 		Bm: pilosa.NewBitmap(),
 		Oa: datastructures.NewOrderedArray(q.Limit),
 	}
-	var fm *Frame
-	var bkd *bkdtree.BkdTree
+	var ifm *IntFrame
+	var tfm *TextFrame
 	var ok bool
 	var prevDocs, docs *pilosa.Bitmap
 
@@ -302,11 +291,11 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	}
 	if len(q.StrPreds) != 0 {
 		for _, strPred := range q.StrPreds {
-			if fm, ok = ind.frames[strPred.Name]; !ok {
+			if tfm, ok = ind.txtFrames[strPred.Name]; !ok {
 				err = errors.Errorf("property %s not found in index spec", strPred.Name)
 				return
 			}
-			docs = fm.Query(strPred.ContWord)
+			docs = tfm.Query(strPred.ContWord)
 			prevDocs = prevDocs.Intersect(docs)
 			if prevDocs.Count() == 0 {
 				return
@@ -319,84 +308,43 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 		return
 	}
 
-	visitor := &bkdVisitor{
-		prevDocs: prevDocs,
-		docs:     pilosa.NewBitmap(),
-		oa:       qr.Oa,
-	}
-
+	var ifmOrder *IntFrame
 	for _, uintPred := range q.UintPreds {
-		if q.OrderBy == uintPred.Name {
-			continue
-		}
-		if bkd, ok = ind.bkds[uintPred.Name]; !ok {
+		if ifm, ok = ind.intFrames[uintPred.Name]; !ok {
 			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
 			return
 		}
-		visitor.lowPoint = bkdtree.Point{
-			Vals: []uint64{uintPred.Low},
+		if q.OrderBy == uintPred.Name {
+			ifmOrder = ifm
 		}
-		visitor.highPoint = bkdtree.Point{
-			Vals: []uint64{uintPred.High},
-		}
-		if err = bkd.Intersect(visitor); err != nil {
+		var bm *pilosa.Bitmap
+		if bm, err = ifm.QueryRangeBetween(uintPred.Low, uintPred.High); err != nil {
 			return
 		}
-		visitor.prevDocs = visitor.docs
-		if visitor.prevDocs.Count() == 0 {
+		prevDocs = prevDocs.Intersect(bm)
+		if prevDocs.Count() == 0 {
 			return
 		}
 	}
 
-	if q.OrderBy == "" {
-		qr.Bm = visitor.prevDocs
+	if ifmOrder == nil {
+		qr.Bm = prevDocs
 	} else {
-		var uintPred cql.UintPred
-		if uintPred, ok = q.UintPreds[q.OrderBy]; !ok {
-			err = errors.Errorf("invalid ORDERBY %s", q.OrderBy)
-			return
+		var val uint64
+		var exists bool
+		for _, docID := range prevDocs.Bits() {
+			if val, exists, err = ifmOrder.GetValue(docID); err != nil {
+				return
+			}
+			if exists {
+				point := bkdtree.Point{
+					Vals:     []uint64{val},
+					UserData: docID,
+				}
+				qr.Oa.Put(point)
+			}
 		}
-		bkd, ok = ind.bkds[uintPred.Name]
-		if !ok {
-			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
-			return
-		}
-		visitor.lowPoint = bkdtree.Point{
-			Vals: []uint64{uintPred.Low},
-		}
-		visitor.highPoint = bkdtree.Point{
-			Vals: []uint64{uintPred.High},
-		}
-		visitor.orderBy = true
-		if err = bkd.Intersect(visitor); err != nil {
-			return
-		}
-		qr.Oa = visitor.oa
 	}
 
 	return
-}
-
-type bkdVisitor struct {
-	lowPoint  bkdtree.Point
-	highPoint bkdtree.Point
-	prevDocs  *pilosa.Bitmap
-	docs      *pilosa.Bitmap
-	orderBy   bool
-	oa        *datastructures.OrderedArray
-}
-
-func (v *bkdVisitor) GetLowPoint() bkdtree.Point { return v.lowPoint }
-
-func (v *bkdVisitor) GetHighPoint() bkdtree.Point { return v.highPoint }
-
-func (v *bkdVisitor) VisitPoint(point bkdtree.Point) {
-	docID := point.UserData
-	if v.prevDocs == nil || v.prevDocs.Contains(docID) {
-		if !v.orderBy {
-			v.docs.SetBit(docID)
-		} else {
-			v.oa.Put(point)
-		}
-	}
 }
