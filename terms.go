@@ -107,6 +107,11 @@ func (td *TermDict) Destroy() (err error) {
 	return
 }
 
+//Sync synchronizes terms to disk
+func (td *TermDict) Sync() (err error) {
+	return td.f.Sync()
+}
+
 //CreateTermIfNotExist get id of the given term, will insert the term implicitly if it is not in the dict.
 func (td *TermDict) CreateTermIfNotExist(term string) (id uint64, err error) {
 	var found bool

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	pprof = flag.String("pprof-addr", "", "pprof http server address")
+	pprof = flag.String("addr-pprof", "", "pprof http server address")
 )
 
 func newDocProt1() *cql.DocumentWithIdx {
@@ -87,6 +87,7 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *indexer.I
 func main() {
 	flag.Parse()
 	N := 100000
+	S := 1000
 
 	if "" != *pprof {
 		log.Printf("bootstrap: start pprof at: %s", *pprof)
@@ -96,10 +97,13 @@ func main() {
 		}()
 	}
 
+	var ir *indexer.Indexer
+	var err error
+
 	// record time
 	t0 := time.Now()
 
-	if _, err := prepareIndexer(N, []*cql.DocumentWithIdx{newDocProt1()}); err != nil {
+	if ir, err = prepareIndexer(N, []*cql.DocumentWithIdx{newDocProt1()}); err != nil {
 		log.Fatalf("%+v", err)
 	}
 
@@ -107,4 +111,15 @@ func main() {
 	t1 := time.Now()
 	log.Printf("duration %v", t1.Sub(t0))
 	log.Printf("insertion speed %f docs/s", float64(N)/t1.Sub(t0).Seconds())
+
+	for i := 0; i < S; i++ {
+		if err = ir.Sync(); err != nil {
+			log.Fatalf("%+v", err)
+		}
+	}
+
+	// record time, and calculate performance
+	t2 := time.Now()
+	log.Printf("duration %v", t2.Sub(t1))
+	log.Printf("sync speed %f syncs/s", float64(S)/t2.Sub(t1).Seconds())
 }

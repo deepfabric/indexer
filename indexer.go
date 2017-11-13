@@ -86,6 +86,18 @@ func (ir *Indexer) Close() (err error) {
 	return
 }
 
+// Sync synchronizes index to disk
+func (ir *Indexer) Sync() (err error) {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
+	for _, ind := range ir.indices {
+		if err = ind.Sync(); err != nil {
+			return
+		}
+	}
+	return
+}
+
 // GetDocProt returns docProt of given index
 func (ir *Indexer) GetDocProt(name string) (docProt *cql.DocumentWithIdx) {
 	ir.rwlock.RLock()

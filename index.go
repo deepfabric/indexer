@@ -223,6 +223,26 @@ func (ind *Index) Close() (err error) {
 	return
 }
 
+// Sync synchronizes index to disk
+func (ind *Index) Sync() (err error) {
+	ind.rwlock.Lock()
+	defer ind.rwlock.Unlock()
+	for _, ifm := range ind.intFrames {
+		if err = ifm.Sync(); err != nil {
+			return
+		}
+	}
+	for _, tfm := range ind.txtFrames {
+		if err = tfm.Sync(); err != nil {
+			return
+		}
+	}
+	if err = ind.liveDocs.Sync(); err != nil {
+		return
+	}
+	return
+}
+
 //Insert executes CqlInsert
 func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var ifm *IntFrame

@@ -9,6 +9,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -21,11 +22,26 @@ import (
 )
 
 var (
-	pprof = flag.String("pprof-addr", "", "pprof http server address")
+	pprof   = flag.String("addr-pprof", "", "pprof http server address")
+	logFile = flag.String("log-file", "", "pilosa fragment log file")
 )
 
 func fragmentPath(sliceID int) string {
 	return filepath.Join("/tmp/pilosa_range/fragments", strconv.FormatInt(int64(sliceID), 10))
+}
+
+// GetLogWriter opens a file for logging, or a default io.Writer (such as stderr) for an empty path.
+func GetLogWriter(path string, defaultWriter io.Writer) (io.Writer, error) {
+	// This is split out so it can be used in NewServeCmd as well as SetupServer
+	if path == "" {
+		return defaultWriter, nil
+	} else {
+		logFile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+		if err != nil {
+			return nil, err
+		}
+		return logFile, nil
+	}
 }
 
 func main() {
@@ -36,6 +52,7 @@ func main() {
 	//R := 500
 	Q := 10000
 	R := 10
+	S := 1000
 
 	if "" != *pprof {
 		log.Printf("bootstrap: start pprof at: %s", *pprof)
@@ -53,6 +70,10 @@ func main() {
 	var frag *pilosa.Fragment
 	var ok bool
 	var err error
+	var logOutput io.Writer
+	if logOutput, err = GetLogWriter(*logFile, os.Stderr); err != nil {
+		log.Fatal(err)
+	}
 
 	if err = os.RemoveAll("/tmp/pilosa_range/fragments"); err != nil {
 		log.Fatal(err)
@@ -65,6 +86,7 @@ func main() {
 		if frag, ok = fragments[sliceID]; !ok {
 			fp := fragmentPath(sliceID)
 			frag = pilosa.NewFragment(fp, "index", "frame", pilosa.ViewStandard, uint64(sliceID))
+			frag.LogOutput = logOutput
 			if err = frag.Open(); err != nil {
 				log.Fatal(err)
 				return
@@ -115,4 +137,18 @@ func main() {
 	log.Printf("duration %v", t2.Sub(t1))
 	log.Printf("query speed %f queries/s", float64(Q)/t2.Sub(t1).Seconds())
 	log.Printf("bs: %v", bs.Bits())
+
+	_, _ = logOutput.Write([]byte("begin snapshot loop......\n"))
+	for i := 0; i < S; i++ {
+		for _, frag = range fragments {
+			if err = frag.Snapshot(); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	// record time, and calculate performance
+	t3 := time.Now()
+	log.Printf("duration %v", t3.Sub(t2))
+	log.Printf("snapshot speed %f fragment-snapshots/s", float64(S)/t3.Sub(t2).Seconds())
 }

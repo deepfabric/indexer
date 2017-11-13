@@ -135,6 +135,20 @@ func (f *TextFrame) closeFragments() (err error) {
 	return
 }
 
+// Sync synchronizes storage bitmap to disk and reopens it.
+func (f *TextFrame) Sync() (err error) {
+	f.rwlock.Lock()
+	for _, frag := range f.fragments {
+		if err = frag.Snapshot(); err != nil {
+			f.rwlock.Unlock()
+			err = errors.Wrap(err, "")
+			return
+		}
+	}
+	f.rwlock.Unlock()
+	return
+}
+
 // FragmentPath returns the path to a fragment
 func (f *TextFrame) FragmentPath(slice uint64) string {
 	return filepath.Join(f.path, "fragments", strconv.FormatUint(slice, 10))
