@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/deepfabric/pilosa"
-	"github.com/deepfabric/pilosa/pql"
+	"github.com/pilosa/pilosa"
+	"github.com/pilosa/pilosa/pql"
 	"github.com/pkg/errors"
 )
 

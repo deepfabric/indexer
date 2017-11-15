@@ -9,7 +9,7 @@ import (
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/go-datastructures"
 	"github.com/deepfabric/indexer/cql"
-	"github.com/deepfabric/pilosa"
+	"github.com/pilosa/pilosa"
 	"github.com/pkg/errors"
 )
 

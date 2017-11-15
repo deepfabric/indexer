@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deepfabric/pilosa"
+	"github.com/pilosa/pilosa"
 	"github.com/juju/testing/checkers"
 )
 

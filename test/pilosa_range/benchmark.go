@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -47,11 +48,8 @@ func GetLogWriter(path string, defaultWriter io.Writer) (io.Writer, error) {
 func main() {
 	flag.Parse()
 	N := 1000000
-	//https://github.com/pilosa/pilosa/issues/939
-	//Q := 17000
-	//R := 500
-	Q := 10000
-	R := 10
+	Q := 17000
+	R := 500
 	S := 1000
 
 	if "" != *pprof {
@@ -71,7 +69,7 @@ func main() {
 	var ok bool
 	var err error
 	var logOutput io.Writer
-	if logOutput, err = GetLogWriter(*logFile, os.Stderr); err != nil {
+	if logOutput, err = GetLogWriter(*logFile, ioutil.Discard); err != nil {
 		log.Fatal(err)
 	}
 

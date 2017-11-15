@@ -10,7 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/deepfabric/bkdtree"
-	"github.com/deepfabric/pilosa"
+	"github.com/pilosa/pilosa"
 	"github.com/pkg/errors"
 )
 
