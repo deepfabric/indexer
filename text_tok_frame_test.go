@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pilosa/pilosa"
 	"github.com/juju/testing/checkers"
+	"github.com/pilosa/pilosa"
 )
 
-func TestTextFrameParseWords(t *testing.T) {
+func TestTextTokFrameParseWords(t *testing.T) {
 	text := "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it? cindex为若干路径创建索引。索引是trigram倒排表。trigram是UTF-8文档中的连续3字节(可以是中英文混合)。posting list就是文档ID列表，将它们的delta以变长编码方式存放。整个索引存储在一个文件，在read时mmap到内存。所以索引尺寸受限于RAM。"
 	expect := "go/s/standard/library/does/not/have/a/function/solely/intended/to/check/if/a/file/exists/or/not/like/python/s/os/path/exists/what/is/the/idiomatic/way/to/do/it/cindex/为/若/干/路/径/创/建/索/引/索/引/是/trigram/倒/排/表/trigram/是/utf/8/文/档/中/的/连/续/3/字/节/可/以/是/中/英/文/混/合/posting/list/就/是/文/档/id/列/表/将/它/们/的/delta/以/变/长/编/码/方/式/存/放/整/个/索/引/存/储/在/一/个/文/件/在/read/时/mmap/到/内/存/所/以/索/引/尺/寸/受/限/于/ram"
 	words := ParseWords(text)
@@ -20,18 +20,18 @@ func TestTextFrameParseWords(t *testing.T) {
 	var err error
 	var isEqual bool
 	if isEqual, err = checkers.DeepEqual(strings.Join(words, "/"), expect); !isEqual {
-		t.Fatalf("incorrect result of (*TextFrame).Query, %+v", err)
+		t.Fatalf("incorrect result of ParseWords, %+v", err)
 	}
 }
 
-func TestTextFrameDoIndex(t *testing.T) {
+func TestTextTokFrameDoIndex(t *testing.T) {
 	var err error
 	var found bool
-	var f *TextFrame
+	var f *TextTokFrame
 	var terms []string
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewTextFrame("/tmp/text_frame_test", "i", "f", true); err != nil {
+	if f, err = NewTextTokFrame("/tmp/text_tok_frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -57,16 +57,16 @@ func TestTextFrameDoIndex(t *testing.T) {
 	}
 }
 
-func TestTextFrameQuery(t *testing.T) {
+func TestTextTokFrameQuery(t *testing.T) {
 	var err error
-	var f *TextFrame
+	var f *TextTokFrame
 	var terms []string
 	var bm *pilosa.Bitmap
 	var isEqual bool
 	var bits map[uint64][]uint64
 
 	//TESTCASE: query and insert term to an empty dict
-	if f, err = NewTextFrame("/tmp/text_frame_test", "i", "f", true); err != nil {
+	if f, err = NewTextTokFrame("/tmp/text_tok_frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -94,16 +94,16 @@ func TestTextFrameQuery(t *testing.T) {
 		docIDs = bm.Bits()
 		fmt.Printf("found term %s in documents: %v\n", term, docIDs)
 		if isEqual, err = checkers.DeepEqual(docIDs, expDocIDs[i]); !isEqual {
-			t.Fatalf("incorrect result of (*TextFrame).Query, %+v", err)
+			t.Fatalf("incorrect result of (*TextTokFrame).Query, %+v", err)
 		}
 	}
 }
 
-func TestTextFrameDestroy(t *testing.T) {
+func TestTextTokFrameDestroy(t *testing.T) {
 	var err error
-	var f *TextFrame
+	var f *TextTokFrame
 
-	if f, err = NewTextFrame("/tmp/text_frame_test", "i", "f", true); err != nil {
+	if f, err = NewTextTokFrame("/tmp/text_tok_frame_test", "i", "f", true); err != nil {
 		t.Fatalf("%+v", err)
 	}
 	defer f.Close()
@@ -129,10 +129,10 @@ func TestTextFrameDestroy(t *testing.T) {
 	}
 }
 
-func BenchmarkTextFrameDoIndex(b *testing.B) {
+func BenchmarkTextTokFrameDoIndex(b *testing.B) {
 	var err error
-	var f *TextFrame
-	if f, err = NewTextFrame("/tmp/text_frame_test", "i", "f", true); err != nil {
+	var f *TextTokFrame
+	if f, err = NewTextTokFrame("/tmp/text_frame_test", "i", "f", true); err != nil {
 		b.Fatalf("%+v", err)
 	}
 	defer f.Close()

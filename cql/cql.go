@@ -5,8 +5,11 @@ import (
 	"math"
 	"strconv"
 
+	"regexp"
+
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/deepfabric/indexer/cql/parser"
+	"github.com/google/codesearch/index"
 	"github.com/pkg/errors"
 )
 
@@ -40,11 +43,17 @@ type StrProp struct {
 	Val  string
 }
 
+type StrPatProp struct {
+	Name string
+	Val  string
+}
+
 type Document struct {
-	DocID     uint64
-	UintProps []UintProp
-	EnumProps []EnumProp
-	StrProps  []StrProp
+	DocID       uint64
+	UintProps   []UintProp
+	EnumProps   []EnumProp
+	StrProps    []StrProp
+	StrPatProps []StrPatProp
 }
 
 type DocumentWithIdx struct {
@@ -67,6 +76,13 @@ type StrPred struct {
 	ContWord string
 }
 
+type StrPatPred struct {
+	Name string
+	Pat  string
+	Reg  *regexp.Regexp
+	Qry  *index.Query
+}
+
 type CqlCreate struct {
 	DocumentWithIdx
 }
@@ -84,12 +100,13 @@ type CqlDel struct {
 }
 
 type CqlSelect struct {
-	Index     string
-	UintPreds map[string]UintPred
-	EnumPreds map[string]EnumPred
-	StrPreds  map[string]StrPred
-	OrderBy   string
-	Limit     int
+	Index       string
+	UintPreds   map[string]UintPred
+	EnumPreds   map[string]EnumPred
+	StrPreds    map[string]StrPred
+	StrPatPreds map[string]StrPatPred
+	OrderBy     string
+	Limit       int
 }
 
 type VerboseErrorListener struct {

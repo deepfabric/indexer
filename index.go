@@ -24,8 +24,8 @@ type Index struct {
 
 	rwlock    sync.RWMutex //concurrent access of frames, liveDocs
 	intFrames map[string]*IntFrame
-	txtFrames map[string]*TextFrame
-	liveDocs  *TextFrame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
+	txtFrames map[string]*TextTokFrame
+	liveDocs  *TextTokFrame //row 0 of this frame stores a bitmap of live docIDs. other rows are not used.
 	dirty     bool
 }
 
@@ -64,7 +64,7 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string) (ind *Index, err err
 		MainDir:   mainDir,
 		DocProt:   docProt,
 		intFrames: make(map[string]*IntFrame),
-		txtFrames: make(map[string]*TextFrame),
+		txtFrames: make(map[string]*TextTokFrame),
 	}
 	var ifm *IntFrame
 	for _, uintProp := range docProt.UintProps {
@@ -74,16 +74,16 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string) (ind *Index, err err
 		}
 		ind.intFrames[uintProp.Name] = ifm
 	}
-	var tfm *TextFrame
+	var tfm *TextTokFrame
 	for _, strProp := range docProt.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
-		if tfm, err = NewTextFrame(dir, docProt.Index, strProp.Name, true); err != nil {
+		if tfm, err = NewTextTokFrame(dir, docProt.Index, strProp.Name, true); err != nil {
 			return
 		}
 		ind.txtFrames[strProp.Name] = tfm
 	}
 	dir := filepath.Join(indDir, LiveDocs)
-	if tfm, err = NewTextFrame(dir, docProt.Index, LiveDocs, true); err != nil {
+	if tfm, err = NewTextTokFrame(dir, docProt.Index, LiveDocs, true); err != nil {
 		return
 	}
 	ind.liveDocs = tfm
@@ -181,17 +181,17 @@ func (ind *Index) Open() (err error) {
 		}
 		ind.intFrames[uintProp.Name] = ifm
 	}
-	ind.txtFrames = make(map[string]*TextFrame)
-	var tfm *TextFrame
+	ind.txtFrames = make(map[string]*TextTokFrame)
+	var tfm *TextTokFrame
 	for _, strProp := range ind.DocProt.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
-		if tfm, err = NewTextFrame(dir, ind.DocProt.Index, strProp.Name, false); err != nil {
+		if tfm, err = NewTextTokFrame(dir, ind.DocProt.Index, strProp.Name, false); err != nil {
 			return
 		}
 		ind.txtFrames[strProp.Name] = tfm
 	}
 	dir := filepath.Join(indDir, LiveDocs)
-	if tfm, err = NewTextFrame(dir, ind.DocProt.Index, LiveDocs, false); err != nil {
+	if tfm, err = NewTextTokFrame(dir, ind.DocProt.Index, LiveDocs, false); err != nil {
 		return
 	}
 	ind.liveDocs = tfm
@@ -254,7 +254,7 @@ func (ind *Index) Sync() (err error) {
 //Insert executes CqlInsert
 func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var ifm *IntFrame
-	var tfm *TextFrame
+	var tfm *TextTokFrame
 	var changed, ok bool
 	ind.rwlock.RLock()
 	defer ind.rwlock.RUnlock()
@@ -309,7 +309,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 		Oa: datastructures.NewOrderedArray(q.Limit),
 	}
 	var ifm *IntFrame
-	var tfm *TextFrame
+	var tfm *TextTokFrame
 	var ok bool
 	var prevDocs, docs *pilosa.Bitmap
 

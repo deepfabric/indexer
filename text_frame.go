@@ -4,10 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/pilosa/pilosa"
@@ -22,28 +19,19 @@ type TextFrame struct {
 
 	rwlock    sync.RWMutex                //concurrent access of fragments
 	fragments map[uint64]*pilosa.Fragment //map slice to Fragment
-	td        *TermDict
 }
 
-// NewTextFrame returns a new instance of frame, and initializes it.
-func NewTextFrame(path, index, name string, overwrite bool) (f *TextFrame, err error) {
-	var td *TermDict
-	if td, err = NewTermDict(path, overwrite); err != nil {
-		return
-	}
+func (f *TextFrame) init(path, index, name string, overwrite bool) (err error) {
 	if overwrite {
 		if err = os.RemoveAll(filepath.Join(path, "fragments")); err != nil {
 			err = errors.Wrap(err, "")
 			return
 		}
 	}
-	f = &TextFrame{
-		path:      path,
-		index:     index,
-		name:      name,
-		td:        td,
-		fragments: make(map[uint64]*pilosa.Fragment),
-	}
+	f.path = path
+	f.index = index
+	f.name = name
+	f.fragments = make(map[uint64]*pilosa.Fragment)
 	err = f.openFragments()
 	return
 }
@@ -53,7 +41,6 @@ func (f *TextFrame) Open() (err error) {
 	if err = f.openFragments(); err != nil {
 		return
 	}
-	err = f.td.Open()
 	return
 }
 
@@ -104,7 +91,6 @@ func (f *TextFrame) Close() (err error) {
 	if err = f.closeFragments(); err != nil {
 		return
 	}
-	err = f.td.Close()
 	return
 }
 
@@ -118,7 +104,6 @@ func (f *TextFrame) Destroy() (err error) {
 		err = errors.Wrap(err, "")
 		return
 	}
-	err = f.td.Destroy()
 	return
 }
 
@@ -248,84 +233,6 @@ func (f *TextFrame) Count() (cnt uint64, err error) {
 		)
 		if err != nil {
 			return
-		}
-	}
-	return
-}
-
-// DoIndex parses and index a field.
-func (f *TextFrame) DoIndex(docID uint64, text string) (err error) {
-	//https://stackoverflow.com/questions/13737745/split-a-string-on-whitespace-in-go
-	/*terms := strings.Fields(text)
-	for i, term := range terms {
-		terms[i] = strings.ToLower(term)
-	}*/
-	terms := ParseWords(text)
-	ids, err := f.td.CreateTermsIfNotExist(terms)
-	if err != nil {
-		return
-	}
-	for _, termID := range ids {
-		if _, err = f.setBit(termID, docID); err != nil {
-			return
-		}
-	}
-	return
-}
-
-//Query query which documents contain the given term.
-func (f *TextFrame) Query(text string) (bm *pilosa.Bitmap) {
-	words := ParseWords(text)
-	var bm2 *pilosa.Bitmap
-	for _, word := range words {
-		termID, found := f.td.GetTermID(word)
-		if !found {
-			bm = pilosa.NewBitmap()
-			return
-		}
-		bm2 = f.row(termID)
-		if bm != nil {
-			bm = bm.Intersect(bm2)
-		} else {
-			bm = bm2
-		}
-	}
-	return
-}
-
-var asciiSpace = [128]uint8{'\t': 1, '\n': 1, '\v': 1, '\f': 1, '\r': 1, ' ': 1}
-
-//ParseWords parses text(encoded in UTF-8) for words.
-//A word is a non-ascii-space lowered ASCII character sequence, or a non-ASCII non-unicode-space non-chinese-punctuate character.
-//Note: words are not de-duplicated.
-func ParseWords(text string) (words []string) {
-	lenText := len(text)
-	words = make([]string, 0, lenText/3)
-	i := 0
-	for i < lenText {
-		j := i
-		var c byte
-		for j < lenText {
-			if c = text[j]; c < 0x80 && asciiSpace[c] == 0 && unicode.IsPrint(rune(c)) && !unicode.IsPunct(rune(c)) {
-				j++
-			} else {
-				break
-			}
-		}
-		if i < j {
-			// text[i:j] is a printable non-space ASCII character sequence.
-			words = append(words, strings.ToLower(text[i:j]))
-			i = j
-		} else if c < 0x80 {
-			// i==j, text[i] is an ascii space, non-printable or punctuation character.
-			i++
-		} else {
-			// i==j, text[i] is the begin of an non-ascii character
-			r, w := utf8.DecodeRuneInString(text[i:])
-			if unicode.IsPrint(rune(c)) && !unicode.IsSpace(r) && !unicode.IsPunct(r) {
-				words = append(words, text[i:i+w])
-			}
-			i += w
 		}
 	}
 	return
