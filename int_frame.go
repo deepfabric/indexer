@@ -70,6 +70,10 @@ func (f *IntFrame) openFragments() (err error) {
 // Close closes all fragments without removing files on disk.
 // It's allowed to invoke Close multiple times.
 func (f *IntFrame) Close() (err error) {
+	// pilosa WAL could be disabled. Need to sync before close.
+	if err = f.Sync(); err != nil {
+		return
+	}
 	if err = f.closeFragments(); err != nil {
 		return
 	}

@@ -101,6 +101,10 @@ func getSliceList(dir string) (numList []uint64, err error) {
 // Close closes all fragments without removing files on disk.
 // It's allowed to invoke Close multiple times.
 func (f *TextFrame) Close() (err error) {
+	// pilosa WAL could be disabled. Need to sync before close.
+	if err = f.Sync(); err != nil {
+		return
+	}
 	if err = f.closeFragments(); err != nil {
 		return
 	}
