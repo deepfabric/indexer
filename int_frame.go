@@ -56,6 +56,7 @@ func (f *IntFrame) openFragments() (err error) {
 	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
 		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		fragment.CacheType = pilosa.CacheTypeNone
 		if err = fragment.Open(); err != nil {
 			err = errors.Wrap(err, "")
 			return
@@ -145,6 +146,7 @@ func (f *IntFrame) setValue(colID, val uint64) (changed bool, err error) {
 	if !ok {
 		fp := f.FragmentPath(slice)
 		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
+		fragment.CacheType = pilosa.CacheTypeNone
 		if err = fragment.Open(); err != nil {
 			err = errors.Wrap(err, "")
 			f.rwlock.Unlock()
