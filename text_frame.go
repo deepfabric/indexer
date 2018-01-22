@@ -103,10 +103,6 @@ func getSliceList(dir string) (numList []uint64, err error) {
 // Close closes all fragments without removing files on disk.
 // It's allowed to invoke Close multiple times.
 func (f *TextFrame) Close() (err error) {
-	// pilosa WAL could be disabled. Need to sync before close.
-	if err = f.Sync(); err != nil {
-		return
-	}
 	if err = f.closeFragments(); err != nil {
 		return
 	}
@@ -177,7 +173,7 @@ func (f *TextFrame) setBit(rowID, colID uint64) (changed bool, err error) {
 	if !ok {
 		fp := f.FragmentPath(slice)
 		fragment = pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
-		fragment.MaxOpN = fragment.MaxOpN * 100
+		fragment.MaxOpN = MaxInt
 		fragment.CacheType = pilosa.CacheTypeNone
 		if err = fragment.Open(); err != nil {
 			err = errors.Wrap(err, "")

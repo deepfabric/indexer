@@ -11,6 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	MaxUint = ^uint(0)
+	MinUint = 0
+	MaxInt  = int(MaxUint >> 1)
+	MinInt  = -MaxInt - 1
+)
+
 // IntFrame represents a string field of an index. Refers to pilosa.Frame and pilosa.View.
 type IntFrame struct {
 	path      string
@@ -56,7 +63,7 @@ func (f *IntFrame) openFragments() (err error) {
 	for _, slice := range sliceList {
 		fp := f.FragmentPath(slice)
 		fragment := pilosa.NewFragment(fp, f.index, f.name, pilosa.ViewStandard, slice)
-		fragment.MaxOpN = fragment.MaxOpN * 100
+		fragment.MaxOpN = MaxInt
 		fragment.CacheType = pilosa.CacheTypeNone
 		if err = fragment.Open(); err != nil {
 			err = errors.Wrap(err, "")
@@ -72,10 +79,6 @@ func (f *IntFrame) openFragments() (err error) {
 // Close closes all fragments without removing files on disk.
 // It's allowed to invoke Close multiple times.
 func (f *IntFrame) Close() (err error) {
-	// pilosa WAL could be disabled. Need to sync before close.
-	if err = f.Sync(); err != nil {
-		return
-	}
 	if err = f.closeFragments(); err != nil {
 		return
 	}
