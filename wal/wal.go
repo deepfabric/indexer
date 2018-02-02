@@ -25,7 +25,6 @@ import (
 	"github.com/coreos/etcd/pkg/fileutil"
 	"github.com/coreos/etcd/pkg/pbutil"
 	"github.com/coreos/etcd/raft/raftpb"
-	"github.com/deepfabric/etcd/raft"
 	"github.com/deepfabric/indexer/wal/walpb"
 
 	"github.com/coreos/pkg/capnslog"
@@ -566,12 +565,12 @@ func (w *WAL) saveEntry(e *raftpb.Entry) (err error) {
 	return
 }
 
-func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
+func (w *WAL) Save(ents []raftpb.Entry) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	// short cut, do not call sync
-	if raft.IsEmptyHardState(st) && len(ents) == 0 {
+	if len(ents) == 0 {
 		return nil
 	}
 
