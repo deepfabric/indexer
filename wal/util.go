@@ -15,9 +15,10 @@
 package wal
 
 import (
-	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/coreos/etcd/pkg/fileutil"
 )
@@ -70,11 +71,11 @@ func isValidSeq(names []string) bool {
 func readWalNames(dirpath string) ([]string, error) {
 	names, err := fileutil.ReadDir(dirpath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 	wnames := checkWalNames(names)
 	if len(wnames) == 0 {
-		return nil, ErrFileNotFound
+		return nil, errors.Wrap(ErrFileNotFound, "")
 	}
 	return wnames, nil
 }
@@ -98,7 +99,9 @@ func parseWalName(str string) (seq, index uint64, err error) {
 	if !strings.HasSuffix(str, ".wal") {
 		return 0, 0, badWalName
 	}
-	_, err = fmt.Sscanf(str, "%016x-%016x.wal", &seq, &index)
+	if _, err = fmt.Sscanf(str, "%016x-%016x.wal", &seq, &index); err != nil {
+		err = errors.Wrap(err, "")
+	}
 	return seq, index, err
 }
 

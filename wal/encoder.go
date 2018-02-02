@@ -23,7 +23,8 @@ import (
 
 	"github.com/coreos/etcd/pkg/crc"
 	"github.com/coreos/etcd/pkg/ioutil"
-	"github.com/coreos/etcd/wal/walpb"
+	"github.com/deepfabric/indexer/wal/walpb"
+	"github.com/pkg/errors"
 )
 
 // walPageBytes is the alignment for flushing records to the backing Writer.
@@ -38,6 +39,7 @@ type encoder struct {
 	crc       hash.Hash32
 	buf       []byte
 	uint64buf []byte
+	curOff    int64 //offset of under-layer io.File
 }
 
 func newEncoder(w io.Writer, prevCrc uint32, pageOffset int) *encoder {
@@ -47,6 +49,7 @@ func newEncoder(w io.Writer, prevCrc uint32, pageOffset int) *encoder {
 		// 1MB buffer
 		buf:       make([]byte, 1024*1024),
 		uint64buf: make([]byte, 8),
+		curOff:    int64(pageOffset),
 	}
 }
 
@@ -54,12 +57,12 @@ func newEncoder(w io.Writer, prevCrc uint32, pageOffset int) *encoder {
 func newFileEncoder(f *os.File, prevCrc uint32) (*encoder, error) {
 	offset, err := f.Seek(0, io.SeekCurrent)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 	return newEncoder(f, prevCrc, int(offset)), nil
 }
 
-func (e *encoder) encode(rec *walpb.Record) error {
+func (e *encoder) encode(rec *walpb.Record) (err error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -67,33 +70,37 @@ func (e *encoder) encode(rec *walpb.Record) error {
 	rec.Crc = e.crc.Sum32()
 	var (
 		data []byte
-		err  error
 		n    int
 	)
 
 	if rec.Size() > len(e.buf) {
-		data, err = rec.Marshal()
-		if err != nil {
-			return err
+		if data, err = rec.Marshal(); err != nil {
+			err = errors.Wrap(err, "")
+			return
 		}
 	} else {
-		n, err = rec.MarshalTo(e.buf)
-		if err != nil {
-			return err
+		if n, err = rec.MarshalTo(e.buf); err != nil {
+			err = errors.Wrap(err, "")
+			return
 		}
 		data = e.buf[:n]
 	}
 
 	lenField, padBytes := encodeFrameSize(len(data))
 	if err = writeUint64(e.bw, lenField, e.uint64buf); err != nil {
-		return err
+		return
 	}
+	e.curOff += int64(lenField)
 
 	if padBytes != 0 {
 		data = append(data, make([]byte, padBytes)...)
 	}
-	_, err = e.bw.Write(data)
-	return err
+	if _, err = e.bw.Write(data); err != nil {
+		err = errors.Wrap(err, "")
+		return
+	}
+	e.curOff += int64(len(data))
+	return
 }
 
 func encodeFrameSize(dataBytes int) (lenField uint64, padBytes int) {
@@ -106,15 +113,20 @@ func encodeFrameSize(dataBytes int) (lenField uint64, padBytes int) {
 	return lenField, padBytes
 }
 
-func (e *encoder) flush() error {
+func (e *encoder) flush() (err error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.bw.Flush()
+	if err = e.bw.Flush(); err != nil {
+		err = errors.Wrap(err, "")
+	}
+	return
 }
 
-func writeUint64(w io.Writer, n uint64, buf []byte) error {
+func writeUint64(w io.Writer, n uint64, buf []byte) (err error) {
 	// http://golang.org/src/encoding/binary/binary.go
 	binary.LittleEndian.PutUint64(buf, n)
-	_, err := w.Write(buf)
-	return err
+	if _, err = w.Write(buf); err != nil {
+		err = errors.Wrap(err, "")
+	}
+	return
 }

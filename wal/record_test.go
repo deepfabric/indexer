@@ -22,7 +22,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/coreos/etcd/wal/walpb"
+	"github.com/deepfabric/indexer/wal/walpb"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -57,7 +58,7 @@ func TestReadRecord(t *testing.T) {
 		if !reflect.DeepEqual(rec, tt.wr) {
 			t.Errorf("#%d: block = %v, want %v", i, rec, tt.wr)
 		}
-		if !reflect.DeepEqual(e, tt.we) {
+		if !reflect.DeepEqual(errors.Cause(e), tt.we) {
 			t.Errorf("#%d: err = %v, want %v", i, e, tt.we)
 		}
 		rec = &walpb.Record{}

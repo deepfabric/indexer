@@ -24,7 +24,8 @@ import (
 	"github.com/coreos/etcd/pkg/crc"
 	"github.com/coreos/etcd/pkg/pbutil"
 	"github.com/coreos/etcd/raft/raftpb"
-	"github.com/coreos/etcd/wal/walpb"
+	"github.com/deepfabric/indexer/wal/walpb"
+	"github.com/pkg/errors"
 )
 
 const minSectorSize = 512
@@ -61,15 +62,15 @@ func (d *decoder) decode(rec *walpb.Record) error {
 
 func (d *decoder) decodeRecord(rec *walpb.Record) error {
 	if len(d.brs) == 0 {
-		return io.EOF
+		return errors.Wrap(io.EOF, "")
 	}
 
 	l, err := readInt64(d.brs[0])
-	if err == io.EOF || (err == nil && l == 0) {
+	if errors.Cause(err) == io.EOF || (err == nil && l == 0) {
 		// hit end of file or preallocated space
 		d.brs = d.brs[1:]
 		if len(d.brs) == 0 {
-			return io.EOF
+			return errors.Wrap(io.EOF, "")
 		}
 		d.lastValidOff = 0
 		return d.decodeRecord(rec)
@@ -87,13 +88,13 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
-		return err
+		return errors.Wrap(err, "")
 	}
 	if err := rec.Unmarshal(data[:recBytes]); err != nil {
 		if d.isTornEntry(data) {
-			return io.ErrUnexpectedEOF
+			return errors.Wrap(io.ErrUnexpectedEOF, "")
 		}
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	// skip crc checking if the record type is crcType
@@ -101,9 +102,9 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 		d.crc.Write(rec.Data)
 		if err := rec.Validate(d.crc.Sum32()); err != nil {
 			if d.isTornEntry(data) {
-				return io.ErrUnexpectedEOF
+				return errors.Wrap(io.ErrUnexpectedEOF, "")
 			}
-			return err
+			return errors.Wrap(err, "")
 		}
 	}
 	// record decoded as valid; point last valid offset to end of record
@@ -181,8 +182,9 @@ func mustUnmarshalState(d []byte) raftpb.HardState {
 	return s
 }
 
-func readInt64(r io.Reader) (int64, error) {
-	var n int64
-	err := binary.Read(r, binary.LittleEndian, &n)
-	return n, err
+func readInt64(r io.Reader) (n int64, err error) {
+	if err = binary.Read(r, binary.LittleEndian, &n); err != nil {
+		err = errors.Wrap(err, "")
+	}
+	return
 }
