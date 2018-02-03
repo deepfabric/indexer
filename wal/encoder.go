@@ -90,7 +90,7 @@ func (e *encoder) encode(rec *walpb.Record) (err error) {
 	if err = writeUint64(e.bw, lenField, e.uint64buf); err != nil {
 		return
 	}
-	e.curOff += int64(lenField)
+	e.curOff += int64(8)
 
 	if padBytes != 0 {
 		data = append(data, make([]byte, padBytes)...)

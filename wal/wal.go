@@ -76,8 +76,9 @@ type WAL struct {
 	enti    uint64   // index of the last entry saved to the wal
 	encoder *encoder // encoder to encode records
 
-	locks []*fileutil.LockedFile // the locked files the WAL holds (the name is increasing)
-	fp    *filePipeline
+	tail     *os.File //the tail segment
+	walNames []string // the segment files the WAL holds (the name is increasing)
+	fp       *filePipeline
 }
 
 // Create creates a WAL ready for appending records.
@@ -110,13 +111,15 @@ func Create(dirpath string) (*WAL, error) {
 	}
 
 	w := &WAL{
-		dir: dirpath,
+		dir:      dirpath,
+		walNames: make([]string, 0),
 	}
 	w.encoder, err = newFileEncoder(f.File, 0)
 	if err != nil {
 		return nil, err
 	}
-	w.locks = append(w.locks, f)
+	w.tail = f.File
+	w.walNames = append(w.walNames, f.Name())
 	if err = w.saveCrc(0); err != nil {
 		return nil, err
 	}
@@ -219,7 +222,7 @@ func openAtIndex(dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) 
 	// open the wal files
 	rcs := make([]io.ReadCloser, 0)
 	rs := make([]io.Reader, 0)
-	ls := make([]*fileutil.LockedFile, 0)
+	walNames := make([]string, 0)
 	for _, name := range names[nameIndex:] {
 		p := filepath.Join(dirpath, name)
 		if write {
@@ -228,7 +231,6 @@ func openAtIndex(dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) 
 				closeAll(rcs...)
 				return nil, err
 			}
-			ls = append(ls, l)
 			rcs = append(rcs, l)
 		} else {
 			rf, err := os.OpenFile(p, os.O_RDONLY, fileutil.PrivateFileMode)
@@ -236,10 +238,10 @@ func openAtIndex(dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) 
 				closeAll(rcs...)
 				return nil, err
 			}
-			ls = append(ls, nil)
 			rcs = append(rcs, rf)
 		}
 		rs = append(rs, rcs[len(rcs)-1])
+		walNames = append(walNames, p)
 	}
 
 	closer := func() error { return closeAll(rcs...) }
@@ -250,17 +252,10 @@ func openAtIndex(dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) 
 		start:     snap,
 		decoder:   newDecoder(rs...),
 		readClose: closer,
-		locks:     ls,
+		walNames:  walNames,
 	}
 
 	if write {
-		// write reuses the file descriptors from read; don't close so
-		// WAL can append without dropping the file lock
-		w.readClose = nil
-		if _, _, err := parseWalName(filepath.Base(w.tail().Name())); err != nil {
-			closer()
-			return nil, err
-		}
 		w.fp = newFilePipeline(w.dir, SegmentSizeBytes)
 	}
 
@@ -306,7 +301,7 @@ func (w *WAL) ReadAll() (ents []raftpb.Entry, err error) {
 	}
 
 	cause := errors.Cause(err)
-	switch w.tail() {
+	switch w.fp {
 	case nil:
 		// We do not have to read out all entries in read mode.
 		// The last record maybe a partial written one, so
@@ -319,37 +314,20 @@ func (w *WAL) ReadAll() (ents []raftpb.Entry, err error) {
 		if cause != io.EOF {
 			return
 		}
-		// decodeRecord() will return io.EOF if it detects a zero record,
-		// but this zero record may be followed by non-zero records from
-		// a torn write. Overwriting some of these non-zero records, but
-		// not all, will cause CRC errors on WAL open. Since the records
-		// were never fully synced to disk in the first place, it's safe
-		// to zero them out to avoid any CRC errors from new writes.
-		if _, err = w.tail().Seek(w.decoder.lastOffset(), io.SeekStart); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
-		if err = fileutil.ZeroToEnd(w.tail().File); err != nil {
-			err = errors.Wrap(err, "")
-			return
-		}
 	}
 	err = nil
 
+	if w.fp != nil {
+		if err = w.advance(w.decoder.lastCRC()); err != nil {
+			return
+		}
+	}
 	// close decoder, disable reading
 	if w.readClose != nil {
 		w.readClose()
 		w.readClose = nil
 	}
-
-	if w.tail() != nil {
-		// create encoder (chain crc with the decoder), enable appending
-		if w.encoder, err = newFileEncoder(w.tail().File, w.decoder.lastCRC()); err != nil {
-			return
-		}
-	}
 	w.decoder = nil
-
 	return
 }
 
@@ -358,18 +336,18 @@ func (w *WAL) ReadAll() (ents []raftpb.Entry, err error) {
 // Then cut atomically rename temp wal file to a wal file.
 func (w *WAL) cut() error {
 	// close old wal file; truncate to avoid wasting space if an early cut
-	off, serr := w.tail().Seek(0, io.SeekCurrent)
+	off, serr := w.tail.Seek(0, io.SeekCurrent)
 	if serr != nil {
 		return serr
 	}
-	if err := w.tail().Truncate(off); err != nil {
+	if err := w.tail.Truncate(off); err != nil {
 		return err
 	}
-	if err := w.sync(); err != nil {
+	if err := w.Sync(); err != nil {
 		return err
 	}
 
-	return w.advance()
+	return w.advance(w.encoder.crc.Sum32())
 }
 
 // CompactAll remove all entries.
@@ -377,28 +355,27 @@ func (w *WAL) CompactAll() (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if len(w.locks) == 0 {
-		return nil
+	if err = w.tail.Close(); err != nil {
+		return
 	}
-
-	for _, l := range w.locks {
-		if l == nil {
-			continue
-		}
-		if err = l.Close(); err != nil {
-			return
-		}
-		if err = os.Remove(l.Name()); err != nil {
+	for _, name := range w.walNames {
+		if err = os.Remove(filepath.Join(w.dir, name)); err != nil {
 			return
 		}
 	}
-	w.locks = w.locks[0:0]
+	w.walNames = w.walNames[0:0]
 
-	err = w.advance()
+	err = w.advance(w.encoder.crc.Sum32())
 	return
 }
 
-func (w *WAL) advance() error {
+func (w *WAL) advance(prevCrc uint32) (err error) {
+	if w.tail != nil {
+		if err = w.tail.Close(); err != nil {
+			return
+		}
+		w.tail = nil
+	}
 	fpath := filepath.Join(w.dir, walName(w.seq()+1, w.enti+1))
 
 	// create a temp wal file with name sequence + 1, or truncate the existing one
@@ -408,9 +385,8 @@ func (w *WAL) advance() error {
 	}
 
 	// update writer and save the previous crc
-	w.locks = append(w.locks, newTail)
-	prevCrc := w.encoder.crc.Sum32()
-	w.encoder, err = newFileEncoder(w.tail().File, prevCrc)
+	w.tail = newTail.File
+	w.encoder, err = newFileEncoder(w.tail, prevCrc)
 	if err != nil {
 		return err
 	}
@@ -418,101 +394,53 @@ func (w *WAL) advance() error {
 		return err
 	}
 	// atomically move temp wal file to wal file
-	if err = w.sync(); err != nil {
+	if err = w.Sync(); err != nil {
 		return err
 	}
 
 	var off int64
 	off, err = newTail.Seek(0, io.SeekCurrent)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	if err = os.Rename(newTail.Name(), fpath); err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 	if err = fileutil.Fsync(w.dirFile); err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	// reopen newTail with its new path so calls to Name() match the wal filename format
 	newTail.Close()
 
 	if newTail, err = fileutil.LockFile(fpath, os.O_WRONLY, fileutil.PrivateFileMode); err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 	if _, err = newTail.Seek(off, io.SeekStart); err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
-	w.locks[len(w.locks)-1] = newTail
+	w.tail = newTail.File
+	w.walNames = append(w.walNames, newTail.Name())
 
-	prevCrc = w.encoder.crc.Sum32()
-	w.encoder, err = newFileEncoder(w.tail().File, prevCrc)
+	w.encoder, err = newFileEncoder(w.tail, prevCrc)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	plog.Infof("segmented wal file %v is created", fpath)
 	return nil
 }
 
-func (w *WAL) sync() error {
+func (w *WAL) Sync() error {
 	if w.encoder != nil {
 		if err := w.encoder.flush(); err != nil {
 			return err
 		}
 	}
-	err := fileutil.Fdatasync(w.tail().File)
+	err := fileutil.Fdatasync(w.tail)
 	return err
-}
-
-// ReleaseLockTo releases the locks, which has smaller index than the given index
-// except the largest one among them.
-// For example, if WAL is holding lock 1,2,3,4,5,6, ReleaseLockTo(4) will release
-// lock 1,2 but keep 3. ReleaseLockTo(5) will release 1,2,3 but keep 4.
-func (w *WAL) ReleaseLockTo(index uint64) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if len(w.locks) == 0 {
-		return nil
-	}
-
-	var smaller int
-	found := false
-
-	for i, l := range w.locks {
-		_, lockIndex, err := parseWalName(filepath.Base(l.Name()))
-		if err != nil {
-			return err
-		}
-		if lockIndex >= index {
-			smaller = i - 1
-			found = true
-			break
-		}
-	}
-
-	// if no lock index is greater than the release index, we can
-	// release lock up to the last one(excluding).
-	if !found {
-		smaller = len(w.locks) - 1
-	}
-
-	if smaller <= 0 {
-		return nil
-	}
-
-	for i := 0; i < smaller; i++ {
-		if w.locks[i] == nil {
-			continue
-		}
-		w.locks[i].Close()
-	}
-	w.locks = w.locks[smaller:]
-
-	return nil
 }
 
 func (w *WAL) Close() error {
@@ -524,17 +452,19 @@ func (w *WAL) Close() error {
 		w.fp = nil
 	}
 
-	if w.tail() != nil {
-		if err := w.sync(); err != nil {
+	if w.readClose != nil {
+		if err := w.readClose(); err != nil {
 			return err
 		}
+		w.readClose = nil
 	}
-	for _, l := range w.locks {
-		if l == nil {
-			continue
+
+	if w.tail != nil {
+		if err := w.Sync(); err != nil {
+			return err
 		}
-		if err := l.Close(); err != nil {
-			plog.Errorf("failed to unlock during closing wal: %s", err)
+		if err := w.tail.Close(); err != nil {
+			return err
 		}
 	}
 
@@ -581,7 +511,7 @@ func (w *WAL) Save(ents []raftpb.Entry) error {
 		}
 	}
 
-	curOff, err := w.tail().Seek(0, io.SeekCurrent)
+	curOff, err := w.tail.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return err
 	}
@@ -597,21 +527,14 @@ func (w *WAL) saveCrc(prevCrc uint32) (err error) {
 	return
 }
 
-func (w *WAL) tail() *fileutil.LockedFile {
-	if len(w.locks) > 0 {
-		return w.locks[len(w.locks)-1]
-	}
-	return nil
-}
-
 func (w *WAL) seq() uint64 {
-	t := w.tail()
-	if t == nil {
+	num := len(w.walNames)
+	if num == 0 {
 		return 0
 	}
-	seq, _, err := parseWalName(filepath.Base(t.Name()))
+	seq, _, err := parseWalName(filepath.Base(w.walNames[num-1]))
 	if err != nil {
-		plog.Fatalf("bad wal name %s (%v)", t.Name(), err)
+		plog.Fatalf("bad wal name %s (%v)", w.walNames[num-1], err)
 	}
 	return seq
 }

@@ -33,8 +33,8 @@ func main() {
 	// 记录时间
 	t0 := time.Now()
 
-	S := 100000
-	benchmarkWriteEntry(S, 100, 8)
+	S := 300000
+	benchmarkWriteEntry(S, 256, 8)
 
 	// record time, and calculate performance
 	t1 := time.Now()
@@ -62,6 +62,11 @@ func benchmarkWriteEntry(loops int, size int, batch int) {
 
 	for i := 0; i < loops; i++ {
 		err := w.SaveEntry(e)
+		e.Index++
+		if err != nil {
+			log.Fatalf("err = %v, want nil", err)
+		}
+		err = w.Sync()
 		if err != nil {
 			log.Fatalf("err = %v, want nil", err)
 		}
