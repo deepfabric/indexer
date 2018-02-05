@@ -67,7 +67,7 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string) (ind *Index, err err
 		txtFrames: make(map[string]*TextFrame),
 	}
 	var ifm *IntFrame
-	for _, uintProp := range docProt.UintProps {
+	for _, uintProp := range docProt.Doc.UintProps {
 		dir := filepath.Join(indDir, uintProp.Name)
 		if ifm, err = NewIntFrame(dir, docProt.Index, uintProp.Name, uint(uintProp.ValLen*8), true); err != nil {
 			return
@@ -75,7 +75,7 @@ func NewIndex(docProt *cql.DocumentWithIdx, mainDir string) (ind *Index, err err
 		ind.intFrames[uintProp.Name] = ifm
 	}
 	var tfm *TextFrame
-	for _, strProp := range docProt.StrProps {
+	for _, strProp := range docProt.Doc.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
 		if tfm, err = NewTextFrame(dir, docProt.Index, strProp.Name, true); err != nil {
 			return
@@ -132,10 +132,10 @@ func (ind *Index) Destroy() (err error) {
 	}
 
 	paths := make([]string, 0)
-	for _, uintProp := range ind.DocProt.UintProps {
+	for _, uintProp := range ind.DocProt.Doc.UintProps {
 		paths = append(paths, filepath.Join(ind.MainDir, uintProp.Name))
 	}
-	for _, strProp := range ind.DocProt.StrProps {
+	for _, strProp := range ind.DocProt.Doc.StrProps {
 		paths = append(paths, filepath.Join(ind.MainDir, strProp.Name))
 	}
 	paths = append(paths, filepath.Join(ind.MainDir, LiveDocs))
@@ -174,7 +174,7 @@ func (ind *Index) Open() (err error) {
 	indDir := filepath.Join(ind.MainDir, ind.DocProt.Index)
 	ind.intFrames = make(map[string]*IntFrame)
 	var ifm *IntFrame
-	for _, uintProp := range ind.DocProt.UintProps {
+	for _, uintProp := range ind.DocProt.Doc.UintProps {
 		dir := filepath.Join(indDir, uintProp.Name)
 		if ifm, err = NewIntFrame(dir, ind.DocProt.Index, uintProp.Name, uint(uintProp.ValLen*8), false); err != nil {
 			return
@@ -183,7 +183,7 @@ func (ind *Index) Open() (err error) {
 	}
 	ind.txtFrames = make(map[string]*TextFrame)
 	var tfm *TextFrame
-	for _, strProp := range ind.DocProt.StrProps {
+	for _, strProp := range ind.DocProt.Doc.StrProps {
 		dir := filepath.Join(indDir, strProp.Name)
 		if tfm, err = NewTextFrame(dir, ind.DocProt.Index, strProp.Name, false); err != nil {
 			return
@@ -259,27 +259,27 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	ind.rwlock.RLock()
 	defer ind.rwlock.RUnlock()
 	//check if doc.DocID is already there before insertion.
-	if changed, err = ind.liveDocs.setBit(0, doc.DocID); err != nil {
+	if changed, err = ind.liveDocs.setBit(0, doc.Doc.DocID); err != nil {
 		return
 	} else if !changed {
-		err = errors.Errorf("document %v is alaredy there before insertion", doc.DocID)
+		err = errors.Errorf("document %v is alaredy there before insertion", doc.Doc.DocID)
 		return
 	}
-	for _, uintProp := range doc.UintProps {
+	for _, uintProp := range doc.Doc.UintProps {
 		if ifm, ok = ind.intFrames[uintProp.Name]; !ok {
 			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", uintProp.Name, doc, ind.DocProt)
 			return
 		}
-		if err = ifm.DoIndex(doc.DocID, uintProp.Val); err != nil {
+		if err = ifm.DoIndex(doc.Doc.DocID, uintProp.Val); err != nil {
 			return
 		}
 	}
-	for _, strProp := range doc.StrProps {
+	for _, strProp := range doc.Doc.StrProps {
 		if tfm, ok = ind.txtFrames[strProp.Name]; !ok {
 			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", strProp.Name, doc, ind.DocProt)
 			return
 		}
-		if err = tfm.DoIndex(doc.DocID, strProp.Val); err != nil {
+		if err = tfm.DoIndex(doc.Doc.DocID, strProp.Val); err != nil {
 			return
 		}
 	}

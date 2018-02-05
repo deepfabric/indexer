@@ -33,7 +33,7 @@ func TestParseCql(t *testing.T) {
 		switch r := res.(type) {
 		case *CqlCreate:
 			fmt.Printf("Create index %v\n", r)
-			docProts[r.DocumentWithIdx.Index] = &r.Document
+			docProts[r.DocumentWithIdx.Index] = &r.DocumentWithIdx.Doc
 		case *CqlDestroy:
 			fmt.Printf("Destroy index %s\n", r.Index)
 			delete(docProts, r.Index)
@@ -65,7 +65,7 @@ func TestParseCqlSelect(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	c = res.(*CqlCreate)
-	docProts[c.DocumentWithIdx.Index] = &c.Document
+	docProts[c.DocumentWithIdx.Index] = &c.DocumentWithIdx.Doc
 
 	//TESTCASE: multiple UintPred of the same property into one
 	res, err = ParseCql("IDX.SELECT orders WHERE price>=30 price<=40 price<35 price>20", docProts)

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/deepfabric/indexer/cql"
 )
 
@@ -15,36 +17,36 @@ const (
 
 func newDocProt1() *cql.DocumentWithIdx {
 	return &cql.DocumentWithIdx{
-		Document: cql.Document{
+		Doc: cql.Document{
 			DocID: 0,
-			UintProps: []cql.UintProp{
-				cql.UintProp{
+			UintProps: []*cql.UintProp{
+				&cql.UintProp{
 					Name:   "object",
 					ValLen: 8,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "price",
 					ValLen: 4,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "number",
 					ValLen: 4,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "date",
 					ValLen: 8,
 					Val:    0,
 				},
 			},
-			StrProps: []cql.StrProp{
-				cql.StrProp{
+			StrProps: []*cql.StrProp{
+				&cql.StrProp{
 					Name: "description",
 					Val:  "",
 				},
-				cql.StrProp{
+				&cql.StrProp{
 					Name: "note",
 					Val:  "",
 				},
@@ -56,31 +58,31 @@ func newDocProt1() *cql.DocumentWithIdx {
 
 func newDocProt2() *cql.DocumentWithIdx {
 	return &cql.DocumentWithIdx{
-		Document: cql.Document{
+		Doc: cql.Document{
 			DocID: 0,
-			UintProps: []cql.UintProp{
-				cql.UintProp{
+			UintProps: []*cql.UintProp{
+				&cql.UintProp{
 					Name:   "ip",
 					ValLen: 4,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "created",
 					ValLen: 8,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "updated",
 					ValLen: 8,
 					Val:    0,
 				},
 			},
-			StrProps: []cql.StrProp{
-				cql.StrProp{
+			StrProps: []*cql.StrProp{
+				&cql.StrProp{
 					Name: "description",
 					Val:  "",
 				},
-				cql.StrProp{
+				&cql.StrProp{
 					Name: "note",
 					Val:  "",
 				},
@@ -98,43 +100,37 @@ func TestIndexerNormal(t *testing.T) {
 	var found bool
 
 	//create empty indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	ir, err = NewIndexer("/tmp/indexer_test", true, false)
+	require.NoError(t, err)
 
 	//create index 1
 	docProt = newDocProt1()
-	if err = ir.CreateIndex(docProt); err != nil {
-		return
-	}
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
 
 	//create index 2
 	docProt = newDocProt2()
-	if err = ir.CreateIndex(docProt); err != nil {
-		return
-	}
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
 
 	//insert documents
 	for i := 0; i < InitialNumDocs; i++ {
 		doc := newDocProt1()
-		doc.DocID = uint64(i)
-		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * (j + 1))
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if err = ir.Insert(doc); err != nil {
-			t.Fatalf("%+v", err)
-		}
+		err = ir.Insert(doc)
+		require.NoError(t, err)
 	}
 
 	//close indexer
-	if err = ir.Close(); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	err = ir.Close()
+	require.NoError(t, err)
 
 	//create indexer with existing data
-	if ir2, err = NewIndexer("/tmp/indexer_test", false); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	ir2, err = NewIndexer("/tmp/indexer_test", false, false)
+	require.NoError(t, err)
 
 	//query
 	var qr *QueryResult
@@ -150,34 +146,99 @@ func TestIndexerNormal(t *testing.T) {
 			},
 		},
 	}
-	if qr, err = ir2.Select(cs); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	qr, err = ir2.Select(cs)
+	require.NoError(t, err)
 	fmt.Println(qr.Bm.Bits())
 
 	//delete documents
 	for i := 0; i < InitialNumDocs; i++ {
 		doc := newDocProt1()
-		doc.DocID = uint64(i)
-		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * (j + 1))
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if found, err = ir2.Del(doc.Index, doc.DocID); err != nil {
-			t.Fatalf("%+v", err)
-		} else if !found {
-			t.Fatalf("document %v not found", doc)
-		}
+		found, err = ir2.Del(doc.Index, doc.Doc.DocID)
+		require.NoError(t, err)
+		require.Equal(t, true, found)
 	}
 
 	//destroy index 1
-	if err = ir2.DestroyIndex("orders"); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	err = ir2.DestroyIndex("orders")
+	require.NoError(t, err)
 
 	//destroy index 2
-	if err = ir2.DestroyIndex("addrs"); err != nil {
-		t.Fatalf("%+v", err)
+	err = ir2.DestroyIndex("addrs")
+	require.NoError(t, err)
+}
+
+//TESTCASE: normal operation sequence with wal: new_empty, create, insert, close, new_existing, query, del, destroy
+func TestIndexerWal(t *testing.T) {
+	var err error
+	var docProt *cql.DocumentWithIdx
+	var ir, ir2 *Indexer
+	var found bool
+
+	//create empty indexer
+	ir, err = NewIndexer("/tmp/indexer_test", true, true)
+	require.NoError(t, err)
+
+	//create index 1
+	docProt = newDocProt1()
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
+
+	//insert documents
+	for i := 0; i < InitialNumDocs; i++ {
+		doc := newDocProt1()
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
+		}
+		err = ir.Insert(doc)
+		require.NoError(t, err)
 	}
+
+	//close indexer
+	err = ir.Close()
+	require.NoError(t, err)
+
+	//create indexer with existing data
+	ir2, err = NewIndexer("/tmp/indexer_test", false, true)
+	require.NoError(t, err)
+
+	//query
+	var qr *QueryResult
+	low := 30
+	high := 600
+	cs := &cql.CqlSelect{
+		Index: "orders",
+		UintPreds: map[string]cql.UintPred{
+			"price": cql.UintPred{
+				Name: "price",
+				Low:  uint64(low),
+				High: uint64(high),
+			},
+		},
+	}
+	qr, err = ir2.Select(cs)
+	require.NoError(t, err)
+	fmt.Println(qr.Bm.Bits())
+
+	//delete documents
+	for i := 0; i < InitialNumDocs; i++ {
+		doc := newDocProt1()
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
+		}
+		found, err = ir2.Del(doc.Index, doc.Doc.DocID)
+		require.NoError(t, err)
+		require.Equal(t, true, found)
+	}
+
+	//destroy index 1
+	err = ir2.DestroyIndex("orders")
+	require.NoError(t, err)
 }
 
 func TestIndexerOpenClose(t *testing.T) {
@@ -185,35 +246,30 @@ func TestIndexerOpenClose(t *testing.T) {
 	var ir *Indexer
 
 	//create indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	ir, err = NewIndexer("/tmp/indexer_test", true, false)
+	require.NoError(t, err)
 
 	//create index
 	docProt := newDocProt1()
-	if err = ir.CreateIndex(docProt); err != nil {
-		return
-	}
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
 
 	//close indexer
-	if err = ir.Close(); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	err = ir.Close()
+	require.NoError(t, err)
 
 	//open indexer
-	if err = ir.Open(); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	err = ir.Open()
+	require.NoError(t, err)
 
 	//close indexer
-	if err = ir.Close(); err != nil {
-		t.Fatalf("%+v", err)
-	}
+	err = ir.Close()
+	require.NoError(t, err)
 }
 
 func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, err error) {
 	//create indexer
-	if ir, err = NewIndexer("/tmp/indexer_test", true); err != nil {
+	if ir, err = NewIndexer("/tmp/indexer_test", true, false); err != nil {
 		return
 	}
 
@@ -223,12 +279,12 @@ func prepareIndexer(numDocs int, docProts []*cql.DocumentWithIdx) (ir *Indexer, 
 			return
 		}
 		for i := 0; i < numDocs; i++ {
-			docProt.DocID = uint64(i)
-			for j := 0; j < len(docProt.UintProps); j++ {
-				docProt.UintProps[j].Val = uint64(i * (j + 1))
+			docProt.Doc.DocID = uint64(i)
+			for j := 0; j < len(docProt.Doc.UintProps); j++ {
+				docProt.Doc.UintProps[j].Val = uint64(i * (j + 1))
 			}
-			for j := 0; j < len(docProt.StrProps); j++ {
-				docProt.StrProps[j].Val = fmt.Sprintf("%03d%03d ", i, j) + "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+			for j := 0; j < len(docProt.Doc.StrProps); j++ {
+				docProt.Doc.StrProps[j].Val = fmt.Sprintf("%03d%03d ", i, j) + "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 			}
 			if err = ir.Insert(docProt); err != nil {
 				return
@@ -251,9 +307,7 @@ func TestIndexerParallel(t *testing.T) {
 	//"A subbenchmark is like any other benchmark. A benchmark that calls Run at least once will not be measured itself and will be called once with N=1."
 	//prepareIndexer is expensive setup, so it's better to share among sub-benchmarks.
 	ir, err = prepareIndexer(initialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
+	require.NoError(t, err)
 
 	end := time.Now().Add(duration)
 	endIns := end.Add(3 * time.Second)
@@ -271,12 +325,12 @@ func TestIndexerParallel(t *testing.T) {
 				}
 				for d, doc := range docs {
 					seq := atomic.AddUint64(&seqIns[d], 1)
-					doc.DocID = seq
-					for j := 0; j < len(doc.UintProps); j++ {
-						doc.UintProps[j].Val = doc.DocID * uint64(j+1)
+					doc.Doc.DocID = seq
+					for j := 0; j < len(doc.Doc.UintProps); j++ {
+						doc.Doc.UintProps[j].Val = doc.Doc.DocID * uint64(j+1)
 					}
-					for j := 0; j < len(doc.StrProps); j++ {
-						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+					for j := 0; j < len(doc.Doc.StrProps); j++ {
+						doc.Doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 					}
 					if err2 = ir.Insert(doc); err2 != nil {
 						errIns = err2
@@ -296,14 +350,14 @@ func TestIndexerParallel(t *testing.T) {
 				}
 				for d, doc := range docs {
 					seq := atomic.AddUint64(&seqDel[d], 1)
-					doc.DocID = seq
-					for j := 0; j < len(doc.UintProps); j++ {
-						doc.UintProps[j].Val = doc.DocID * uint64(j+1)
+					doc.Doc.DocID = seq
+					for j := 0; j < len(doc.Doc.UintProps); j++ {
+						doc.Doc.UintProps[j].Val = doc.Doc.DocID * uint64(j+1)
 					}
-					for j := 0; j < len(doc.StrProps); j++ {
-						doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+					for j := 0; j < len(doc.Doc.StrProps); j++ {
+						doc.Doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 					}
-					if _, err2 = ir.Del(doc.Index, doc.DocID); err2 != nil {
+					if _, err2 = ir.Del(doc.Index, doc.Doc.DocID); err2 != nil {
 						//deletion could be scheduled more often than insertion.
 						errDel = err2
 					}
@@ -371,26 +425,23 @@ func BenchmarkIndexer(b *testing.B) {
 	//"A subbenchmark is like any other benchmark. A benchmark that calls Run at least once will not be measured itself and will be called once with N=1."
 	//prepareIndexer is expensive setup, so it's better to share among sub-benchmarks.
 	ir, err = prepareIndexer(InitialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
-	if err != nil {
-		b.Fatalf("%+v", err)
-	}
+	require.NoError(b, err)
 
 	b.Run("Insert", func(b *testing.B) {
 		//insert documents
 		doc := newDocProt1()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			doc.DocID = uint64(InitialNumDocs + i)
-			for j := 0; j < len(doc.UintProps); j++ {
-				doc.UintProps[j].Val = doc.DocID * uint64(j+1)
+			doc.Doc.DocID = uint64(InitialNumDocs + i)
+			for j := 0; j < len(doc.Doc.UintProps); j++ {
+				doc.Doc.UintProps[j].Val = doc.Doc.DocID * uint64(j+1)
 			}
-			for j := 0; j < len(doc.StrProps); j++ {
-				doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
+			for j := 0; j < len(doc.Doc.StrProps); j++ {
+				doc.Doc.StrProps[j].Val = "Go's standard library does not have a function solely intended to check if a file exists or not (like Python's os.path.exists). What is the idiomatic way to do it?"
 			}
-			if err = ir.Insert(doc); err != nil {
-				//document could already be there since the benchmark function is called "at least once".
-				//b.Fatalf("%+v", err)
-			}
+			err = ir.Insert(doc)
+			//document could already be there since the benchmark function is called "at least once".
+			//b.Fatalf("%+v", err)
 		}
 	})
 

@@ -114,16 +114,6 @@ func Create(dirpath string) (*WAL, error) {
 		dir:      dirpath,
 		walNames: make([]string, 0),
 	}
-	w.encoder, err = newFileEncoder(f.File, 0)
-	if err != nil {
-		return nil, err
-	}
-	w.tail = f.File
-	w.walNames = append(w.walNames, f.Name())
-	if err = w.saveCrc(0); err != nil {
-		return nil, err
-	}
-
 	if w, err = w.renameWal(tmpdirpath); err != nil {
 		return nil, err
 	}
@@ -138,6 +128,16 @@ func Create(dirpath string) (*WAL, error) {
 	}
 	if perr = pdir.Close(); err != nil {
 		return nil, perr
+	}
+
+	w.encoder, err = newFileEncoder(f.File, 0)
+	if err != nil {
+		return nil, err
+	}
+	w.tail = f.File
+	w.walNames = append(w.walNames, filepath.Join(dirpath, walName(0, 0)))
+	if err = w.saveCrc(0); err != nil {
+		return nil, err
 	}
 
 	return w, nil
@@ -169,7 +169,7 @@ func (w *WAL) renameWalUnlock(tmpdirpath string) (*WAL, error) {
 	// rename of directory with locked files doesn't work on windows/cifs;
 	// close the WAL to release the locks so the directory can be renamed.
 	plog.Infof("releasing file lock to rename %q to %q", tmpdirpath, w.dir)
-	w.Close()
+	w.Close(false)
 	if err := os.Rename(tmpdirpath, w.dir); err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (w *WAL) renameWalUnlock(tmpdirpath string) (*WAL, error) {
 		return nil, oerr
 	}
 	if _, err := newWAL.ReadAll(); err != nil {
-		newWAL.Close()
+		newWAL.Close(false)
 		return nil, err
 	}
 	return newWAL, nil
@@ -259,6 +259,50 @@ func openAtIndex(dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) 
 		w.fp = newFilePipeline(w.dir, SegmentSizeBytes)
 	}
 
+	return w, nil
+}
+
+// OpenAtBeginning opens the WAL at the beginning.
+// The WAL cannot be appended to before reading out all of its
+// previous records.
+func OpenAtBeginning(dirpath string) (*WAL, error) {
+	names, err := readWalNames(dirpath)
+	if err != nil && errors.Cause(err) != ErrFileNotFound {
+		return nil, err
+	}
+	nameIndex := 0
+
+	// open the wal files
+	rcs := make([]io.ReadCloser, 0)
+	rs := make([]io.Reader, 0)
+	walNames := make([]string, 0)
+	for _, name := range names[nameIndex:] {
+		p := filepath.Join(dirpath, name)
+		l, err := fileutil.TryLockFile(p, os.O_RDWR, fileutil.PrivateFileMode)
+		if err != nil {
+			closeAll(rcs...)
+			return nil, errors.Wrap(err, "")
+		}
+		rcs = append(rcs, l)
+		rs = append(rs, rcs[len(rcs)-1])
+		walNames = append(walNames, p)
+	}
+
+	closer := func() error { return closeAll(rcs...) }
+
+	// create a WAL ready for reading
+	w := &WAL{
+		dir:       dirpath,
+		start:     walpb.Snapshot{},
+		decoder:   newDecoder(rs...),
+		readClose: closer,
+		walNames:  walNames,
+	}
+
+	w.fp = newFilePipeline(w.dir, SegmentSizeBytes)
+	if w.dirFile, err = fileutil.OpenDir(w.dir); err != nil {
+		return nil, errors.Wrap(err, "")
+	}
 	return w, nil
 }
 
@@ -354,24 +398,30 @@ func (w *WAL) cut() error {
 func (w *WAL) CompactAll() (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-
-	if err = w.tail.Close(); err != nil {
+	if err = w.clean(); err != nil {
 		return
 	}
+
+	err = w.advance(w.encoder.crc.Sum32())
+	return
+}
+
+// CompactAll remove all entries.
+func (w *WAL) clean() (err error) {
 	for _, name := range w.walNames {
-		if err = os.Remove(filepath.Join(w.dir, name)); err != nil {
+		if err = os.Remove(name); err != nil {
+			err = errors.Wrap(err, "")
 			return
 		}
 	}
 	w.walNames = w.walNames[0:0]
-
-	err = w.advance(w.encoder.crc.Sum32())
 	return
 }
 
 func (w *WAL) advance(prevCrc uint32) (err error) {
 	if w.tail != nil {
 		if err = w.tail.Close(); err != nil {
+			err = errors.Wrap(err, "")
 			return
 		}
 		w.tail = nil
@@ -443,7 +493,7 @@ func (w *WAL) Sync() error {
 	return err
 }
 
-func (w *WAL) Close() error {
+func (w *WAL) Close(clean bool) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -466,9 +516,19 @@ func (w *WAL) Close() error {
 		if err := w.tail.Close(); err != nil {
 			return err
 		}
+		w.tail = nil
 	}
 
-	return w.dirFile.Close()
+	if err = w.dirFile.Close(); err != nil {
+		return
+	}
+
+	if clean {
+		if err = w.clean(); err != nil {
+			return
+		}
+	}
+	return
 }
 
 func (w *WAL) SaveEntry(e *raftpb.Entry) (err error) {

@@ -15,42 +15,42 @@ const (
 
 func newDocProt() *cql.DocumentWithIdx {
 	return &cql.DocumentWithIdx{
-		Document: cql.Document{
+		Doc: cql.Document{
 			DocID: 0,
-			UintProps: []cql.UintProp{
-				cql.UintProp{
+			UintProps: []*cql.UintProp{
+				&cql.UintProp{
 					Name:   "object",
 					ValLen: 8,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "price",
 					ValLen: 4,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:    "priceF64",
 					IsFloat: true,
 					ValLen:  8,
 					Val:     0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "number",
 					ValLen: 4,
 					Val:    0,
 				},
-				cql.UintProp{
+				&cql.UintProp{
 					Name:   "date",
 					ValLen: 8,
 					Val:    0,
 				},
 			},
-			StrProps: []cql.StrProp{
-				cql.StrProp{
+			StrProps: []*cql.StrProp{
+				&cql.StrProp{
 					Name: "description",
 					Val:  "",
 				},
-				cql.StrProp{
+				&cql.StrProp{
 					Name: "note",
 					Val:  "",
 				},
@@ -78,16 +78,16 @@ func TestIndexNormal(t *testing.T) {
 
 	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
-		doc.DocID = uint64(i)
-		for j := 0; j < len(doc.UintProps); j++ {
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
 			val := uint64(i * (j + 1))
-			if val, err = cql.ParseUintProp(doc.UintProps[j], fmt.Sprintf("%v", val)); err != nil {
+			if val, err = cql.ParseUintProp(doc.Doc.UintProps[j], fmt.Sprintf("%v", val)); err != nil {
 				t.Fatalf("%+v", err)
 			}
-			doc.UintProps[j].Val = val
+			doc.Doc.UintProps[j].Val = val
 		}
-		for j := 0; j < len(doc.StrProps); j++ {
-			doc.StrProps[j].Val = fmt.Sprintf("%03d%03d and some random text", i, j)
+		for j := 0; j < len(doc.Doc.StrProps); j++ {
+			doc.Doc.StrProps[j].Val = fmt.Sprintf("%03d%03d and some random text", i, j)
 		}
 		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)
@@ -199,11 +199,11 @@ func TestIndexNormal(t *testing.T) {
 	//delete docs
 	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
-		doc.DocID = uint64(i)
-		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * (j + 1))
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
-		if found, err = ind.Del(doc.DocID); err != nil {
+		if found, err = ind.Del(doc.Doc.DocID); err != nil {
 			t.Fatalf("%+v", err)
 		} else if !found {
 			t.Fatalf("document %v not found", doc)
@@ -226,9 +226,9 @@ func TestIndexOpenClose(t *testing.T) {
 	//insert documents
 	for i := 0; i < NumDocs; i++ {
 		doc := newDocProt()
-		doc.DocID = uint64(i)
-		for j := 0; j < len(doc.UintProps); j++ {
-			doc.UintProps[j].Val = uint64(i * (j + 1))
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
 		}
 		if err = ind.Insert(doc); err != nil {
 			t.Fatalf("%+v", err)

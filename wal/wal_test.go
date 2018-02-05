@@ -40,7 +40,7 @@ func TestNew(t *testing.T) {
 	if g := filepath.Base(w.tail.Name()); g != walName(0, 0) {
 		t.Errorf("name = %+v, want %+v", g, walName(0, 0))
 	}
-	defer w.Close()
+	defer w.Close(false)
 
 	// file is preallocated to segment size; only read data written by wal
 	off, err := w.tail.Seek(0, io.SeekCurrent)
@@ -86,7 +86,7 @@ func TestOpenAtIndex(t *testing.T) {
 		require.Equal(t, walName(0, 0), g)
 	}
 	require.Equal(t, uint64(0), w.seq())
-	w.Close()
+	w.Close(false)
 
 	wname := walName(2, 10)
 	f, err = os.Create(filepath.Join(dir, wname))
@@ -99,7 +99,7 @@ func TestOpenAtIndex(t *testing.T) {
 		require.Equal(t, wname, g)
 	}
 	require.Equal(t, uint64(2), w.seq())
-	w.Close()
+	w.Close(false)
 
 	emptydir, err := ioutil.TempDir(os.TempDir(), "waltestempty")
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestCut(t *testing.T) {
 
 	w, err := Create(p)
 	require.NoError(t, err)
-	defer w.Close()
+	defer w.Close(false)
 
 	err = w.cut()
 	require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestRecover(t *testing.T) {
 	ents := []raftpb.Entry{{Index: 1, Term: 1, Data: []byte{1}}, {Index: 2, Term: 2, Data: []byte{2}}}
 	err = w.Save(ents)
 	require.NoError(t, err)
-	w.Close()
+	w.Close(false)
 
 	w, err = Open(p, walpb.Snapshot{})
 	require.NoError(t, err)
@@ -166,7 +166,7 @@ func TestRecover(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, ents, entries)
-	w.Close()
+	w.Close(false)
 }
 
 func TestSearchIndex(t *testing.T) {
@@ -250,7 +250,7 @@ func TestRecoverAfterCut(t *testing.T) {
 		err = md.cut()
 		require.NoError(t, err)
 	}
-	md.Close()
+	md.Close(false)
 
 	err = os.Remove(filepath.Join(p, walName(4, 4)))
 	require.NoError(t, err)
@@ -277,7 +277,7 @@ func TestRecoverAfterCut(t *testing.T) {
 				t.Errorf("#%d: ents[%d].Index = %+v, want %+v", i, j, e.Index, j+i+1)
 			}
 		}
-		w.Close()
+		w.Close(false)
 	}
 }
 
@@ -290,14 +290,14 @@ func TestOpenAtUncommittedIndex(t *testing.T) {
 	require.NoError(t, err)
 	err = w.Save([]raftpb.Entry{{Index: 0}})
 	require.NoError(t, err)
-	w.Close()
+	w.Close(false)
 
 	w, err = Open(p, walpb.Snapshot{})
 	require.NoError(t, err)
 	// commit up to index 0, try to read index 1
 	_, err = w.ReadAll()
 	require.NoError(t, err)
-	w.Close()
+	w.Close(false)
 }
 
 // TestOpenForRead tests that OpenForRead can load all files.
@@ -311,7 +311,7 @@ func TestOpenForRead(t *testing.T) {
 	// create WAL
 	w, err := Create(p)
 	require.NoError(t, err)
-	defer w.Close()
+	defer w.Close(false)
 	// make 10 separate files
 	for i := 0; i < 10; i++ {
 		es := []raftpb.Entry{{Index: uint64(i)}}
@@ -324,7 +324,7 @@ func TestOpenForRead(t *testing.T) {
 	// All are available for read
 	w2, err := OpenForRead(p, walpb.Snapshot{})
 	require.NoError(t, err)
-	defer w2.Close()
+	defer w2.Close(false)
 	ents, err := w2.ReadAll()
 	require.NoError(t, err)
 	g := ents[len(ents)-1].Index
@@ -351,7 +351,7 @@ func TestTailWriteNoSlackSpace(t *testing.T) {
 	require.NoError(t, serr)
 	terr := w.tail.Truncate(off)
 	require.NoError(t, terr)
-	w.Close()
+	w.Close(false)
 
 	// open, write more
 	w, err = Open(p, walpb.Snapshot{})
@@ -365,7 +365,7 @@ func TestTailWriteNoSlackSpace(t *testing.T) {
 		err = w.Save(es)
 		require.NoError(t, err)
 	}
-	w.Close()
+	w.Close(false)
 
 	// confirm all writes
 	w, err = Open(p, walpb.Snapshot{})
@@ -373,7 +373,7 @@ func TestTailWriteNoSlackSpace(t *testing.T) {
 	ents, rerr = w.ReadAll()
 	require.NoError(t, rerr)
 	require.Equal(t, 10, len(ents))
-	w.Close()
+	w.Close(false)
 }
 
 // TestRestartCreateWal ensures that an interrupted WAL initialization is clobbered on restart
@@ -391,14 +391,14 @@ func TestRestartCreateWal(t *testing.T) {
 
 	w, werr := Create(p)
 	require.NoError(t, werr)
-	w.Close()
+	w.Close(false)
 	if Exist(tmpdir) {
 		t.Fatalf("got %q exists, expected it to not exist", tmpdir)
 	}
 
 	w, err = OpenForRead(p, walpb.Snapshot{})
 	require.NoError(t, err)
-	defer w.Close()
+	defer w.Close(false)
 
 	_, rerr := w.ReadAll()
 	require.NoError(t, rerr)
@@ -415,7 +415,7 @@ func TestOpenOnTornWrite(t *testing.T) {
 	defer os.RemoveAll(p)
 	w, err := Create(p)
 	defer func() {
-		if err = w.Close(); err != nil && err != os.ErrInvalid {
+		if err = w.Close(false); err != nil && err != os.ErrInvalid {
 			t.Fatal(err)
 		}
 	}()
@@ -432,7 +432,7 @@ func TestOpenOnTornWrite(t *testing.T) {
 	}
 
 	fn := filepath.Join(p, filepath.Base(w.tail.Name()))
-	w.Close()
+	w.Close(false)
 
 	// clobber some entry with 0's to simulate a torn write
 	f, ferr := os.OpenFile(fn, os.O_WRONLY, fileutil.PrivateFileMode)
@@ -458,7 +458,7 @@ func TestOpenOnTornWrite(t *testing.T) {
 		err = w.Save(es)
 		require.NoError(t, err)
 	}
-	w.Close()
+	w.Close(false)
 
 	// read back the entries, confirm number of entries matches expectation
 	w, err = OpenForRead(p, walpb.Snapshot{})

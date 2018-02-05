@@ -55,13 +55,13 @@ func benchmarkWriteEntry(b *testing.B, size int, batch int) {
 	n := 0
 	b.SetBytes(int64(e.Size()))
 	for i := 0; i < b.N; i++ {
-		err := w.saveEntry(e)
+		err := w.SaveEntry(e)
 		if err != nil {
 			b.Fatal(err)
 		}
 		n++
 		if n > batch {
-			w.sync()
+			w.Sync()
 			n = 0
 		}
 	}
