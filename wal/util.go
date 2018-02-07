@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/coreos/etcd/pkg/fileutil"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -43,7 +44,7 @@ func searchIndex(names []string, index uint64) (int, bool) {
 		name := names[i]
 		_, curIndex, err := parseWalName(name)
 		if err != nil {
-			plog.Panicf("parse correct name should never fail: %v", err)
+			log.Panicf("parse correct name should never fail: %v", err)
 		}
 		if index >= curIndex {
 			return i, true
@@ -59,7 +60,7 @@ func isValidSeq(names []string) bool {
 	for _, name := range names {
 		curSeq, _, err := parseWalName(name)
 		if err != nil {
-			plog.Panicf("parse correct name should never fail: %v", err)
+			log.Panicf("parse correct name should never fail: %v", err)
 		}
 		if lastSeq != 0 && lastSeq != curSeq-1 {
 			return false
@@ -86,7 +87,7 @@ func checkWalNames(names []string) []string {
 		if _, _, err := parseWalName(name); err != nil {
 			// don't complain about left over tmp files
 			if !strings.HasSuffix(name, ".tmp") {
-				plog.Warningf("ignored file %v in wal", name)
+				log.Warningf("ignored file %v in wal", name)
 			}
 			continue
 		}

@@ -19,6 +19,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/coreos/etcd/raft/raftpb"
 )
 
@@ -36,15 +38,11 @@ func BenchmarkWrite1000EntryBatch1000(b *testing.B)    { benchmarkWriteEntry(b, 
 
 func benchmarkWriteEntry(b *testing.B, size int, batch int) {
 	p, err := ioutil.TempDir(os.TempDir(), "waltest")
-	if err != nil {
-		b.Fatal(err)
-	}
+	require.NoError(b, err)
 	defer os.RemoveAll(p)
 
 	w, err := Create(p)
-	if err != nil {
-		b.Fatalf("err = %v, want nil", err)
-	}
+	require.NoError(b, err)
 	data := make([]byte, size)
 	for i := 0; i < size; i++ {
 		data[i] = byte(i)
@@ -55,13 +53,12 @@ func benchmarkWriteEntry(b *testing.B, size int, batch int) {
 	n := 0
 	b.SetBytes(int64(e.Size()))
 	for i := 0; i < b.N; i++ {
-		err := w.SaveEntry(e)
-		if err != nil {
-			b.Fatal(err)
-		}
+		err = w.saveEntry(e)
+		require.NoError(b, err)
 		n++
 		if n > batch {
-			w.Sync()
+			err = w.Sync()
+			require.NoError(b, err)
 			n = 0
 		}
 	}

@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/coreos/etcd/pkg/fileutil"
+	log "github.com/sirupsen/logrus"
 )
 
 // filePipeline pipelines allocating disk space
@@ -70,7 +71,7 @@ func (fp *filePipeline) alloc() (f *fileutil.LockedFile, err error) {
 		return nil, err
 	}
 	if err = fileutil.Preallocate(f.File, fp.size, true); err != nil {
-		plog.Errorf("failed to allocate space when creating new wal file (%v)", err)
+		log.Errorf("failed to allocate space when creating new wal file (%v)", err)
 		f.Close()
 		return nil, err
 	}

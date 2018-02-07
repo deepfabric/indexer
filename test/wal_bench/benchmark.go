@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -58,15 +58,11 @@ func benchmarkWriteEntry(loops int, size int, batch int) {
 	for i := 0; i < size; i++ {
 		data[i] = byte(i)
 	}
-	e := &raftpb.Entry{Data: data}
+	e := &raftpb.Entry{Index: uint64(1), Data: data}
 
 	for i := 0; i < loops; i++ {
 		err := w.SaveEntry(e)
 		e.Index++
-		if err != nil {
-			log.Fatalf("err = %v, want nil", err)
-		}
-		err = w.Sync()
 		if err != nil {
 			log.Fatalf("err = %v, want nil", err)
 		}

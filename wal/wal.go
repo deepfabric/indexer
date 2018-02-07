@@ -27,8 +27,8 @@ import (
 	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal/walpb"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -49,8 +49,6 @@ var (
 	// value should be used, but this is defined as an exported variable
 	// so that tests can set a different segment size.
 	SegmentSizeBytes int64 = 64 * 1000 * 1000 // 64MB
-
-	plog = capnslog.NewPackageLogger("github.com/coreos/etcd", "wal")
 
 	ErrFileNotFound = errors.New("wal: file not found")
 	ErrCRCMismatch  = errors.New("wal: crc mismatch")
@@ -168,7 +166,7 @@ func (w *WAL) renameWal(tmpdirpath string) (*WAL, error) {
 func (w *WAL) renameWalUnlock(tmpdirpath string) (*WAL, error) {
 	// rename of directory with locked files doesn't work on windows/cifs;
 	// close the WAL to release the locks so the directory can be renamed.
-	plog.Infof("releasing file lock to rename %q to %q", tmpdirpath, w.dir)
+	log.Infof("releasing file lock to rename %q to %q", tmpdirpath, w.dir)
 	w.Close(false)
 	if err := os.Rename(tmpdirpath, w.dir); err != nil {
 		return nil, err
@@ -343,7 +341,6 @@ func (w *WAL) ReadAll() (ents []raftpb.Entry, err error) {
 		default:
 		}
 	}
-
 	cause := errors.Cause(err)
 	switch w.fp {
 	case nil:
@@ -479,7 +476,7 @@ func (w *WAL) advance(prevCrc uint32) (err error) {
 		return errors.Wrap(err, "")
 	}
 
-	plog.Infof("segmented wal file %v is created", fpath)
+	log.Infof("segmented wal file %v is created", fpath)
 	return nil
 }
 
@@ -531,17 +528,23 @@ func (w *WAL) Close(clean bool) (err error) {
 	return
 }
 
+// SaveEntry saves an entry, and always sync the wal
 func (w *WAL) SaveEntry(e *raftpb.Entry) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if err = w.saveEntry(e); err != nil {
 		return
 	}
-	if w.encoder.curOff < SegmentSizeBytes {
-		return nil
+	if w.encoder.curOff >= SegmentSizeBytes {
+		if err = w.cut(); err != nil {
+			return
+		}
+	} else {
+		if err = w.Sync(); err != nil {
+			return
+		}
 	}
-
-	return w.cut()
+	return
 }
 
 func (w *WAL) saveEntry(e *raftpb.Entry) (err error) {
@@ -555,31 +558,32 @@ func (w *WAL) saveEntry(e *raftpb.Entry) (err error) {
 	return
 }
 
-func (w *WAL) Save(ents []raftpb.Entry) error {
+func (w *WAL) Save(ents []raftpb.Entry) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	// short cut, do not call sync
 	if len(ents) == 0 {
-		return nil
+		return
 	}
 
 	// TODO(xiangli): no more reference operator
 	for i := range ents {
-		if err := w.saveEntry(&ents[i]); err != nil {
-			return err
+		if err = w.saveEntry(&ents[i]); err != nil {
+			return
 		}
 	}
 
-	curOff, err := w.tail.Seek(0, io.SeekCurrent)
-	if err != nil {
-		return err
+	if w.encoder.curOff >= SegmentSizeBytes {
+		if err = w.cut(); err != nil {
+			return
+		}
+	} else {
+		if err = w.Sync(); err != nil {
+			return
+		}
 	}
-	if curOff < SegmentSizeBytes {
-		return nil
-	}
-
-	return w.cut()
+	return
 }
 
 func (w *WAL) saveCrc(prevCrc uint32) (err error) {
@@ -594,7 +598,7 @@ func (w *WAL) seq() uint64 {
 	}
 	seq, _, err := parseWalName(filepath.Base(w.walNames[num-1]))
 	if err != nil {
-		plog.Fatalf("bad wal name %s (%v)", w.walNames[num-1], err)
+		log.Fatalf("bad wal name %s (%v)", w.walNames[num-1], err)
 	}
 	return seq
 }

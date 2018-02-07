@@ -11,6 +11,7 @@ import (
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/indexer/wal"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -29,6 +30,7 @@ type Indexer struct {
 	indices  map[string]*Index               //index data, need to persist
 	w        *wal.WAL                        //WAL
 	opN      int
+	entIndex uint64
 }
 
 type ErrIdxNotExist struct {
@@ -50,8 +52,9 @@ func (e *ErrIdxExist) Error() string {
 //NewIndexer creates an Indexer.
 func NewIndexer(mainDir string, overwirte bool, enableWal bool) (ir *Indexer, err error) {
 	ir = &Indexer{
-		MainDir: mainDir,
-		MaxOpN:  DefaultIndexerMaxOpN,
+		MainDir:  mainDir,
+		MaxOpN:   DefaultIndexerMaxOpN,
+		entIndex: uint64(1),
 	}
 	if err = os.MkdirAll(mainDir, 0700); err != nil {
 		err = errors.Wrap(err, "")
@@ -169,16 +172,15 @@ func (ir *Indexer) sync() (err error) {
 
 func (ir *Indexer) replayWal() (err error) {
 	walDir := filepath.Join(ir.MainDir, "wal")
+	var w *wal.WAL
 	//replay wal records
-	if ir.w, err = wal.OpenAtBeginning(walDir); err != nil {
+	if w, err = wal.OpenAtBeginning(walDir); err != nil {
 		return
 	}
 	var ents []raftpb.Entry
-	if ents, err = ir.w.ReadAll(); err != nil {
+	if ents, err = w.ReadAll(); err != nil {
 		return
 	}
-	savedW := ir.w
-	ir.w = nil
 	doc := &cql.DocumentWithIdx{}
 	dd := &cql.DocumentDel{}
 	for _, ent := range ents {
@@ -201,9 +203,9 @@ func (ir *Indexer) replayWal() (err error) {
 			}
 		}
 	}
-	ir.w = savedW
-	ir.Sync()
-	if err = ir.w.CompactAll(); err != nil {
+	log.Infof("replayed %v entries in WAL", len(ents))
+	ir.w = w
+	if err = ir.Sync(); err != nil {
 		return
 	}
 	return
@@ -255,10 +257,11 @@ func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 		if data, err = doc.Marshal(); err != nil {
 			return
 		}
-		e := &raftpb.Entry{Data: data}
+		e := &raftpb.Entry{Index: ir.entIndex, Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
 			return
 		}
+		ir.entIndex++
 	}
 	if err = ir.incrementOpN(); err != nil {
 		return
@@ -288,10 +291,11 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 		if data, err = dd.Marshal(); err != nil {
 			return
 		}
-		e := &raftpb.Entry{Type: raftpb.EntryType(1), Data: data}
+		e := &raftpb.Entry{Index: ir.entIndex, Type: raftpb.EntryType(1), Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
 			return
 		}
+		ir.entIndex++
 	}
 	if err = ir.incrementOpN(); err != nil {
 		return
