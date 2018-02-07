@@ -420,3 +420,31 @@ func (ir *Indexer) removeIndex(name string) (err error) {
 	}
 	return
 }
+
+func (ir *Indexer) CreateSnapshot(snapDir string) (err error) {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
+	if err = ir.sync(); err != nil {
+		return
+	}
+	src := ir.MainDir
+	dst := filepath.Join(snapDir, "index")
+	if err = os.RemoveAll(dst); err != nil {
+		return
+	}
+	err = CopyDir(src, dst)
+	return
+}
+
+func NewIndexerFromSnap(mainDir, snapDir string, enableWal bool) (ir *Indexer, err error) {
+	if err = os.RemoveAll(mainDir); err != nil {
+		return
+	}
+	src := filepath.Join(snapDir, "index")
+	dst := mainDir
+	if err = CopyDir(src, dst); err != nil {
+		return
+	}
+	ir, err = NewIndexer(mainDir, false, enableWal)
+	return
+}

@@ -223,6 +223,7 @@ func TestIndexerWal(t *testing.T) {
 	qr, err = ir2.Select(cs)
 	require.NoError(t, err)
 	fmt.Println(qr.Bm.Bits())
+	require.NotEqual(t, 0, qr.Bm.Count())
 
 	//delete documents
 	for i := 0; i < InitialNumDocs; i++ {
@@ -239,6 +240,59 @@ func TestIndexerWal(t *testing.T) {
 	//destroy index 1
 	err = ir2.DestroyIndex("orders")
 	require.NoError(t, err)
+}
+
+func TestIndexerSnap(t *testing.T) {
+	var err error
+	var docProt *cql.DocumentWithIdx
+	var ir, ir2 *Indexer
+
+	//create empty indexer
+	ir, err = NewIndexer("/tmp/indexer_test", true, true)
+	require.NoError(t, err)
+
+	//create index 1
+	docProt = newDocProt1()
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
+
+	//insert documents
+	for i := 0; i < 200; i++ {
+		doc := newDocProt1()
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
+		}
+		err = ir.Insert(doc)
+		require.NoError(t, err)
+	}
+
+	snapDir := "/tmp/indexer_test_snap"
+	err = ir.CreateSnapshot(snapDir)
+	require.NoError(t, err)
+
+	//create indexer with existing data
+	ir2, err = NewIndexerFromSnap("/tmp/indexer_test2", snapDir, true)
+	require.NoError(t, err)
+
+	//query
+	var qr *QueryResult
+	low := 30
+	high := 600
+	cs := &cql.CqlSelect{
+		Index: "orders",
+		UintPreds: map[string]cql.UintPred{
+			"price": cql.UintPred{
+				Name: "price",
+				Low:  uint64(low),
+				High: uint64(high),
+			},
+		},
+	}
+	qr, err = ir2.Select(cs)
+	require.NoError(t, err)
+	fmt.Println(qr.Bm.Bits())
+	require.NotEqual(t, 0, qr.Bm.Count())
 }
 
 func TestIndexerOpenClose(t *testing.T) {
