@@ -6,7 +6,7 @@
 set -e
 
 # directories containing protos to be built
-DIRS="./cql"
+DIRS="./cql ./wal/walpb"
 
 GOGOPROTO_ROOT="${GOPATH}/src/github.com/gogo/protobuf"
 GOGOPROTO_PATH="${GOGOPROTO_ROOT}:${GOGOPROTO_ROOT}/protobuf"

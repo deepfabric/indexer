@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/indexer/wal"
+	"github.com/deepfabric/indexer/wal/walpb"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -177,7 +177,7 @@ func (ir *Indexer) replayWal() (err error) {
 	if w, err = wal.OpenAtBeginning(walDir); err != nil {
 		return
 	}
-	var ents []raftpb.Entry
+	var ents []walpb.Entry
 	if ents, err = w.ReadAll(); err != nil {
 		return
 	}
@@ -257,7 +257,7 @@ func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 		if data, err = doc.Marshal(); err != nil {
 			return
 		}
-		e := &raftpb.Entry{Index: ir.entIndex, Data: data}
+		e := &walpb.Entry{Index: ir.entIndex, Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
 			return
 		}
@@ -291,7 +291,7 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 		if data, err = dd.Marshal(); err != nil {
 			return
 		}
-		e := &raftpb.Entry{Index: ir.entIndex, Type: raftpb.EntryType(1), Data: data}
+		e := &walpb.Entry{Index: ir.entIndex, Type: walpb.EntryType(1), Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
 			return
 		}

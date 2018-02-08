@@ -9,8 +9,8 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal"
+	"github.com/deepfabric/indexer/wal/walpb"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,7 +40,6 @@ func main() {
 	t1 := time.Now()
 	log.Printf("duration %v", t1.Sub(t0))
 	log.Printf("wal write speed %f entries/s", float64(S)/t1.Sub(t0).Seconds())
-
 }
 
 func benchmarkWriteEntry(loops int, size int, batch int) {
@@ -58,7 +57,7 @@ func benchmarkWriteEntry(loops int, size int, batch int) {
 	for i := 0; i < size; i++ {
 		data[i] = byte(i)
 	}
-	e := &raftpb.Entry{Index: uint64(1), Data: data}
+	e := &walpb.Entry{Index: uint64(1), Data: data}
 
 	for i := 0; i < loops; i++ {
 		err := w.SaveEntry(e)

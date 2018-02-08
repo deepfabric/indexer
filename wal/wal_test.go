@@ -26,7 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/etcd/pkg/fileutil"
-	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal/walpb"
 )
 
@@ -125,7 +124,7 @@ func TestCut(t *testing.T) {
 		t.Errorf("name = %s, want %s", g, wname)
 	}
 
-	es := []raftpb.Entry{{Index: 1, Term: 1, Data: []byte{1}}}
+	es := []walpb.Entry{{Index: 1, Term: 1, Data: []byte{1}}}
 	err = w.Save(es)
 	require.NoError(t, err)
 	err = w.cut()
@@ -155,7 +154,7 @@ func TestRecover(t *testing.T) {
 
 	w, err := Create(p)
 	require.NoError(t, err)
-	ents := []raftpb.Entry{{Index: 1, Term: 1, Data: []byte{1}}, {Index: 2, Term: 2, Data: []byte{2}}}
+	ents := []walpb.Entry{{Index: 1, Term: 1, Data: []byte{1}}, {Index: 2, Term: 2, Data: []byte{2}}}
 	err = w.Save(ents)
 	require.NoError(t, err)
 	w.Close(false)
@@ -244,7 +243,7 @@ func TestRecoverAfterCut(t *testing.T) {
 	md, err := Create(p)
 	require.NoError(t, err)
 	for i := 0; i < 10; i++ {
-		es := []raftpb.Entry{{Index: uint64(i)}}
+		es := []walpb.Entry{{Index: uint64(i)}}
 		err = md.Save(es)
 		require.NoError(t, err)
 		err = md.cut()
@@ -288,7 +287,7 @@ func TestOpenAtUncommittedIndex(t *testing.T) {
 
 	w, err := Create(p)
 	require.NoError(t, err)
-	err = w.Save([]raftpb.Entry{{Index: 0}})
+	err = w.Save([]walpb.Entry{{Index: 0}})
 	require.NoError(t, err)
 	w.Close(false)
 
@@ -314,7 +313,7 @@ func TestOpenForRead(t *testing.T) {
 	defer w.Close(false)
 	// make 10 separate files
 	for i := 0; i < 10; i++ {
-		es := []raftpb.Entry{{Index: uint64(i)}}
+		es := []walpb.Entry{{Index: uint64(i)}}
 		err = w.Save(es)
 		require.NoError(t, err)
 		err = w.cut()
@@ -342,7 +341,7 @@ func TestTailWriteNoSlackSpace(t *testing.T) {
 	require.NoError(t, err)
 	// write some entries
 	for i := 1; i <= 5; i++ {
-		es := []raftpb.Entry{{Index: uint64(i), Term: 1, Data: []byte{byte(i)}}}
+		es := []walpb.Entry{{Index: uint64(i), Term: 1, Data: []byte{byte(i)}}}
 		err = w.Save(es)
 		require.NoError(t, err)
 	}
@@ -361,7 +360,7 @@ func TestTailWriteNoSlackSpace(t *testing.T) {
 	require.Equal(t, 5, len(ents))
 	// write more entries
 	for i := 6; i <= 10; i++ {
-		es := []raftpb.Entry{{Index: uint64(i), Term: 1, Data: []byte{byte(i)}}}
+		es := []walpb.Entry{{Index: uint64(i), Term: 1, Data: []byte{byte(i)}}}
 		err = w.Save(es)
 		require.NoError(t, err)
 	}
@@ -424,7 +423,7 @@ func TestOpenOnTornWrite(t *testing.T) {
 	// get offset of end of each saved entry
 	offsets := make([]int64, maxEntries)
 	for i := range offsets {
-		es := []raftpb.Entry{{Index: uint64(i)}}
+		es := []walpb.Entry{{Index: uint64(i)}}
 		err = w.Save(es)
 		require.NoError(t, err)
 		offsets[i], err = w.tail.Seek(0, io.SeekCurrent)
@@ -454,7 +453,7 @@ func TestOpenOnTornWrite(t *testing.T) {
 	// write a few entries past the clobbered entry
 	for i := 0; i < overwriteEntries; i++ {
 		// Index is different from old, truncated entries
-		es := []raftpb.Entry{{Index: uint64(i + clobberIdx), Data: []byte("new")}}
+		es := []walpb.Entry{{Index: uint64(i + clobberIdx), Data: []byte("new")}}
 		err = w.Save(es)
 		require.NoError(t, err)
 	}

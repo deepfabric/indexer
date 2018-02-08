@@ -24,7 +24,6 @@ import (
 
 	"github.com/coreos/etcd/pkg/fileutil"
 	"github.com/coreos/etcd/pkg/pbutil"
-	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal/walpb"
 
 	"github.com/pkg/errors"
@@ -314,7 +313,7 @@ func OpenAtBeginning(dirpath string) (*WAL, error) {
 // TODO: detect not-last-snap error.
 // TODO: maybe loose the checking of match.
 // After ReadAll, the WAL will be ready for appending new records.
-func (w *WAL) ReadAll() (ents []raftpb.Entry, err error) {
+func (w *WAL) ReadAll() (ents []walpb.Entry, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -529,7 +528,7 @@ func (w *WAL) Close(clean bool) (err error) {
 }
 
 // SaveEntry saves an entry, and always sync the wal
-func (w *WAL) SaveEntry(e *raftpb.Entry) (err error) {
+func (w *WAL) SaveEntry(e *walpb.Entry) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if err = w.saveEntry(e); err != nil {
@@ -547,7 +546,7 @@ func (w *WAL) SaveEntry(e *raftpb.Entry) (err error) {
 	return
 }
 
-func (w *WAL) saveEntry(e *raftpb.Entry) (err error) {
+func (w *WAL) saveEntry(e *walpb.Entry) (err error) {
 	// TODO: add MustMarshalTo to reduce one allocation.
 	b := pbutil.MustMarshal(e)
 	rec := &walpb.Record{Type: entryType, Data: b}
@@ -558,7 +557,7 @@ func (w *WAL) saveEntry(e *raftpb.Entry) (err error) {
 	return
 }
 
-func (w *WAL) Save(ents []raftpb.Entry) (err error) {
+func (w *WAL) Save(ents []walpb.Entry) (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 

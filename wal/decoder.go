@@ -23,7 +23,6 @@ import (
 
 	"github.com/coreos/etcd/pkg/crc"
 	"github.com/coreos/etcd/pkg/pbutil"
-	"github.com/coreos/etcd/raft/raftpb"
 	"github.com/deepfabric/indexer/wal/walpb"
 	"github.com/pkg/errors"
 )
@@ -170,16 +169,10 @@ func (d *decoder) lastCRC() uint32 {
 
 func (d *decoder) lastOffset() int64 { return d.lastValidOff }
 
-func mustUnmarshalEntry(d []byte) raftpb.Entry {
-	var e raftpb.Entry
+func mustUnmarshalEntry(d []byte) walpb.Entry {
+	var e walpb.Entry
 	pbutil.MustUnmarshal(&e, d)
 	return e
-}
-
-func mustUnmarshalState(d []byte) raftpb.HardState {
-	var s raftpb.HardState
-	pbutil.MustUnmarshal(&s, d)
-	return s
 }
 
 func readInt64(r io.Reader) (n int64, err error) {
