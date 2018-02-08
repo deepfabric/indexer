@@ -205,7 +205,7 @@ func (ir *Indexer) replayWal() (err error) {
 	}
 	log.Infof("replayed %v entries in WAL", len(ents))
 	ir.w = w
-	if err = ir.Sync(); err != nil {
+	if err = ir.sync(); err != nil {
 		return
 	}
 	return
@@ -436,15 +436,20 @@ func (ir *Indexer) CreateSnapshot(snapDir string) (err error) {
 	return
 }
 
-func NewIndexerFromSnap(mainDir, snapDir string, enableWal bool) (ir *Indexer, err error) {
-	if err = os.RemoveAll(mainDir); err != nil {
+func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
+	if err = ir.Close(); err != nil {
+		return
+	}
+	if err = os.RemoveAll(ir.MainDir); err != nil {
 		return
 	}
 	src := filepath.Join(snapDir, "index")
-	dst := mainDir
+	dst := ir.MainDir
 	if err = CopyDir(src, dst); err != nil {
 		return
 	}
-	ir, err = NewIndexer(mainDir, false, enableWal)
+	if err = ir.Open(); err != nil {
+		return
+	}
 	return
 }

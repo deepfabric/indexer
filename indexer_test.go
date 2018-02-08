@@ -272,7 +272,9 @@ func TestIndexerSnap(t *testing.T) {
 	require.NoError(t, err)
 
 	//create indexer with existing data
-	ir2, err = NewIndexerFromSnap("/tmp/indexer_test2", snapDir, true)
+	ir2, err = NewIndexer("/tmp/indexer_test2", true, true)
+	require.NoError(t, err)
+	err = ir2.ApplySnapshot(snapDir)
 	require.NoError(t, err)
 
 	//query
