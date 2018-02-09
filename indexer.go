@@ -458,8 +458,17 @@ func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
 	}
 	src := filepath.Join(snapDir, "index")
 	dst := ir.MainDir
-	if err = CopyDir(src, dst); err != nil {
-		return
+	_, err = os.Stat(src)
+	if os.IsNotExist(err) {
+		log.Infof("snapshot source directory %v doesn't exist, treating it as an empty one", src)
+		if err = os.MkdirAll(dst, 0700); err != nil {
+			err = errors.Wrap(err, "")
+			return
+		}
+	} else {
+		if err = CopyDir(src, dst); err != nil {
+			return
+		}
 	}
 	if err = ir.Open(); err != nil {
 		return

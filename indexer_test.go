@@ -255,17 +255,47 @@ func TestIndexerWal(t *testing.T) {
 func TestIndexerSnapEmpty(t *testing.T) {
 	var err error
 	var ir, ir2 *Indexer
+	mainDir1 := "/tmp/indexer_test"
+	mainDir2 := "/tmp/indexer_test2"
+	snapDir := "/tmp/indexer_test_snap"
 
-	//create empty indexer
-	ir, err = NewIndexer("/tmp/indexer_test", true, true)
+	err = os.RemoveAll(mainDir1)
+	require.NoError(t, err)
+	err = os.RemoveAll(mainDir2)
+	require.NoError(t, err)
+	err = os.RemoveAll(snapDir)
 	require.NoError(t, err)
 
-	snapDir := "/tmp/indexer_test_snap"
+	//create empty indexer
+	ir, err = NewIndexer(mainDir1, false, false)
+	require.NoError(t, err)
+
+	err = ir.ApplySnapshot(snapDir)
+	require.NoError(t, err)
+
 	err = ir.CreateSnapshot(snapDir)
 	require.NoError(t, err)
 
 	//create indexer with existing data
-	ir2, err = NewIndexer("/tmp/indexer_test2", true, true)
+	ir2, err = NewIndexer(mainDir2, false, false)
+	require.NoError(t, err)
+	err = ir2.ApplySnapshot(snapDir)
+	require.NoError(t, err)
+
+	err = os.RemoveAll(mainDir1)
+	require.NoError(t, err)
+	err = os.RemoveAll(mainDir2)
+	require.NoError(t, err)
+
+	//create empty indexer
+	ir, err = NewIndexer(mainDir1, false, true)
+	require.NoError(t, err)
+
+	err = ir.CreateSnapshot(snapDir)
+	require.NoError(t, err)
+
+	//create indexer with existing data
+	ir2, err = NewIndexer(mainDir2, false, true)
 	require.NoError(t, err)
 	err = ir2.ApplySnapshot(snapDir)
 	require.NoError(t, err)
@@ -276,9 +306,17 @@ func TestIndexerSnap(t *testing.T) {
 	var docProt *cql.DocumentWithIdx
 	var ir, ir2 *Indexer
 	initialNumDocs := 137
+	mainDir1 := "/tmp/indexer_test"
+	mainDir2 := "/tmp/indexer_test2"
+	snapDir := "/tmp/indexer_test_snap"
+
+	err = os.RemoveAll(mainDir1)
+	require.NoError(t, err)
+	err = os.RemoveAll(mainDir2)
+	require.NoError(t, err)
 
 	//create empty indexer
-	ir, err = NewIndexer("/tmp/indexer_test", true, true)
+	ir, err = NewIndexer(mainDir1, false, false)
 	require.NoError(t, err)
 
 	//create index 1
@@ -297,12 +335,11 @@ func TestIndexerSnap(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	snapDir := "/tmp/indexer_test_snap"
 	err = ir.CreateSnapshot(snapDir)
 	require.NoError(t, err)
 
 	//create indexer with existing data
-	ir2, err = NewIndexer("/tmp/indexer_test2", true, true)
+	ir2, err = NewIndexer(mainDir2, false, false)
 	require.NoError(t, err)
 	err = ir2.ApplySnapshot(snapDir)
 	require.NoError(t, err)
