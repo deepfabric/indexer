@@ -1,11 +1,12 @@
 package indexer
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 // https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
@@ -40,12 +41,14 @@ import (
 func CopyFile(src, dst string) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 	defer in.Close()
 
 	out, err := os.Create(dst)
 	if err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 	defer func() {
@@ -54,22 +57,23 @@ func CopyFile(src, dst string) (err error) {
 		}
 	}()
 
-	_, err = io.Copy(out, in)
-	if err != nil {
+	if _, err = io.Copy(out, in); err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 
-	err = out.Sync()
-	if err != nil {
+	if err = out.Sync(); err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 
 	si, err := os.Stat(src)
 	if err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
+	if err = os.Chmod(dst, si.Mode()); err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 
@@ -85,27 +89,30 @@ func CopyDir(src string, dst string) (err error) {
 
 	si, err := os.Stat(src)
 	if err != nil {
+		err = errors.Wrap(err, "")
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+		return errors.Errorf("source %v is not a directory", src)
 	}
 
 	_, err = os.Stat(dst)
 	if err != nil && !os.IsNotExist(err) {
+		err = errors.Wrap(err, "")
 		return
 	}
 	if err == nil {
-		return fmt.Errorf("destination already exists")
+		return errors.Errorf("destination %v already exists", dst)
 	}
 
-	err = os.MkdirAll(dst, si.Mode())
-	if err != nil {
+	if err = os.MkdirAll(dst, si.Mode()); err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 
 	entries, err := ioutil.ReadDir(src)
 	if err != nil {
+		err = errors.Wrap(err, "")
 		return
 	}
 
