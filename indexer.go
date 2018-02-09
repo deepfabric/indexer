@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
@@ -16,20 +17,20 @@ import (
 
 const (
 	// DefaultIndexerMaxOpN is the default value for Indexer.MaxOpN.
-	DefaultIndexerMaxOpN = 1000000
+	DefaultIndexerMaxOpN = uint64(1000000)
 )
 
 //Indexer shall be singleton
 type Indexer struct {
 	MainDir string //the main directory where stores all indices
 	// Number of operations performed before performing a snapshot.
-	MaxOpN int
+	MaxOpN uint64
 
 	rwlock   sync.RWMutex                    //concurrent access of docProts, indices
 	docProts map[string]*cql.DocumentWithIdx //index meta, need to persist
 	indices  map[string]*Index               //index data, need to persist
 	w        *wal.WAL                        //WAL
-	opN      int
+	opN      uint64
 	entIndex uint64
 }
 
@@ -54,7 +55,7 @@ func NewIndexer(mainDir string, overwirte bool, enableWal bool) (ir *Indexer, er
 	ir = &Indexer{
 		MainDir:  mainDir,
 		MaxOpN:   DefaultIndexerMaxOpN,
-		entIndex: uint64(1),
+		entIndex: uint64(0),
 	}
 	if err = os.MkdirAll(mainDir, 0700); err != nil {
 		err = errors.Wrap(err, "")
@@ -105,6 +106,12 @@ func (ir *Indexer) Destroy() (err error) {
 func (ir *Indexer) Open() (err error) {
 	ir.rwlock.Lock()
 	defer ir.rwlock.Unlock()
+	err = ir.open()
+	return
+}
+
+//Open opens all indices without holding the lock
+func (ir *Indexer) open() (err error) {
 	if ir.indices != nil || ir.docProts != nil {
 		panic("indexer already open")
 	}
@@ -132,6 +139,12 @@ func (ir *Indexer) Open() (err error) {
 func (ir *Indexer) Close() (err error) {
 	ir.rwlock.Lock()
 	defer ir.rwlock.Unlock()
+	err = ir.close()
+	return
+}
+
+// Close close indexer without holding the lock
+func (ir *Indexer) close() (err error) {
 	for _, ind := range ir.indices {
 		if err = ind.Close(); err != nil {
 			return
@@ -250,36 +263,38 @@ func (ir *Indexer) DestroyIndex(name string) (err error) {
 	return
 }
 
-//Insert executes CqlInsert. If the given index doesn't exist, create it before insertion.
+//Insert executes CqlInsert
 func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 	var ind *Index
 	var found bool
 	ir.rwlock.RLock()
-	defer ir.rwlock.RUnlock()
 	if ind, found = ir.indices[doc.Index]; !found {
-		if err = ir.createIndex(doc); err != nil {
-			return
-		}
-		ind, found = ir.indices[doc.Index]
+		ir.rwlock.RUnlock()
+		err = errors.Errorf("index %v doesn't exist", doc.Index)
+		return
 	}
 	if err = ind.Insert(doc); err != nil {
+		ir.rwlock.RUnlock()
 		return
 	}
 	if ir.w != nil {
 		var data []byte
 		if data, err = doc.Marshal(); err != nil {
+			ir.rwlock.RUnlock()
+			err = errors.Wrap(err, "")
 			return
 		}
-		e := &walpb.Entry{Index: ir.entIndex, Data: data}
+		entIndex := atomic.AddUint64(&ir.entIndex, uint64(1))
+		e := &walpb.Entry{Index: entIndex, Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
+			ir.rwlock.RUnlock()
 			return
 		}
-		ir.entIndex++
 	}
-	if err = ir.incrementOpN(); err != nil {
+	ir.rwlock.RUnlock()
+	if err = ir._IncrementOpN(); err != nil {
 		return
 	}
-
 	return
 }
 
@@ -288,11 +303,13 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 	var ind *Index
 	var fnd bool
 	ir.rwlock.RLock()
-	defer ir.rwlock.RUnlock()
 	if ind, fnd = ir.indices[idxName]; !fnd {
+		ir.rwlock.RUnlock()
+		err = errors.Errorf("index %v doesn't exist", idxName)
 		return
 	}
 	if found, err = ind.Del(docID); err != nil {
+		ir.rwlock.RUnlock()
 		return
 	}
 	if ir.w != nil {
@@ -302,29 +319,33 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 		}
 		var data []byte
 		if data, err = dd.Marshal(); err != nil {
+			ir.rwlock.RUnlock()
+			err = errors.Wrap(err, "")
 			return
 		}
-		e := &walpb.Entry{Index: ir.entIndex, Type: walpb.EntryType(1), Data: data}
+		entIndex := atomic.AddUint64(&ir.entIndex, uint64(1))
+		e := &walpb.Entry{Index: entIndex, Type: walpb.EntryType(1), Data: data}
 		if err = ir.w.SaveEntry(e); err != nil {
+			ir.rwlock.RUnlock()
 			return
 		}
-		ir.entIndex++
 	}
-	if err = ir.incrementOpN(); err != nil {
+	ir.rwlock.RUnlock()
+	if err = ir._IncrementOpN(); err != nil {
 		return
 	}
 	return
 }
 
-// incrementOpN increase the operation count by one.
+// _IncrementOpN increase the operation count by one.
 // If the count exceeds the maximum allowed then a snapshot is performed.
-func (ir *Indexer) incrementOpN() (err error) {
-	ir.opN++
-	if ir.opN <= ir.MaxOpN {
+func (ir *Indexer) _IncrementOpN() (err error) {
+	opN := atomic.AddUint64(&ir.opN, uint64(1))
+	if opN <= ir.MaxOpN {
 		return
 	}
-	err = ir.sync()
-	ir.opN = 0
+	atomic.StoreUint64(&ir.opN, 0)
+	err = ir.Sync()
 	return
 }
 
@@ -379,13 +400,16 @@ func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
 	return
 }
 
-//writeMeta persists Conf and DocProts to files.
-func (ir *Indexer) writeMeta() (err error) {
+//WriteMeta persists Conf and DocProts to files.
+func (ir *Indexer) WriteMeta() (err error) {
+	ir.rwlock.RLock()
 	for _, docProt := range ir.docProts {
 		if err = indexWriteConf(ir.MainDir, docProt); err != nil {
+			ir.rwlock.RUnlock()
 			return
 		}
 	}
+	ir.rwlock.RUnlock()
 	return
 }
 
@@ -450,7 +474,9 @@ func (ir *Indexer) CreateSnapshot(snapDir string) (err error) {
 }
 
 func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
-	if err = ir.Close(); err != nil {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
+	if err = ir.close(); err != nil {
 		return
 	}
 	if err = os.RemoveAll(ir.MainDir); err != nil {
@@ -470,7 +496,7 @@ func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
 			return
 		}
 	}
-	if err = ir.Open(); err != nil {
+	if err = ir.open(); err != nil {
 		return
 	}
 	return

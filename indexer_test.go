@@ -565,7 +565,7 @@ func BenchmarkIndexer(b *testing.B) {
 			}
 			err = ir.Insert(doc)
 			//document could already be there since the benchmark function is called "at least once".
-			//b.Fatalf("%+v", err)
+			//require.NoError(b, err)
 		}
 	})
 
@@ -592,12 +592,9 @@ func BenchmarkIndexer(b *testing.B) {
 		}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			if qr, err = ir.Select(cs); err != nil {
-				b.Fatalf("%+v", err)
-			}
-			if qr.Bm.Count() == 0 {
-				b.Fatalf("rb.Count() is zero")
-			}
+			qr, err = ir.Select(cs)
+			require.NoError(b, err)
+			require.NotEqual(b, 0, qr.Bm.Count())
 		}
 	})
 	return
