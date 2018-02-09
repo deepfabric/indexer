@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"fmt"
+	"os"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -9,10 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/deepfabric/indexer/cql"
-)
-
-const (
-	InitialNumDocs int = 100000 //insert some documents before benchmark
 )
 
 func newDocProt1() *cql.DocumentWithIdx {
@@ -98,6 +95,7 @@ func TestIndexerNormal(t *testing.T) {
 	var docProt *cql.DocumentWithIdx
 	var ir, ir2 *Indexer
 	var found bool
+	initialNumDocs := 137
 
 	//create empty indexer
 	ir, err = NewIndexer("/tmp/indexer_test", true, false)
@@ -114,7 +112,7 @@ func TestIndexerNormal(t *testing.T) {
 	require.NoError(t, err)
 
 	//insert documents
-	for i := 0; i < InitialNumDocs; i++ {
+	for i := 0; i < initialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.Doc.DocID = uint64(i)
 		for j := 0; j < len(doc.Doc.UintProps); j++ {
@@ -151,7 +149,7 @@ func TestIndexerNormal(t *testing.T) {
 	fmt.Println(qr.Bm.Bits())
 
 	//delete documents
-	for i := 0; i < InitialNumDocs; i++ {
+	for i := 0; i < initialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.Doc.DocID = uint64(i)
 		for j := 0; j < len(doc.Doc.UintProps); j++ {
@@ -177,6 +175,7 @@ func TestIndexerWal(t *testing.T) {
 	var docProt *cql.DocumentWithIdx
 	var ir, ir2 *Indexer
 	var found bool
+	initialNumDocs := 137
 
 	//create empty indexer
 	ir, err = NewIndexer("/tmp/indexer_test", true, true)
@@ -188,7 +187,7 @@ func TestIndexerWal(t *testing.T) {
 	require.NoError(t, err)
 
 	//insert documents
-	for i := 0; i < InitialNumDocs; i++ {
+	for i := 0; i < initialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.Doc.DocID = uint64(i)
 		for j := 0; j < len(doc.Doc.UintProps); j++ {
@@ -226,7 +225,7 @@ func TestIndexerWal(t *testing.T) {
 	require.NotEqual(t, 0, qr.Bm.Count())
 
 	//delete documents
-	for i := 0; i < InitialNumDocs; i++ {
+	for i := 0; i < initialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.Doc.DocID = uint64(i)
 		for j := 0; j < len(doc.Doc.UintProps); j++ {
@@ -240,12 +239,43 @@ func TestIndexerWal(t *testing.T) {
 	//destroy index 1
 	err = ir2.DestroyIndex("orders")
 	require.NoError(t, err)
+
+	//close ir2
+	err = ir2.Close()
+	require.NoError(t, err)
+
+	err = os.RemoveAll("/tmp/indexer_test")
+	require.NoError(t, err)
+
+	//create indexer with existing empty data
+	_, err = NewIndexer("/tmp/indexer_test", false, true)
+	require.NoError(t, err)
+}
+
+func TestIndexerSnapEmpty(t *testing.T) {
+	var err error
+	var ir, ir2 *Indexer
+
+	//create empty indexer
+	ir, err = NewIndexer("/tmp/indexer_test", true, true)
+	require.NoError(t, err)
+
+	snapDir := "/tmp/indexer_test_snap"
+	err = ir.CreateSnapshot(snapDir)
+	require.NoError(t, err)
+
+	//create indexer with existing data
+	ir2, err = NewIndexer("/tmp/indexer_test2", true, true)
+	require.NoError(t, err)
+	err = ir2.ApplySnapshot(snapDir)
+	require.NoError(t, err)
 }
 
 func TestIndexerSnap(t *testing.T) {
 	var err error
 	var docProt *cql.DocumentWithIdx
 	var ir, ir2 *Indexer
+	initialNumDocs := 137
 
 	//create empty indexer
 	ir, err = NewIndexer("/tmp/indexer_test", true, true)
@@ -257,7 +287,7 @@ func TestIndexerSnap(t *testing.T) {
 	require.NoError(t, err)
 
 	//insert documents
-	for i := 0; i < 200; i++ {
+	for i := 0; i < initialNumDocs; i++ {
 		doc := newDocProt1()
 		doc.Doc.DocID = uint64(i)
 		for j := 0; j < len(doc.Doc.UintProps); j++ {
@@ -475,12 +505,13 @@ func TestIndexerParallel(t *testing.T) {
 func BenchmarkIndexer(b *testing.B) {
 	var err error
 	var ir *Indexer
+	initialNumDocs := 10000
 
 	//https://golang.org/pkg/testing/#hdr-Subtests_and_Sub_benchmarks
 	//"The Run methods of T and B allow defining subtests and sub-benchmarks, ...provides a way to share common setup and tear-down code"
 	//"A subbenchmark is like any other benchmark. A benchmark that calls Run at least once will not be measured itself and will be called once with N=1."
 	//prepareIndexer is expensive setup, so it's better to share among sub-benchmarks.
-	ir, err = prepareIndexer(InitialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
+	ir, err = prepareIndexer(initialNumDocs, []*cql.DocumentWithIdx{newDocProt1(), newDocProt2()})
 	require.NoError(b, err)
 
 	b.Run("Insert", func(b *testing.B) {
@@ -488,7 +519,7 @@ func BenchmarkIndexer(b *testing.B) {
 		doc := newDocProt1()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			doc.Doc.DocID = uint64(InitialNumDocs + i)
+			doc.Doc.DocID = uint64(initialNumDocs + i)
 			for j := 0; j < len(doc.Doc.UintProps); j++ {
 				doc.Doc.UintProps[j].Val = doc.Doc.DocID * uint64(j+1)
 			}

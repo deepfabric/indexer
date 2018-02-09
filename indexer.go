@@ -171,8 +171,21 @@ func (ir *Indexer) sync() (err error) {
 }
 
 func (ir *Indexer) replayWal() (err error) {
-	walDir := filepath.Join(ir.MainDir, "wal")
 	var w *wal.WAL
+	walDir := filepath.Join(ir.MainDir, "wal")
+	_, err = os.Stat(walDir)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			err = errors.Wrap(err, "")
+			return
+		}
+		// wal directory doesn't exist
+		if w, err = wal.Create(walDir); err != nil {
+			return
+		}
+		ir.w = w
+		return
+	}
 	//replay wal records
 	if w, err = wal.OpenAtBeginning(walDir); err != nil {
 		return
