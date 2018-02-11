@@ -106,6 +106,11 @@ func TestIndexerNormal(t *testing.T) {
 	err = ir.CreateIndex(docProt)
 	require.NoError(t, err)
 
+	//create index 1 again. shall be ok.
+	docProt = newDocProt1()
+	err = ir.CreateIndex(docProt)
+	require.NoError(t, err)
+
 	//create index 2
 	docProt = newDocProt2()
 	err = ir.CreateIndex(docProt)

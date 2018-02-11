@@ -383,7 +383,10 @@ func (ir *Indexer) Summary() (sum string, err error) {
 
 // createIndex creates index without holding the lock
 func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
-	if _, found := ir.docProts[docProt.Index]; found {
+	if curDocProt, found := ir.docProts[docProt.Index]; found {
+		if isSameSchema(curDocProt, docProt) {
+			return
+		}
 		err = &ErrIdxExist{idxName: docProt.Index}
 		err = errors.Wrap(err, "")
 		return
@@ -500,4 +503,37 @@ func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
 		return
 	}
 	return
+}
+
+func isSameSchema(docProt1, docProt2 *cql.DocumentWithIdx) bool {
+	if docProt1.Index != docProt2.Index ||
+		len(docProt1.Doc.UintProps) != len(docProt2.Doc.UintProps) ||
+		len(docProt1.Doc.EnumProps) != len(docProt2.Doc.EnumProps) ||
+		len(docProt1.Doc.StrProps) != len(docProt2.Doc.StrProps) {
+		return false
+	}
+	for i := 0; i < len(docProt1.Doc.UintProps); i++ {
+		uintProt1 := docProt1.Doc.UintProps[i]
+		uintProt2 := docProt2.Doc.UintProps[i]
+		if uintProt1.Name != uintProt2.Name ||
+			uintProt1.IsFloat != uintProt2.IsFloat ||
+			uintProt1.ValLen != uintProt2.ValLen {
+			return false
+		}
+	}
+	for i := 0; i < len(docProt1.Doc.EnumProps); i++ {
+		enumProt1 := docProt1.Doc.EnumProps[i]
+		enumProt2 := docProt2.Doc.EnumProps[i]
+		if enumProt1.Name != enumProt2.Name {
+			return false
+		}
+	}
+	for i := 0; i < len(docProt1.Doc.StrProps); i++ {
+		strProt1 := docProt1.Doc.StrProps[i]
+		strProt2 := docProt2.Doc.StrProps[i]
+		if strProt1.Name != strProt2.Name {
+			return false
+		}
+	}
+	return true
 }
