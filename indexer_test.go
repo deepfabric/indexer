@@ -277,6 +277,7 @@ func TestIndexerSnapEmpty(t *testing.T) {
 
 	err = ir.ApplySnapshot(snapDir)
 	require.NoError(t, err)
+	fmt.Printf("ir.GetDocProts(): %v\n", ir.GetDocProts())
 
 	err = ir.CreateSnapshot(snapDir)
 	require.NoError(t, err)
@@ -348,6 +349,7 @@ func TestIndexerSnap(t *testing.T) {
 	require.NoError(t, err)
 	err = ir2.ApplySnapshot(snapDir)
 	require.NoError(t, err)
+	fmt.Printf("ir2.GetDocProts(): %v\n", ir2.GetDocProts())
 
 	//query
 	var qr *QueryResult

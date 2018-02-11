@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/deepfabric/bkdtree"
 	"github.com/deepfabric/indexer/cql"
 	"github.com/deepfabric/indexer/wal"
@@ -229,11 +230,19 @@ func (ir *Indexer) replayWal() (err error) {
 			}
 		}
 	}
-	log.Infof("replayed %v entries in WAL", len(ents))
+	log.Infof("replayed %v entries in %v", len(ents), walDir)
 	ir.w = w
 	if err = ir.sync(); err != nil {
 		return
 	}
+	return
+}
+
+// GetDocProts dumps docProts
+func (ir *Indexer) GetDocProts() (sdump string) {
+	ir.rwlock.RLock()
+	sdump = spew.Sdump(ir.docProts)
+	ir.rwlock.RUnlock()
 	return
 }
 
@@ -502,6 +511,7 @@ func (ir *Indexer) ApplySnapshot(snapDir string) (err error) {
 	if err = ir.open(); err != nil {
 		return
 	}
+	log.Infof("applied snapshot %v, docProts %+v", src, ir.docProts)
 	return
 }
 
