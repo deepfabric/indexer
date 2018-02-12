@@ -17,6 +17,11 @@ const (
 	LiveDocs string = "__liveDocs" // the directory where stores Index.liveDocs
 )
 
+var (
+	ErrUnknownProp = errors.New("unknown property")
+	ErrDocExist    = errors.New("document already exist")
+)
+
 //Index is created by CqlCreate
 type Index struct {
 	MainDir string
@@ -262,12 +267,12 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	if changed, err = ind.liveDocs.setBit(0, doc.Doc.DocID); err != nil {
 		return
 	} else if !changed {
-		err = errors.Errorf("document %v is alaredy there before insertion", doc.Doc.DocID)
+		err = errors.Wrapf(ErrDocExist, "document %v is alaredy there before insertion", doc.Doc.DocID)
 		return
 	}
 	for _, uintProp := range doc.Doc.UintProps {
 		if ifm, ok = ind.intFrames[uintProp.Name]; !ok {
-			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", uintProp.Name, doc, ind.DocProt)
+			err = errors.Wrapf(ErrUnknownProp, "property %v is missing at index spec, document %v, index spec %v", uintProp.Name, doc, ind.DocProt)
 			return
 		}
 		if err = ifm.DoIndex(doc.Doc.DocID, uintProp.Val); err != nil {
@@ -276,7 +281,7 @@ func (ind *Index) Insert(doc *cql.DocumentWithIdx) (err error) {
 	}
 	for _, strProp := range doc.Doc.StrProps {
 		if tfm, ok = ind.txtFrames[strProp.Name]; !ok {
-			err = errors.Errorf("property %v is missing at index spec, document %v, index spec %v", strProp.Name, doc, ind.DocProt)
+			err = errors.Wrapf(ErrUnknownProp, "property %v is missing at index spec, document %v, index spec %v", strProp.Name, doc, ind.DocProt)
 			return
 		}
 		if err = tfm.DoIndex(doc.Doc.DocID, strProp.Val); err != nil {
@@ -322,7 +327,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	if len(q.StrPreds) != 0 {
 		for _, strPred := range q.StrPreds {
 			if tfm, ok = ind.txtFrames[strPred.Name]; !ok {
-				err = errors.Errorf("property %s not found in index spec", strPred.Name)
+				err = errors.Wrapf(ErrUnknownProp, "property %s not found in index spec", strPred.Name)
 				return
 			}
 			docs = tfm.Query(strPred.ContWord)
@@ -341,7 +346,7 @@ func (ind *Index) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	var ifmOrder *IntFrame
 	for _, uintPred := range q.UintPreds {
 		if ifm, ok = ind.intFrames[uintPred.Name]; !ok {
-			err = errors.Errorf("property %s not found in index spec", uintPred.Name)
+			err = errors.Wrapf(ErrUnknownProp, "property %s not found in index spec", uintPred.Name)
 			return
 		}
 		if q.OrderBy == uintPred.Name {

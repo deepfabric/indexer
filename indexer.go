@@ -21,6 +21,11 @@ const (
 	DefaultIndexerMaxOpN = uint64(1000000)
 )
 
+var (
+	ErrIdxExist    = errors.New("index already exist")
+	ErrIdxNotExist = errors.New("index not exist")
+)
+
 //Indexer shall be singleton
 type Indexer struct {
 	MainDir string //the main directory where stores all indices
@@ -33,22 +38,6 @@ type Indexer struct {
 	w        *wal.WAL                        //WAL
 	opN      uint64
 	entIndex uint64
-}
-
-type ErrIdxNotExist struct {
-	idxName string
-}
-
-func (e *ErrIdxNotExist) Error() string {
-	return fmt.Sprintf("index %s doesn't exist", e.idxName)
-}
-
-type ErrIdxExist struct {
-	idxName string
-}
-
-func (e *ErrIdxExist) Error() string {
-	return fmt.Sprintf("index %s already exist", e.idxName)
 }
 
 //NewIndexer creates an Indexer.
@@ -279,7 +268,7 @@ func (ir *Indexer) Insert(doc *cql.DocumentWithIdx) (err error) {
 	ir.rwlock.RLock()
 	if ind, found = ir.indices[doc.Index]; !found {
 		ir.rwlock.RUnlock()
-		err = errors.Errorf("index %v doesn't exist", doc.Index)
+		err = errors.Wrapf(ErrIdxNotExist, "index %v doesn't exist", doc.Index)
 		return
 	}
 	if err = ind.Insert(doc); err != nil {
@@ -314,7 +303,7 @@ func (ir *Indexer) Del(idxName string, docID uint64) (found bool, err error) {
 	ir.rwlock.RLock()
 	if ind, fnd = ir.indices[idxName]; !fnd {
 		ir.rwlock.RUnlock()
-		err = errors.Errorf("index %v doesn't exist", idxName)
+		err = errors.Wrapf(ErrIdxNotExist, "index %v doesn't exist", idxName)
 		return
 	}
 	if found, err = ind.Del(docID); err != nil {
@@ -364,8 +353,7 @@ func (ir *Indexer) Select(q *cql.CqlSelect) (qr *QueryResult, err error) {
 	var found bool
 	ir.rwlock.RLock()
 	if ind, found = ir.indices[q.Index]; !found {
-		err = &ErrIdxNotExist{idxName: q.Index}
-		err = errors.Wrap(err, "")
+		err = errors.Wrap(ErrIdxNotExist, q.Index)
 		ir.rwlock.RUnlock()
 		return
 	}

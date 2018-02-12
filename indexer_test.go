@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/deepfabric/indexer/cql"
@@ -174,8 +175,8 @@ func TestIndexerNormal(t *testing.T) {
 	require.NoError(t, err)
 }
 
-//TESTCASE: normal operation sequence: new_empty, create, insert, close, new_existing, query, del, destroy
-func TestIndexerCreateIndex(t *testing.T) {
+//TESTCASE: corner case
+func TestIndexerCorner(t *testing.T) {
 	var err error
 	var docProt1, docProt2 *cql.DocumentWithIdx
 	var ir *Indexer
@@ -190,8 +191,12 @@ func TestIndexerCreateIndex(t *testing.T) {
 	err = ir.CreateIndex(docProt1)
 	require.NoError(t, err)
 
-	//create index 1 again with different schema. shall be ok.
+	//insert docProt2 shall fail
 	docProt2 = newDocProt2()
+	err = ir.Insert(docProt2)
+	require.Equal(t, errors.Cause(err), ErrIdxNotExist)
+
+	//create index 1 again with different schema. shall be ok.
 	docProt2.Index = docProt1.Index
 	err = ir.CreateIndex(docProt2)
 	require.NoError(t, err)
@@ -207,6 +212,12 @@ func TestIndexerCreateIndex(t *testing.T) {
 		err = ir.Insert(doc)
 		require.NoError(t, err)
 	}
+
+	//reinsert a document shall fail
+	doc := newDocProt2()
+	doc.Index = docProt1.Index
+	err = ir.Insert(doc)
+	require.Equal(t, errors.Cause(err), ErrDocExist)
 }
 
 //TESTCASE: normal operation sequence with wal: new_empty, create, insert, close, new_existing, query, del, destroy
