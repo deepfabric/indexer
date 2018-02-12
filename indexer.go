@@ -396,9 +396,11 @@ func (ir *Indexer) createIndex(docProt *cql.DocumentWithIdx) (err error) {
 		if isSameSchema(curDocProt, docProt) {
 			return
 		}
-		err = &ErrIdxExist{idxName: docProt.Index}
-		err = errors.Wrap(err, "")
-		return
+		//TODO: on line schema change
+		log.Infof("indexer %v createIndex with the different schema, current one %+v, new one %+v", ir.MainDir, curDocProt, docProt)
+		if err = ir.removeIndex(docProt.Index); err != nil {
+			return
+		}
 	}
 	if err = indexWriteConf(ir.MainDir, docProt); err != nil {
 		return

@@ -174,6 +174,41 @@ func TestIndexerNormal(t *testing.T) {
 	require.NoError(t, err)
 }
 
+//TESTCASE: normal operation sequence: new_empty, create, insert, close, new_existing, query, del, destroy
+func TestIndexerCreateIndex(t *testing.T) {
+	var err error
+	var docProt1, docProt2 *cql.DocumentWithIdx
+	var ir *Indexer
+	initialNumDocs := 137
+
+	//create empty indexer
+	ir, err = NewIndexer("/tmp/indexer_test", true, false)
+	require.NoError(t, err)
+
+	//create index 1
+	docProt1 = newDocProt1()
+	err = ir.CreateIndex(docProt1)
+	require.NoError(t, err)
+
+	//create index 1 again with different schema. shall be ok.
+	docProt2 = newDocProt2()
+	docProt2.Index = docProt1.Index
+	err = ir.CreateIndex(docProt2)
+	require.NoError(t, err)
+
+	//insert documents
+	for i := 0; i < initialNumDocs; i++ {
+		doc := newDocProt2()
+		doc.Index = docProt1.Index
+		doc.Doc.DocID = uint64(i)
+		for j := 0; j < len(doc.Doc.UintProps); j++ {
+			doc.Doc.UintProps[j].Val = uint64(i * (j + 1))
+		}
+		err = ir.Insert(doc)
+		require.NoError(t, err)
+	}
+}
+
 //TESTCASE: normal operation sequence with wal: new_empty, create, insert, close, new_existing, query, del, destroy
 func TestIndexerWal(t *testing.T) {
 	var err error
