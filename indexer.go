@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"sync/atomic"
 
@@ -462,7 +463,7 @@ func (ir *Indexer) removeIndex(name string) (err error) {
 	return
 }
 
-func (ir *Indexer) CreateSnapshot(snapDir string) (err error) {
+func (ir *Indexer) CreateSnapshot(snapDir string) (numList []uint64, err error) {
 	ir.rwlock.Lock()
 	defer ir.rwlock.Unlock()
 	if err = ir.sync(); err != nil {
@@ -473,7 +474,21 @@ func (ir *Indexer) CreateSnapshot(snapDir string) (err error) {
 	if err = os.RemoveAll(dst); err != nil {
 		return
 	}
-	err = CopyDir(src, dst)
+	if err = CopyDir(src, dst); err != nil {
+		return
+	}
+	numList = []uint64{}
+	seen := map[uint64]int{}
+	for _, ind := range ir.indices {
+		numList2 := ind.GetDocIDFragList()
+		for _, num := range numList2 {
+			seen[num] = 1
+		}
+	}
+	for num := range seen {
+		numList = append(numList, num)
+	}
+	sort.Slice(numList, func(i, j int) bool { return numList[i] < numList[j] })
 	return
 }
 
