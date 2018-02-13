@@ -361,7 +361,7 @@ func TestIndexerSnap(t *testing.T) {
 	var err error
 	var docProt *cql.DocumentWithIdx
 	var ir, ir2 *Indexer
-	var numList []uint64
+	var numList, numList2 []uint64
 	initialNumDocs := 137
 	mainDir1 := "/tmp/indexer_test"
 	mainDir2 := "/tmp/indexer_test2"
@@ -396,6 +396,9 @@ func TestIndexerSnap(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []uint64{0}, numList)
 
+	numList2 = ir.GetDocIDFragList()
+	require.Equal(t, numList, numList2)
+
 	//create index 2
 	docProt = newDocProt2()
 	err = ir.CreateIndex(docProt)
@@ -409,6 +412,9 @@ func TestIndexerSnap(t *testing.T) {
 	numList, err = ir.CreateSnapshot(snapDir)
 	require.NoError(t, err)
 	require.Equal(t, []uint64{0, 1}, numList)
+
+	numList2 = ir.GetDocIDFragList()
+	require.Equal(t, numList, numList2)
 
 	//create indexer with existing data
 	ir2, err = NewIndexer(mainDir2, false, false)
