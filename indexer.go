@@ -83,7 +83,9 @@ func NewIndexer(mainDir string, overwirte bool, enableWal bool) (ir *Indexer, er
 
 //Destroy close and remove index files
 func (ir *Indexer) Destroy() (err error) {
-	if err = ir.Close(); err != nil {
+	ir.rwlock.Lock()
+	defer ir.rwlock.Unlock()
+	if err = ir.close(); err != nil {
 		return
 	}
 	if err = ir.removeIndices(); err != nil {
@@ -95,8 +97,8 @@ func (ir *Indexer) Destroy() (err error) {
 //Open opens all indices. Assumes ir.MainDir is already populated.
 func (ir *Indexer) Open() (err error) {
 	ir.rwlock.Lock()
-	defer ir.rwlock.Unlock()
 	err = ir.open()
+	ir.rwlock.Unlock()
 	return
 }
 
@@ -128,8 +130,8 @@ func (ir *Indexer) open() (err error) {
 // Close close indexer
 func (ir *Indexer) Close() (err error) {
 	ir.rwlock.Lock()
-	defer ir.rwlock.Unlock()
 	err = ir.close()
+	ir.rwlock.Unlock()
 	return
 }
 
@@ -153,8 +155,8 @@ func (ir *Indexer) close() (err error) {
 // Sync synchronizes index to disk
 func (ir *Indexer) Sync() (err error) {
 	ir.rwlock.Lock()
-	defer ir.rwlock.Unlock()
 	err = ir.sync()
+	ir.rwlock.Unlock()
 	return
 }
 
@@ -254,10 +256,10 @@ func (ir *Indexer) CreateIndex(docProt *cql.DocumentWithIdx) (err error) {
 //DestroyIndex destroy given index
 func (ir *Indexer) DestroyIndex(name string) (err error) {
 	ir.rwlock.Lock()
-	defer ir.rwlock.Unlock()
 	delete(ir.indices, name)
 	delete(ir.docProts, name)
 	err = ir.removeIndex(name)
+	ir.rwlock.Unlock()
 	return
 }
 
